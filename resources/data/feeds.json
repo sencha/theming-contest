@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "total" : 3,
+  "data": [
+    { "title": "Sencha Blog", "url": "http://feeds.feedburner.com/sencha", "icon": "" },
+    { "title": "Sencha Forums", "url": "http://sencha.com/forum/external.php?type=RSS2",  "icon": "" },
+    { "title": "Ajaxian", "url": "http://feeds.feedburner.com/ajaxian", "icon": "" }
+  ]
+}    
