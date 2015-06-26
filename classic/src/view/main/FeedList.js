@@ -15,7 +15,8 @@ Ext.define('FeedViewer.view.main.FeedList', {
     xtype: 'feedlist',
 
     requires: [
-        'FeedViewer.view.main.FeedListController',
+        'Ext.layout.container.Fit',
+        'Ext.view.View',
         'FeedViewer.store.Feeds'
     ],
 
@@ -65,7 +66,7 @@ Ext.define('FeedViewer.view.main.FeedList', {
         {
             xtype : 'toolbar',
             dock  : 'top',
-            reference : '',
+            reference : 'feedsBar',
             items : [
                 {
                     handler: 'onAddFeedClick',

@@ -205,7 +205,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
     // Inherit docs
     onDestroy: function(){
         this.callParent(arguments);
-        Ext.destroy(this.menu);
+        Ext.destroy(this.menu, this.addFeedWindow);
     }
 
 });
