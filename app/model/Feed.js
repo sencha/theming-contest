@@ -8,16 +8,11 @@ Ext.define('FeedViewer.model.Feed', {
         'title', 'url', 'icon'
     ],
 
-    pageSize: 20,
-
-    autoLoad: true,
-
     proxy: {
-        type: 'ajax',
+        type: 'memory',
         url: 'resources/data/feeds.json',
         reader: {
-            type: 'json',
-            rootProperty: 'data'
+            type: 'json'
         }
     }
 });

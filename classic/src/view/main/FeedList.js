@@ -14,12 +14,12 @@ Ext.define('FeedViewer.view.main.FeedList', {
 
     xtype: 'feedlist',
 
-    requires: ['FeedViewer.view.main.FeedListController'],
+    requires: [
+        'FeedViewer.view.main.FeedListController',
+        'FeedViewer.store.Feeds'
+    ],
 
-    animCollapse: true,
     layout: 'fit',
-    title: 'Feeds',
-
     controller: 'feedlist',
 
     /**
@@ -40,10 +40,7 @@ Ext.define('FeedViewer.view.main.FeedList', {
         {
             xtype : 'dataview',
             scrollable: true,
-            store: Ext.create('Ext.data.Store', {
-                model: 'FeedViewer.model.Feed',
-                data: this.feeds
-            }),
+
             selModel: {
                 mode: 'SINGLE',
                 listeners: {

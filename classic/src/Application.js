@@ -27,7 +27,7 @@ Ext.define('FeedViewer.Application', {
     ],
 
     stores: [
-        // TODO: add global / shared stores here
+       'Feeds'
     ],
     
     launch: function () {

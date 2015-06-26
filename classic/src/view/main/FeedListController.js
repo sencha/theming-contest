@@ -5,8 +5,14 @@ Ext.define('FeedViewer.view.main.FeedListController',{
     extend: 'Ext.app.ViewController',
     alias: 'controller.feedlist',
 
+    requires : [
+        'Ext.data.StoreManager'
+    ],
 
     onViewReady: function(view){
+
+        view.setStore( Ext.data.StoreManager.lookup('Feeds'));
+        view.refresh();
         Ext.suspendLayouts();
         //TODO: view.getSelectionModel().select(view.getStore().first());
         Ext.resumeLayouts(true);
