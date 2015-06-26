@@ -37,7 +37,8 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
         flex: 2,
         minHeight: 150,
         items: {
-            xtype: 'feedpost'
+            xtype: 'feedpost',
+            reference: 'feedpost'
         }
     },{
         xtype: 'panel',

@@ -53,20 +53,24 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      * @param {Ext.menu.CheckItem} item The checked item
      */
     readingPaneChange: function(cycle, activeItem){
+        var east = this.getView().up().down('[region=east]'),
+            south = this.getView().up().down('[region=south]'),
+            display = this.getView().up().down('feedpost');
+
         switch (activeItem.text) {
             case 'Bottom':
-                this.east.hide();
-                this.south.show();
-                this.south.add(this.display);
+                east.hide();
+                south.show();
+                south.add(display);
                 break;
             case 'Right':
-                this.south.hide();
-                this.east.show();
-                this.east.add(this.display);
+                south.hide();
+                east.show();
+                east.add(display);
                 break;
             default:
-                this.south.hide();
-                this.east.hide();
+                south.hide();
+                east.hide();
                 break;
         }
     },
@@ -113,12 +117,12 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
         var store = this.getView().store;
 
         //TODO - need to set the appropriate URL and load it.
-        
+
         //this.getViewModel().getData().feeditems.getProxy().setExtraParam('feed', url);
         //store.getProxy().setExtraParam('feed', url);
         // store.getProxy().set('url', url );
 
-        store.load();
+        // store.load();
     },
 
     /**
