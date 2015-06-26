@@ -22,15 +22,7 @@ Ext.define('FeedViewer.Application', {
         'Ext.ux.ajax.SimManager',
         'Ext.ux.PreviewPlugin',
 
-        'FeedViewer.Sim',
-        'FeedViewer.model.Feed',
-        'FeedViewer.model.FeedItem',
-        'FeedViewer.view.main.FeedPanel',
-        'FeedViewer.view.main.FeedInfo',
-        'FeedViewer.view.main.FeedDetail',
-        'FeedViewer.view.main.FeedGrid',
-        'FeedViewer.view.main.FeedWindow',
-        'FeedViewer.view.main.FeedPost'
+        'FeedViewer.*'
 
     ],
 
