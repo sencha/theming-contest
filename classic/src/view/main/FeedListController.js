@@ -104,7 +104,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      * @return {Ext.data.Model} Returns the selected model. false if nothing is selected.
      */
     getSelectedItem: function(){
-        return this.getView().getSelectionModel().getSelection()[0] || false;
+        return this.lookupReference('feedList').getSelectionModel().getSelection()[0] || false;
     },
 
     /**

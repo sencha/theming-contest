@@ -40,6 +40,7 @@ Ext.define('FeedViewer.view.main.FeedList', {
         {
             xtype : 'dataview',
             scrollable: true,
+            reference : 'feedList',
 
             selModel: {
                 mode: 'SINGLE',
