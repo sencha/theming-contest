@@ -69,6 +69,7 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
         minWidth: 150,
         listeners: {
             scope: 'controller',
+            afterrender: 'onAfterRender',
             select: 'onSelect'
         }
     },{

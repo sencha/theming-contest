@@ -37,14 +37,14 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
                 url: url,
                 closable: false,
                 listeners: {
-                    scope: this,
-                    opentab: this.onTabOpen,
-                    openall: this.onOpenAll,
-                    rowdblclick: this.onRowDblClick
+                    scope: 'controller',
+                    opentab: 'onTabOpen',
+                    openall: 'onOpenAll',
+                    rowdblclick: 'onRowDblClick'
                 }
             });
         } else {
-            active.loadFeed(url);
+            active.getController().loadFeed(url);
             active.tab.setText(title);
         }
         this.getView().setActiveTab(active);

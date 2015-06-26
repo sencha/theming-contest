@@ -16,35 +16,19 @@ Ext.define('FeedViewer.view.main.FeedDetailController', {
      this.callParent(arguments);
      },*/
 
+
+    onAfterRender: function(){
+      this.loadFeed(this.getView().url);
+    },
+
     /**
      * Loads a feed.
      * @param {String} url
      */
     loadFeed: function(url){
-        this.grid.loadFeed(url);
+        this.getView().down('feedgrid').loadFeed(url);
     },
-
-    /**
-     * Creates the feed grid
-     * @private
-     * @return {FeedViewer.FeedGrid} feedGrid
-     */
-    createGrid: function(){
-        this.grid = Ext.create('widget.feedgrid', {
-            region: 'center',
-            dockedItems: [this.createTopToolbar()],
-            flex: 2,
-            minHeight: 200,
-            minWidth: 150,
-            listeners: {
-                scope: this,
-                select: this.onSelect
-            }
-        });
-        this.loadFeed(this.url);
-        return this.grid;
-    },
-
+    
     /**
      * Fires when a grid row is selected
      * @private
