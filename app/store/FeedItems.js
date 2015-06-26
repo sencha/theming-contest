@@ -4,6 +4,6 @@
 Ext.define('FeedViewer.store.FeedItems', {
     extend: 'Ext.data.Store',
     alias: 'store.feeditems',
-    requires:['FeedViewer.model.FeedItem'],
+    storeId: 'FeedItems',
     model: 'FeedViewer.model.FeedItem'
 });

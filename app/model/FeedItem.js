@@ -6,7 +6,6 @@ Ext.define('FeedViewer.model.FeedItem', {
     alias: 'model.feeditem',
     pageSize: 20,
 
-
     fields: [
 
         {
@@ -55,7 +54,8 @@ Ext.define('FeedViewer.model.FeedItem', {
 
     proxy: {
         type: 'ajax',
-        url: 'resources/data/feeditemsdefault.json',
+        url: 'http://rss.cnn.com/rss/edition.rss',
+        //url: 'resources/data/feeditemsdefault.json',
         reader: {
             type: 'json',
             rootProperty: 'data'
