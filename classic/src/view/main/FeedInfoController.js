@@ -20,7 +20,7 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
      * @private
      */
     onFeedSelect: function(feed, title, url){
-        this.addFeed(title, url);
+       this.addFeed(title, url);
     },
 
     /**
@@ -29,9 +29,9 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
      * @param {String} url The url of the feed
      */
     addFeed: function(title, url){
-        var active = this.getView().first();
+        var active = this.getView().items.first();
         if (!active) {
-            active = this.add({
+            active = this.getView().add({
                 xtype: 'feeddetail',
                 title: title,
                 url: url,
