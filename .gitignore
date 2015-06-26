@@ -1,0 +1,14 @@
+/.idea
+/.DS_Store
+classic.json
+modern.json
+bootstrap.*
+*.tmp
+*.log
+/ext
+libpeerconnection.log
+version.properties
+licenses/file-header.js
+LICENSE
+/build
+
