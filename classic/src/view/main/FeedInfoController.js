@@ -5,13 +5,31 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.feedinfo',
 
+    init: function() {
+        this.listen({
+            controller: {
+                '*': {
+                    feedselect: 'onFeedSelect'
+                }
+            }
+        });
+    },
+
+    /**
+     * Reacts to a feed being selected
+     * @private
+     */
+    onFeedSelect: function(feed, title, url){
+        this.addFeed(title, url);
+    },
+
     /**
      * Add a new feed
      * @param {String} title The title of the feed
      * @param {String} url The url of the feed
      */
     addFeed: function(title, url){
-        var active = this.items.first();
+        var active = this.getView().first();
         if (!active) {
             active = this.add({
                 xtype: 'feeddetail',
@@ -29,7 +47,7 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
             active.loadFeed(url);
             active.tab.setText(title);
         }
-        this.setActiveTab(active);
+        this.getView().setActiveTab(active);
     },
 
     /**

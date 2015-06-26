@@ -32,7 +32,9 @@ Ext.define('FeedViewer.view.main.Viewport', {
             split: true,
 
             listeners: {
-                feedselect: 'onFeedSelect'
+                feedselect: 'onFeedSelect',
+                select: 'onFeedSelect',
+                viewready:'onViewReady'
             }
         },
         {

@@ -17,7 +17,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
         view.setStore(store);
         view.refresh();
         if (first) {
-           //TODO: view.getSelectionModel().select(first);
+           view.getSelectionModel().select(first);
         }
 
     },
@@ -75,7 +75,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
 
         refs.removeFeed.setDisabled(!selected);
         if (selected) {
-            //TODO: this.loadFeed(selected);
+            this.loadFeed(selected);
         }
     },
 

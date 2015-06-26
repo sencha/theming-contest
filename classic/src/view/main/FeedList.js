@@ -21,6 +21,7 @@ Ext.define('FeedViewer.view.main.FeedList', {
     ],
 
     layout: 'fit',
+
     controller: 'feedlist',
 
     /**
