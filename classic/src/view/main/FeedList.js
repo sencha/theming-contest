@@ -44,7 +44,8 @@ Ext.define('FeedViewer.view.main.FeedList', {
             selModel: {
                 mode: 'SINGLE',
                 listeners: {
-                    selectionchange: 'onFeedSelection'
+                    selectionchange: 'onFeedSelection',
+                    scope : 'controller'
                 }
             },
             listeners: {
@@ -68,11 +69,13 @@ Ext.define('FeedViewer.view.main.FeedList', {
                 {
                     handler: 'onAddFeedClick',
                     text: 'Add',
+                    reference : 'addFeed',
                     iconCls: 'feed-add'
                 },
                 {
                     handler: 'onRemoveFeedClick',
                     text: 'Remove',
+                    reference : 'removeFeed',
                     iconCls: 'feed-remove'
                 }
 

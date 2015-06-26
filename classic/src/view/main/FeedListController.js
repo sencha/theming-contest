@@ -11,11 +11,15 @@ Ext.define('FeedViewer.view.main.FeedListController',{
 
     onViewReady: function(view){
 
-        view.setStore( Ext.data.StoreManager.lookup('Feeds'));
+        var store = Ext.data.StoreManager.lookup('Feeds'),
+            first = store && store.first();
+
+        view.setStore(store);
         view.refresh();
-        Ext.suspendLayouts();
-        //TODO: view.getSelectionModel().select(view.getStore().first());
-        Ext.resumeLayouts(true);
+        if (first) {
+           //TODO: view.getSelectionModel().select(first);
+        }
+
     },
 
     /**
@@ -63,11 +67,15 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      * Used when view selection changes so we can disable toolbar buttons.
      * @private
      */
-    onFeedSelection: function(){
-        var selected = this.getSelectedItem();
-        this.toolbar.getComponent('remove').setDisabled(!selected);
+    onFeedSelection: function(selModel){
+        var me = this,
+            selected = this.getSelectedItem(),
+            view = me.getView(),
+            refs = me.getReferences();
+
+        refs.removeFeed.setDisabled(!selected);
         if (selected) {
-            this.loadFeed(selected);
+            //TODO: this.loadFeed(selected);
         }
     },
 

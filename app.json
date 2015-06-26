@@ -321,7 +321,7 @@
             // you can add "?platformTags=fashion:1" to the URL to enable Fashion
             // without changing this file.
             //
-             "fashion"
+            // "fashion"
         ]
     },
 
