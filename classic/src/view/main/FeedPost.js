@@ -11,33 +11,31 @@
 Ext.define('FeedViewer.view.main.FeedPost', {
 
     extend: 'Ext.panel.Panel',
-    alias: 'widget.feedpost',
+    xtype: 'feedpost',
     cls: 'preview',
-    scrollable: true,
+    scrollable: 'y',
     border: true,
 
-    tpl: ['<div class="post-data">',
-        '<span class="post-date">{pubDate:this.formatDate}</span>',
+    tpl: [
+        '<div class="post-data">',
+        '<span class="post-date">{publishedDate:this.formatDate}</span>',
         '<h3 class="post-title">{title}</h3>',
         '<h4 class="post-author">by {author:this.defaultValue}</h4>',
         '</div>',
-        '<div class="post-body">{content:this.getBody}</div>',
+        '<div class="post-body">{content:stripScripts}</div>',
         {
-            getBody: function(value, all){
-                return Ext.util.Format.stripScripts(value);
-            },
-
             defaultValue: function(v){
                 return v ? v : 'Unknown';
             },
 
             formatDate: function(value){
-                if (!value) {
+                if (!Ext.isDate(value)) {
                     return '';
                 }
                 return Ext.Date.format(value, 'M j, Y, g:i a');
             }
-        }],
+        }
+    ],
 
     initComponent: function(){
         this.dockedItems = [this.createToolbar()];
@@ -50,10 +48,10 @@ Ext.define('FeedViewer.view.main.FeedPost', {
      */
     setActive: function(rec) {
         var me = this,
-            gotoButton = me.down('button[text=Go to post]');
+            gotoButton = me.down('button[action=gotoPost]');
 
         me.active = rec;
-        me.update(rec.data);
+        me.update(rec.getData());
         gotoButton.setHref(rec.get('link'));
     },
 
@@ -79,6 +77,7 @@ Ext.define('FeedViewer.view.main.FeedPost', {
         items.push({
             href: this.inTab ? this.getData().link : '#',
             target: '_blank',
+            action: 'gotoPost',
             text: 'Go to post',
             iconCls: 'post-go'
         });
