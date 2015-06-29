@@ -12,12 +12,12 @@
 Ext.define('FeedViewer.view.main.Viewport', {
     extend: 'Ext.container.Container',
 
-    controller: 'main',
 
     layout: {
         type: 'border',
         padding: 5
     },
+
 
     items : [
         {

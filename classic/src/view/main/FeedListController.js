@@ -12,11 +12,9 @@ Ext.define('FeedViewer.view.main.FeedListController',{
 
     onViewReady: function(view){
 
-        var store = Ext.data.StoreManager.lookup('Feeds'),
+      var store = Ext.data.StoreManager.lookup('Feeds'),
          first = store && store.first();
 
-         view.setStore(store);
-         view.refresh();
          if (first) {
             view.getSelectionModel().select(first);
          }
@@ -54,7 +52,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      */
     loadFeed: function(rec){
         if (rec) {
-            this.fireEvent('feedselect', this, rec.get('title'), rec.get('url'));
+            this.fireEvent('feedselect', this, rec, rec.get('title'), rec.get('feedUrl'));
         }
     },
 

@@ -3,6 +3,11 @@
  */
 Ext.define('FeedViewer.view.main.ViewportModel', {
     extend: 'Ext.app.ViewModel',
-    alias: 'viewmodel.main'
+    alias: 'viewmodel.main',
+
+    stores:{
+        feeds:'feeds'
+    }
+
 });
 

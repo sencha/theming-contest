@@ -8,6 +8,10 @@ Ext.define('FeedViewer.Application', {
     
     name: 'FeedViewer',
 
+    requires: [
+        'FeedViewer.*'
+    ],
+
     stores: [
         // TODO: add global / shared stores here
     ],

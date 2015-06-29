@@ -14,7 +14,6 @@ Ext.define('FeedViewer.view.main.FeedList', {
 
     xtype: 'feedlist',
 
-    requires: [],
 
     layout: 'fit',
 
@@ -51,6 +50,10 @@ Ext.define('FeedViewer.view.main.FeedList', {
             listeners: {
                 contextmenu: 'onContextMenu',
                 viewready: 'onViewReady'
+            },
+            store: {
+                type: 'feeds',
+                autoLoad: true
             },
             trackOver: true,
             cls: 'feed-list',

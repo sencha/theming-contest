@@ -7,10 +7,9 @@ Ext.define('FeedViewer.store.Feeds', {
     model: 'FeedViewer.model.RSSFeed',
     storeId: 'Feeds',
     data : [
-        { "title": "Sencha", "url": "http://feeds.feedburner.com/sencha", "icon": "" },
-        { "title": "Yahoo!", "url": "http://news.yahoo.com/rss/", "icon": "" },
-        { "title": "Google Tech", "url": "http://news.google.com/news?pz=1&cf=all&ned=us&hl=en&topic=tc&output=rss",  "icon": "" },
-        { "title": "Google Business", "url": "http://news.google.com/news?pz=1&cf=all&ned=us&hl=en&topic=b&output=rss", "icon": "" }
+        { id: 1, "title": "Sencha", "feedUrl": "http://feeds.feedburner.com/sencha" },
+        { id: 2, "title": "Yahoo!", "feedUrl": "http://news.yahoo.com/rss/" },
+        { id: 3, "title": "Google Tech", "feedUrl": "http://news.google.com/news?pz=1&cf=all&ned=us&hl=en&topic=tc&output=rss" },
+        { id: 4, "title": "Google Business", "feedUrl": "http://news.google.com/news?pz=1&cf=all&ned=us&hl=en&topic=b&output=rss" }
     ]
-
 });

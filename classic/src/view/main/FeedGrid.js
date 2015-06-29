@@ -2,19 +2,15 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
     extend: 'Ext.grid.Panel',
 
     requires: [
-        'FeedViewer.view.main.FeedGridController',
-        'FeedViewer.view.main.FeedGridViewModel'
+        'FeedViewer.view.main.FeedGridController'
     ],
+
     alias: 'widget.feedgrid',
 
     controller: 'feedgrid',
-   // viewModel:'feedgrid',
+
 
     cls: 'feed-grid',
-
-    bind: {
-        store: '{feeditems}'
-    },
 
     dockedItems: [{
         xtype:'toolbar',
@@ -87,13 +83,12 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
         xtype : 'datecolumn',
         dataIndex: 'publishedDate',
         dateFormat : 'Y/m/d g:i a',
-        //renderer: 'formatDate',
+        // renderer: 'formatDate',
         width: 120
     }],
 
     listeners: {
         scope: 'controller',
-        afterrender: 'onAfterRender',
         select: 'onSelect'
     }
 

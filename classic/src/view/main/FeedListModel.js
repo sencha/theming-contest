@@ -9,9 +9,7 @@ Ext.define('FeedViewer.view.main.FeedListViewModel', {
     alias: 'viewmodel.feedlist',
 
     stores:{
-        feeds: {
-            model: 'FeedViewer.model.RSSFeed'
-        }
+        feeds: 'feeds'
     }
 
 });
