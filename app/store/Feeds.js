@@ -1,5 +1,5 @@
 /**
- * @class FeedViewer.view.main.Main
+ * @class FeedViewer.store.Feeds
  */
 Ext.define('FeedViewer.store.Feeds', {
     extend: 'Ext.data.Store',
