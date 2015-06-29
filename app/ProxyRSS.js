@@ -1,6 +1,9 @@
 /**
- * Created by doug on 6/26/15.
+ * @class FeedViewer.ProxyRSS
+ * A data.Proxy implementation for loading select RSS Feeds directly from the google.api
+ * in lieu of JSONP and or other cross-domain method
  */
+
 Ext.define('FeedViewer.ProxyRSS', {
     extend : 'Ext.data.proxy.Server',
     requires : [
@@ -97,7 +100,7 @@ Ext.define('FeedViewer.ProxyRSS', {
         if (method === 'findFeeds') {
             feed = google.feeds;
         } else {
-            feed = new google.feeds.Feed(request.getUrl())
+            feed = new google.feeds.Feed(request.getUrl());
             feed.setNumEntries( operation.getLimit() || 4);
         }
 
@@ -176,7 +179,7 @@ Ext.define('FeedViewer.ProxyRSS', {
             response.status = status;
 
             me.processResponse( status.success, operation, request, response);
-            me = null;
+            me = request = operation = null;
         };
     },
 
