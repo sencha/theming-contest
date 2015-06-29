@@ -21,7 +21,7 @@ Ext.define('FeedViewer.view.main.FeedWindow', {
     defaultFocus: '#feed',
 
     defaultFeeds: [
-        ['http://rss.cnn.com/rss/edition.rss', 'CNN Top Stories'],
+        ['http://rssfeeds.usatoday.com/usatoday-NewsTopStories', 'USA Today Top Stories'], //http://rss.cnn.com/rss/edition.rss
         ['http://sports.espn.go.com/espn/rss/news', 'ESPN Top News'],
         ['http://news.google.com/news?ned=us&topic=t&output=rss', 'Sci/Tech - Google News'],
         ['http://rss.news.yahoo.com/rss/software', 'Yahoo Software News']
@@ -88,20 +88,28 @@ Ext.define('FeedViewer.view.main.FeedWindow', {
      */
     onAddClick: function(addBtn) {
         addBtn.disable();
-        var url = this.form.getComponent('feed').getValue();
+        var url = this.form.getComponent('feed').getValue(),
+            feed = Ext.create('FeedViewer.model.RSSFeed');
         this.form.setLoading({
             msg: 'Validating feed...'
         });
 
-        Ext.Ajax.request({
-            url: 'feed-proxy.php',
+        feed.load({
+            url : url,
+            success: this.validateFeed,
+            failure: this.markInvalid,
+            scope: this
+        });
+
+        /*Ext.Ajax.request({
+            url: url,
             params: {
                 feed: url
             },
             success: this.validateFeed,
             failure: this.markInvalid,
             scope: this
-        });
+        });*/
     },
 
     /**
@@ -115,17 +123,15 @@ Ext.define('FeedViewer.view.main.FeedWindow', {
 
         var dq = Ext.DomQuery,
             url = this.form.getComponent('feed').getValue(),
-            xml,
+            data,
             channel,
             title;
 
         try {
-            xml = response.responseXML;
-            channel = xml.getElementsByTagName('channel')[0];
-            if (channel) {
-                title = dq.selectValue('title', channel, url);
-                this.fireEvent('feedvalid', this, title, url);
+            data = response.data;
+            if (data['title']) {
                 this.hide();
+                this.fireEvent('feedvalid', this, data.title, data.feedUrl);
                 return;
             }
         } catch(e) {

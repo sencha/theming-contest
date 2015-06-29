@@ -5,21 +5,21 @@ Ext.define('FeedViewer.view.main.FeedListController',{
     extend: 'Ext.app.ViewController',
     alias: 'controller.feedlist',
 
-    requires : [
-        'Ext.data.StoreManager'
+    requires: [
+        'Ext.fx.Anim',
+        'Ext.menu.Menu'
     ],
 
     onViewReady: function(view){
 
         var store = Ext.data.StoreManager.lookup('Feeds'),
-            first = store && store.first();
+         first = store && store.first();
 
-        view.setStore(store);
-        view.refresh();
-        if (first) {
-           view.getSelectionModel().select(first);
-        }
-
+         view.setStore(store);
+         view.refresh();
+         if (first) {
+            view.getSelectionModel().select(first);
+         }
     },
 
     /**
@@ -169,7 +169,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      * @param {String} url The url of the feed
      */
     onFeedValid: function(win, title, url){
-        var view = this.view,
+        var view = this.getView().down('dataview'),
             store = view.store,
             rec;
 

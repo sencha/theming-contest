@@ -62,7 +62,7 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
         plugins: [{
             pluginId: 'preview',
             ptype: 'preview',
-            bodyField: 'description',
+            bodyField: 'contentSnippet',
             expanded: true
         }],
         listeners: {
@@ -91,7 +91,7 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
 
     listeners: {
         scope: 'controller',
-        selectionchange: 'onSelectionChange',
+        // selectionchange: 'onSelectionChange',
         afterrender: 'onAfterRender',
         select: 'onSelect'
     }

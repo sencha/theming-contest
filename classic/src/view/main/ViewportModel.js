@@ -4,25 +4,19 @@
 Ext.define('FeedViewer.view.main.ViewportModel', {
     extend: 'Ext.app.ViewModel',
     requires: [
-        'FeedViewer.model.Feed'
+        'FeedViewer.model.RSSFeed'
     ],
     alias: 'viewmodel.main',
 
     data: {
-        name: 'Feed Viewer',
-        feed: null,
-        feeditem: null
+        name: 'Feed Viewer'
     },
 
     stores:{
         feeds: {
-            model: 'FeedViewer.model.Feed',
+            model: 'FeedViewer.model.RSSFeed',
             autoLoad: true
 
-        },
-        feedItems: {
-            model: 'FeedViewer.model.FeedItem',
-            autoLoad: true
         }
     }
 
