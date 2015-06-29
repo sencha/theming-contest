@@ -119,9 +119,10 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
             // refs = me.getReferences(),
             feed = Ext.create('FeedViewer.model.RSSFeed');
 
-        if(url){
+        if (url) {
             feed.load({
                 url : url,
+                limit : 25,
                 callback: function(records, operation, success) {
                     if(success){
                         view.bindStore(feed.entries());
@@ -135,8 +136,10 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      * Title renderer
      * @private
      */
-    formatTitle: function(value, p, record){
-        return Ext.String.format('<div class="topic"><b>{0}</b><span class="author">{1}</span></div>', value, record.get('author') || "Unknown");
+    formatTitle: function(value, p, record) {
+        var author;
+        return Ext.String.format(
+            '<div class="topic"><b>{0}</b><span class="author">{1}</span></div>', value, (author = record.get('author')) ? ' by: ' + author : '');
     },
 
     /**
@@ -144,7 +147,7 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      * @private
      */
     formatDate: function(date){
-        if (!date) {
+        if (Ext.isDate(date)) {
             return '';
         }
 

@@ -80,13 +80,15 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
         text: 'Author',
         dataIndex: 'author',
         hidden: true,
-        width: 200
+        flex : 1
 
     }, {
         text: 'Date',
-        dataIndex: 'pubDate',
-        renderer: 'formatDate',
-        width: 200
+        xtype : 'datecolumn',
+        dataIndex: 'publishedDate',
+        dateFormat : 'Y/m/d g:i a',
+        //renderer: 'formatDate',
+        width: 120
     }],
 
     listeners: {
