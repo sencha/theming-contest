@@ -124,7 +124,7 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
                 url : url,
                 callback: function(records, operation, success) {
                     if(success){
-                        view.setStore(feed.entries());
+                        view.bindStore(feed.entries());
                     }
                 }}
             );
