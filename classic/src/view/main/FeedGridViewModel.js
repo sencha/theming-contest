@@ -7,6 +7,10 @@ Ext.define('FeedViewer.view.main.FeedGridViewModel', {
         'FeedViewer.store.FeedItems'
     ],
 
+    data: {
+        feed: null
+    },
+
     stores: {
         feeditems: {
             //Store reference

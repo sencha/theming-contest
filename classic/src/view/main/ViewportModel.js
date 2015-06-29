@@ -9,9 +9,7 @@ Ext.define('FeedViewer.view.main.ViewportModel', {
     alias: 'viewmodel.main',
 
     data: {
-        name: 'Feed Viewer',
-        feed: null,
-        feeditem: null
+        name: 'Feed Viewer'
     },
 
     stores:{
@@ -19,10 +17,6 @@ Ext.define('FeedViewer.view.main.ViewportModel', {
             model: 'FeedViewer.model.Feed',
             autoLoad: true
 
-        },
-        feedItems: {
-            model: 'FeedViewer.model.FeedItem',
-            autoLoad: true
         }
     }
 

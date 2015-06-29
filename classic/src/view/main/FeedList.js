@@ -14,15 +14,12 @@ Ext.define('FeedViewer.view.main.FeedList', {
 
     xtype: 'feedlist',
 
-    requires: [
-        'Ext.layout.container.Fit',
-        'Ext.view.View',
-        'FeedViewer.store.Feeds'
-    ],
+    requires: [],
 
     layout: 'fit',
 
     controller: 'feedlist',
+    // viewModel: 'feedlist',
 
     /**
      * @event feedremove Fired when a feed is removed
@@ -43,6 +40,10 @@ Ext.define('FeedViewer.view.main.FeedList', {
             xtype : 'dataview',
             scrollable: true,
             reference : 'feedList',
+
+           /* bind: {
+                store: '{feeds}'
+            },*/
 
             selModel: {
                 mode: 'SINGLE',

@@ -18,7 +18,7 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      */
     onSelect: function(grid, rec) {
         if(rec){
-            this.display.setActive(rec);
+            this.getView().up().down('feedpost').setActive(rec);
         }
     },
 
@@ -44,7 +44,7 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      * @param {Boolean} pressed Whether the button is pressed
      */
     onSummaryToggle: function(btn, pressed) {
-        this.grid.getView().getPlugin('preview').toggleExpanded(pressed);
+        this.getView().getView().getPlugin('preview').toggleExpanded(pressed);
     },
 
     /**
@@ -84,7 +84,7 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      * @param {Object} index The row index
      */
     onRowDblClick: function(view, record, item, index, e) {
-        this.fireEvent('rowdblclick', this, this.store.getAt(index));
+        this.fireEvent('rowdblclick', this.getView(), this.getView().store.getAt(index));
     },
 
 
@@ -93,13 +93,13 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      * @private
      */
     onLoad: function(store, records, success) {
-        if (this.getStore().getCount()) {
-            this.getSelectionModel().select(0);
+        if (this.getView().getStore().getCount()) {
+            this.getView().getSelectionModel().select(0);
         }
     },
 
     /**
-     * Listen for proxy eerrors.
+     * Listen for proxy errors.
      */
     onProxyException: function(proxy, response, operation) {
         Ext.Msg.alert("Error with data from server", operation.error);
@@ -114,15 +114,21 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      * @param {String} url The url to load
      */
     loadFeed: function(url){
-        var store = this.getView().store;
+        var me = this,
+            view = me.getView(),
+            // refs = me.getReferences(),
+            feed = Ext.create('FeedViewer.model.RSSFeed');
 
-        //TODO - need to set the appropriate URL and load it.
-
-        //this.getViewModel().getData().feeditems.getProxy().setExtraParam('feed', url);
-        //store.getProxy().setExtraParam('feed', url);
-        // store.getProxy().set('url', url );
-
-        // store.load();
+        if(url){
+            feed.load({
+                url : url,
+                callback: function(records, operation, success) {
+                    if(success){
+                        view.setStore(feed.entries());
+                    }
+                }}
+            );
+        }
     },
 
     /**

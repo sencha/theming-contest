@@ -62,7 +62,7 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
         plugins: [{
             pluginId: 'preview',
             ptype: 'preview',
-            bodyField: 'description',
+            bodyField: 'contentSnippet',
             expanded: true
         }],
         listeners: {
