@@ -44,7 +44,7 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
                 }
             });
         } else {
-            active.getController().loadFeed(url);
+            active.down('grid').getController().loadFeed(url);
             active.tab.setText(title);
         }
         this.getView().setActiveTab(active);

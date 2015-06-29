@@ -24,54 +24,10 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     items:[{
         xtype: 'feedgrid',
         region: 'center',
-        dockedItems: [{
-            xtype:'toolbar',
-            dock: 'top',
-            cls: 'x-docked-noborder-top',
-            items: [{
-                iconCls: 'open-all',
-                text: 'Open All',
-                scope:  'controller',
-                handler: 'onOpenAllClick'
-            }, '-', {
-                xtype: 'cycle',
-                text: 'Reading Pane',
-                prependText: 'Preview: ',
-                showText: true,
-                scope: 'controller',
-                changeHandler: 'readingPaneChange',
-                menu: {
-                    id: 'reading-menu',
-                    items: [{
-                        text: 'Bottom',
-                        checked: true,
-                        iconCls:'preview-bottom'
-                    }, {
-                        text: 'Right',
-                        iconCls:'preview-right'
-                    }, {
-                        text: 'Hide',
-                        iconCls:'preview-hide'
-                    }]
-                }
-            }, {
-                iconCls: 'summary',
-                text: 'Summary',
-                enableToggle: true,
-                pressed: true,
-                scope:  'controller',
-                toggleHandler: 'onSummaryToggle'
-            }]
-
-        }],
         flex: 2,
         minHeight: 200,
-        minWidth: 150,
-        listeners: {
-            scope: 'controller',
-            afterrender: 'onAfterRender',
-            select: 'onSelect'
-        }
+        minWidth: 150
+
     },{
         xtype: 'panel',
         layout: 'fit',
@@ -81,7 +37,8 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
         flex: 2,
         minHeight: 150,
         items: {
-            xtype: 'feedpost'
+            xtype: 'feedpost',
+            reference: 'feedpost'
         }
     },{
         xtype: 'panel',

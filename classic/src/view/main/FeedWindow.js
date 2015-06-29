@@ -92,6 +92,7 @@ Ext.define('FeedViewer.view.main.FeedWindow', {
         this.form.setLoading({
             msg: 'Validating feed...'
         });
+
         Ext.Ajax.request({
             url: 'feed-proxy.php',
             params: {

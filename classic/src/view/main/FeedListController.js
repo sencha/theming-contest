@@ -124,7 +124,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      * @private
      */
     onRemoveFeedClick: function(button) {
-        var view = this.getView(),
+        var view = this.getView().down('dataview'),
             active = this.getSelectedItem();
 
         if (active) {
