@@ -73,23 +73,6 @@ Ext.define('FeedViewer.ProxyRSS', {
     },
 
     /**
-    * Get the url for the request taking into account the order of priority,
-    * - The request
-    * - The api
-    * - The url
-    * @private
-    * @param {Ext.data.Request} request The request
-    * @return {String} The url
-    */
-    getUrl: function(request) {
-        var url;
-        if (request) {
-            url = request.getUrl();
-        }
-        return url ? url : this.callParent();
-    },
-
-    /**
     * @param {Ext.data.operation.Operation} operation The Ext.data.operation.Operation object
     * @param {Function} callback The callback function to call when the Operation has completed
     * @param {Object} scope The scope in which to execute the callback
