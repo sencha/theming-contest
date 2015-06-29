@@ -11,7 +11,7 @@ Ext.define('FeedViewer.model.RSSItem', {
         'author',
         'link',
         'categories',
-
+        'url',
         {
             name: 'publishedDate',
             type: 'date',

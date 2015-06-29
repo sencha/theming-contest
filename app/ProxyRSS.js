@@ -90,24 +90,35 @@ Ext.define('FeedViewer.ProxyRSS', {
     },
 
     /**
-    * In ServerProxy subclasses, the {@link #create}, {@link #read}, {@link #update} and {@link #erase} methods all
-    * pass through to doRequest. Each ServerProxy subclass must implement the doRequest method - see {@link
-    * Ext.data.proxy.JsonP} and {@link Ext.data.proxy.Ajax} for examples. This method carries the same signature as
-    * each of the methods that delegate to it.
-    *
     * @param {Ext.data.operation.Operation} operation The Ext.data.operation.Operation object
     * @param {Function} callback The callback function to call when the Operation has completed
     * @param {Object} scope The scope in which to execute the callback
     */
     doRequest: function(operation, callback, scope) {
         var me = this,
-            request = me.buildRequest(operation);
+            request = me.buildRequest(operation),
+            method = me.getMethod(request),
+            feed;
+
+        //<debug>
+        if (!operation.isReadOperation) {
+           Ext.raise("The RssProxy only supports 'read' operations");
+        }
+       //</debug>
 
         request.setConfig({
-            scope               : me,
-            callback            : me.createRequestCallback(request, operation)
+            scope               : scope,
+            callback            : callback
         });
-        request.feed =new google.feeds.Feed(request.getUrl());
+
+        if (method === 'findFeeds') {
+            feed = google.feeds;
+        } else {
+            feed = new google.feeds.Feed(request.getUrl())
+            feed.setNumEntries( operation.getLimit() || 4);
+        }
+
+        request.feed = feed;
         return me.sendRequest(request);
     },
 
@@ -119,14 +130,23 @@ Ext.define('FeedViewer.ProxyRSS', {
      */
     sendRequest: function(request) {
         var me = this,
-            feed = request.feed;
+            feed = request.feed,
+            operation = request.getOperation(),
+            method = me.getMethod(request),
+            args = [Ext.Function.bind( me.createRequestCallback(request, operation), me )];
 
-        feed.setResultFormat( google.feeds.Feed.JSON_FORMAT );
-        feed.includeHistoricalEntries();
+        if (method !== 'load') {
+            /**
+             * Typical query would look like:
+                  site:cnn.com president
+             */
+            args.unshift(operation.query || '');
+        } else {
+            feed.setResultFormat( google.feeds.Feed.JSON_FORMAT );
+            feed.includeHistoricalEntries();
+        }
 
-        feed[ me.getMethod(request) ](
-            Ext.Function.bind( request.getCallback(), request.getScope() )
-        );
+        (feed[method]).apply(feed, args);
 
         me.lastRequest = request;
         return request;
@@ -162,8 +182,15 @@ Ext.define('FeedViewer.ProxyRSS', {
                 me.lastRequest = null;
             }
 
-            var status = response.status || (response.status =  {message : ''});
-            status.success = status.code == 200;
+            // Normalize status for the reader and operation
+            var status = Ext.apply(
+                {message : ''},
+                response.status,
+                response.error
+            );
+
+            status.success = !response.error;
+            response.status = status;
 
             me.processResponse( status.success, operation, request, response);
             me = null;

@@ -5,7 +5,7 @@ Ext.define('FeedViewer.model.RSSFeed', {
     extend: 'FeedViewer.model.Base',
     alias: 'model.rssfeed',
 
-    fields : [ 'title', 'author', 'link', 'description' ],
+    fields : [ 'title', 'author', 'link', 'description', 'feedUrl', 'type' ],
 
     hasMany: {
         model: 'RSSItem',
@@ -13,11 +13,6 @@ Ext.define('FeedViewer.model.RSSFeed', {
     },
 
     proxy: {
-        type: 'googglerss',
-        //url: 'http://feeds.feedburner.com/sencha',
-
-        reader: {
-            type: 'json'
-        }
+        type: 'googglerss'
     }
 });
