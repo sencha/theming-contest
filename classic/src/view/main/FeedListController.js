@@ -22,46 +22,6 @@ Ext.define('FeedViewer.view.main.FeedListController',{
          }
     },
 
-    /**
-     * Create actions to share between toolbar and menu
-     * @private
-     */
-    createActions: function(){
-        this.addAction = Ext.create('Ext.Action', {
-            scope: this,
-            handler: this.onAddFeedClick,
-            text: 'Add',
-            iconCls: 'feed-add'
-        });
-
-        this.removeAction = Ext.create('Ext.Action', {
-            itemId: 'remove',
-            scope: this,
-            handler: this.onRemoveFeedClick,
-            text: 'Remove',
-            iconCls: 'feed-remove'
-        });
-    },
-
-    /**
-     * Create the context menu
-     * @private
-     */
-    createMenu: function(){
-        this.menu = Ext.create('widget.menu', {
-            items: [{
-                scope: this,
-                handler: this.onLoadClick,
-                text: 'Load feed',
-                iconCls: 'feed-load'
-            }, this.removeAction, '-', this.addAction],
-            listeners: {
-                hide: function(c){
-                    c.activeFeed = null;
-                }
-            }
-        });
-    },
 
     /**
      * Used when view selection changes so we can disable toolbar buttons.
@@ -107,17 +67,6 @@ Ext.define('FeedViewer.view.main.FeedListController',{
         return this.lookupReference('feedList').getSelectionModel().getSelection()[0] || false;
     },
 
-    /**
-     * Listens for the context menu event on the view
-     * @private
-     */
-    onContextMenu: function(view, index, el, event){
-        var menu = this.menu;
-
-        event.stopEvent();
-        menu.activeFeed = view.store.getAt(index);
-        menu.showAt(event.getXY());
-    },
 
     /**
      * React to a feed being removed

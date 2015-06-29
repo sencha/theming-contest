@@ -8,7 +8,7 @@ Ext.define('FeedViewer.view.main.FeedGridViewModel', {
     ],
 
     data: {
-        feed: null
+        feed: Ext.create('FeedViewer.model.RSSFeed')
     },
 
     stores: {

@@ -20,6 +20,7 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     layout: 'border',
 
     controller: 'feeddetail',
+   // model: 'feeddetail',
 
     items:[{
         xtype: 'feedgrid',

@@ -29,8 +29,10 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
      * @param {String} url The url of the feed
      */
     addFeed: function(title, url){
-        var active = this.getView().items.first();
+        var active = this.getView().items.first(),
+            feed = this.getViewModel().data.RSSfeed;
         if (!active) {
+
             active = this.getView().add({
                 xtype: 'feeddetail',
                 title: title,
@@ -43,11 +45,27 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
                     rowdblclick: 'onRowDblClick'
                 }
             });
+
+
         } else {
-            active.down('grid').getController().loadFeed(url);
+            // active.down('grid').getController().loadFeed(url);
             active.tab.setText(title);
         }
+
         this.getView().setActiveTab(active);
+
+        feed.load({
+                url : url,
+                callback: function(records, operation, success) {
+                    if(success){
+                        var grid = active.down('grid');
+                        grid.bindStore(feed.entries());
+                        grid.reconfigure(feed.entries() );
+                    }
+                }}
+        );
+
+
     },
 
     /**

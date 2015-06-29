@@ -8,7 +8,7 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
     alias: 'widget.feedgrid',
 
     controller: 'feedgrid',
-    viewModel:'feedgrid',
+   // viewModel:'feedgrid',
 
     cls: 'feed-grid',
 
@@ -93,7 +93,6 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
 
     listeners: {
         scope: 'controller',
-        // selectionchange: 'onSelectionChange',
         afterrender: 'onAfterRender',
         select: 'onSelect'
     }

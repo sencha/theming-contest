@@ -40,14 +40,10 @@ Ext.define('FeedViewer.view.main.FeedList', {
             xtype : 'dataview',
             scrollable: true,
             reference : 'feedList',
-
-           /* bind: {
-                store: '{feeds}'
-            },*/
-
             selModel: {
                 mode: 'SINGLE',
                 listeners: {
+                    select: 'onFeedSelection',
                     selectionchange: 'onFeedSelection',
                     scope : 'controller'
                 }

@@ -116,7 +116,7 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
     loadFeed: function(url){
         var me = this,
             view = me.getView(),
-            // refs = me.getReferences(),
+            refs = me.getReferences(),
             feed = Ext.create('FeedViewer.model.RSSFeed');
 
         if (url) {
