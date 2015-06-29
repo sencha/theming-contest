@@ -14,18 +14,18 @@ Ext.define('FeedViewer.view.main.FeedPost', {
     xtype: 'feedpost',
     cls: 'preview',
     scrollable: 'y',
-    border: true,
+    border: false,
 
     tpl: [
         '<div class="post-data">',
         '<span class="post-date">{publishedDate:this.formatDate}</span>',
         '<h3 class="post-title">{title}</h3>',
-        '<h4 class="post-author">by {author:this.defaultValue}</h4>',
+        '<h4 class="post-author">{author:this.defaultValue}</h4>',
         '</div>',
         '<div class="post-body">{content:stripScripts}</div>',
         {
             defaultValue: function(v){
-                return v ? v : 'Unknown';
+                return v ? 'By: ' + v : '';
             },
 
             formatDate: function(value){
