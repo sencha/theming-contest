@@ -8,29 +8,50 @@
 Ext.define('FeedViewer.view.main.Viewport', {
     extend: 'Ext.navigation.View',
     xtype: 'app-main',
+    title: 'Feeds',
 
-    items: [
-        {
-            xtype : 'toolbar',
-            docked: 'top',
-            items:[{
+    controller: 'viewport',
+    reference: 'viewport',
+
+    items: [{
+            xtype: 'feedlist',
+            reference: 'feedlist',
+            listeners: {
+                select:'onFeedListSelect'
+            }
+        },{
+        xtype : 'toolbar',
+        docked: 'bottom',
+        items:[{
                 xtype: 'button',
                 text: 'New',
-                handler: function(){
-                    this.up('navigationview').push({
-                        xtype: 'feedform'
-                    })
-                }
-            },
-            {xtype: 'spacer'},
-            {
+                reference: 'newfeedbutton',
+                handler: 'onNewFeedClick'
+            },{
                 xtype: 'button',
-                text: 'Remove'
+                reference: 'cancelbutton',
+                text: 'cancel',
+                hidden: true,
+                handler: 'onCancelClick'
+            },{
+                xtype: 'spacer'
+            },{
+                xtype: 'button',
+                reference: 'removebutton',
+                text: 'Remove',
+                hidden: true,
+                handler: 'onRemoveClick'
 
-            }]
-        },
-        {
-            xtype: 'feedlist'
-        }
-    ]
+            },{
+                xtype: 'button',
+                reference: 'savebutton',
+                text: 'save',
+                hidden: true,
+                handler: 'onSaveClick'
+            }
+        ]
+    }],
+    listeners:{
+        back: 'onBackClick'
+    }
 });
