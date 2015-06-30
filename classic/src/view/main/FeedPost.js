@@ -13,14 +13,15 @@ Ext.define('FeedViewer.view.main.FeedPost', {
     extend: 'Ext.panel.Panel',
     xtype: 'feedpost',
     cls: 'preview',
-    scrollable: 'y',
+    scrollable: true,
     border: false,
+    bodyPadding : '20',
 
     tpl: [
         '<div class="post-data">',
-        '<span class="post-date">{publishedDate:this.formatDate}</span>',
+        '<span class="post-date">{publishedDate:this.formatDate}&nbsp;</span>',
         '<h3 class="post-title">{title}</h3>',
-        '<h4 class="post-author">{author:this.defaultValue}</h4>',
+        '<h4 class="post-author">{author:this.defaultValue}&nbsp;</h4>',
         '</div>',
         '<div class="post-body">{content:stripScripts}</div>',
         {
