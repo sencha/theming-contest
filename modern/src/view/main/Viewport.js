@@ -9,25 +9,16 @@ Ext.define('FeedViewer.view.main.Viewport', {
     extend: 'Ext.navigation.View',
     xtype: 'app-main',
 
-
-    defaults: {
-        styleHtmlContent: true
-    },
-
-    tabBarPosition: 'bottom',
-
     items: [
         {
             xtype : 'toolbar',
             docked: 'top',
-            title: 'Feeds',
             items:[{
                 xtype: 'button',
                 text: 'New',
                 handler: function(){
                     this.up('navigationview').push({
-                        title: 'Second',
-                        html: 'Second view!'
+                        xtype: 'feedform'
                     })
                 }
             },
@@ -39,7 +30,6 @@ Ext.define('FeedViewer.view.main.Viewport', {
             }]
         },
         {
-            iconCls: 'fa-home',
             xtype: 'feedlist'
         }
     ]
