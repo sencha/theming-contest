@@ -14,12 +14,10 @@ Ext.define('FeedViewer.view.main.FeedList', {
 
     xtype: 'feedlist',
 
-    requires: [],
 
     layout: 'fit',
 
     controller: 'feedlist',
-    // viewModel: 'feedlist',
 
     /**
      * @event feedremove Fired when a feed is removed
@@ -40,21 +38,18 @@ Ext.define('FeedViewer.view.main.FeedList', {
             xtype : 'dataview',
             scrollable: true,
             reference : 'feedList',
-
-           /* bind: {
-                store: '{feeds}'
-            },*/
-
             selModel: {
                 mode: 'SINGLE',
                 listeners: {
-                    selectionchange: 'onFeedSelection',
-                    scope : 'controller'
+                    select: 'onFeedSelection'
                 }
             },
             listeners: {
-                contextmenu: 'onContextMenu',
                 viewready: 'onViewReady'
+            },
+            store: {
+                type: 'feeds',
+                autoLoad: true
             },
             trackOver: true,
             cls: 'feed-list',
@@ -85,6 +80,12 @@ Ext.define('FeedViewer.view.main.FeedList', {
 
             ]
         }
-    ]
+    ],
+
+    listeners: {
+        feedselect: 'onFeedSelect',
+        select: 'onFeedSelect',
+        viewready:'onViewReady'
+    }
 
 });

@@ -13,13 +13,10 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     extend: 'Ext.panel.Panel',
     alias: 'widget.feeddetail',
 
-    requires: ['FeedViewer.view.main.FeedDetailController'],
 
     border: false,
 
     layout: 'border',
-
-    controller: 'feeddetail',
 
     items:[{
         xtype: 'feedgrid',

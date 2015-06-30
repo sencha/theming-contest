@@ -5,11 +5,6 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.feedgrid',
 
-    onAfterRender: function(){
-        this.loadFeed(this.getView().url);
-    },
-
-
     /**
      * Fires when a grid row is selected
      * @private
@@ -109,28 +104,6 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
         this.fireEvent('select', this, {data:{}});
     },
 
-    /**
-     * Instructs the grid to load a new feed
-     * @param {String} url The url to load
-     */
-    loadFeed: function(url){
-        var me = this,
-            view = me.getView(),
-            // refs = me.getReferences(),
-            feed = Ext.create('FeedViewer.model.RSSFeed');
-
-        if (url) {
-            feed.load({
-                url : url,
-                limit : 25,
-                callback: function(records, operation, success) {
-                    if(success){
-                        view.bindStore(feed.entries());
-                    }
-                }}
-            );
-        }
-    },
 
     /**
      * Title renderer

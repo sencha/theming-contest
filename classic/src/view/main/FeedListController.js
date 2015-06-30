@@ -12,56 +12,14 @@ Ext.define('FeedViewer.view.main.FeedListController',{
 
     onViewReady: function(view){
 
-        var store = Ext.data.StoreManager.lookup('Feeds'),
+      var store = Ext.data.StoreManager.lookup('Feeds'),
          first = store && store.first();
 
-         view.setStore(store);
-         view.refresh();
          if (first) {
             view.getSelectionModel().select(first);
          }
     },
 
-    /**
-     * Create actions to share between toolbar and menu
-     * @private
-     */
-    createActions: function(){
-        this.addAction = Ext.create('Ext.Action', {
-            scope: this,
-            handler: this.onAddFeedClick,
-            text: 'Add',
-            iconCls: 'feed-add'
-        });
-
-        this.removeAction = Ext.create('Ext.Action', {
-            itemId: 'remove',
-            scope: this,
-            handler: this.onRemoveFeedClick,
-            text: 'Remove',
-            iconCls: 'feed-remove'
-        });
-    },
-
-    /**
-     * Create the context menu
-     * @private
-     */
-    createMenu: function(){
-        this.menu = Ext.create('widget.menu', {
-            items: [{
-                scope: this,
-                handler: this.onLoadClick,
-                text: 'Load feed',
-                iconCls: 'feed-load'
-            }, this.removeAction, '-', this.addAction],
-            listeners: {
-                hide: function(c){
-                    c.activeFeed = null;
-                }
-            }
-        });
-    },
 
     /**
      * Used when view selection changes so we can disable toolbar buttons.
@@ -74,6 +32,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
             refs = me.getReferences();
 
         refs.removeFeed.setDisabled(!selected);
+
         if (selected) {
             this.loadFeed(selected);
         }
@@ -94,7 +53,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      */
     loadFeed: function(rec){
         if (rec) {
-            this.fireEvent('feedselect', this, rec.get('title'), rec.get('url'));
+            this.fireEvent('feedselect', this, rec, rec.get('title'), rec.get('feedUrl'));
         }
     },
 
@@ -107,17 +66,6 @@ Ext.define('FeedViewer.view.main.FeedListController',{
         return this.lookupReference('feedList').getSelectionModel().getSelection()[0] || false;
     },
 
-    /**
-     * Listens for the context menu event on the view
-     * @private
-     */
-    onContextMenu: function(view, index, el, event){
-        var menu = this.menu;
-
-        event.stopEvent();
-        menu.activeFeed = view.store.getAt(index);
-        menu.showAt(event.getXY());
-    },
 
     /**
      * React to a feed being removed

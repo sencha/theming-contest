@@ -19,8 +19,8 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
      * Reacts to a feed being selected
      * @private
      */
-    onFeedSelect: function(feed, title, url){
-       this.addFeed(title, url);
+    onFeedSelect: function(controller, feed, title, url){
+       this.addFeed(feed, title, url);
     },
 
     /**
@@ -28,13 +28,13 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
      * @param {String} title The title of the feed
      * @param {String} url The url of the feed
      */
-    addFeed: function(title, url){
+    addFeed: function(feed, title, url){
         var active = this.getView().items.first();
+
         if (!active) {
+
             active = this.getView().add({
                 xtype: 'feeddetail',
-                title: title,
-                url: url,
                 closable: false,
                 listeners: {
                     scope: 'controller',
@@ -43,12 +43,31 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
                     rowdblclick: 'onRowDblClick'
                 }
             });
+
         } else {
-            active.down('grid').getController().loadFeed(url);
             active.tab.setText(title);
         }
+
         this.getView().setActiveTab(active);
+
+        feed.load({
+            url : url,
+            limit : 50,
+            callback: function(records, operation, success) {
+                if(success){
+                    var grid = active.down('grid');
+                    grid.bindStore(feed.entries());
+                    grid.store.load(function(){
+                        if (grid.getStore().getCount()) {
+                            grid.getView().getSelectionModel().select(0);
+                        }
+                    });
+                }
+            }}
+        );
+
     },
+
 
     /**
      * Listens for a new tab request
