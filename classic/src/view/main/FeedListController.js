@@ -32,6 +32,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
             refs = me.getReferences();
 
         refs.removeFeed.setDisabled(!selected);
+
         if (selected) {
             this.loadFeed(selected);
         }

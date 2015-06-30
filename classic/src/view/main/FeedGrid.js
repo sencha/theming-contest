@@ -83,6 +83,7 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
         xtype : 'datecolumn',
         dataIndex: 'publishedDate',
         dateFormat : 'Y/m/d g:i a',
+        hidden: true,
         // renderer: 'formatDate',
         width: 120
     }],

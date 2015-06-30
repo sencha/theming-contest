@@ -52,6 +52,7 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
 
         feed.load({
             url : url,
+            limit : 50,
             callback: function(records, operation, success) {
                 if(success){
                     var grid = active.down('grid');
