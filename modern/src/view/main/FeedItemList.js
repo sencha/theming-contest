@@ -42,5 +42,4 @@ Ext.define('FeedViewer.view.main.FeedItemList', {
         }]
     }]
 
-
 });
