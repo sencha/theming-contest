@@ -10,18 +10,16 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
             controller: {
                 '*': {
                     feedselect: 'onFeedSelect',
-                    rssitemselect : 'onRSSItemSelect'
+                    rssitemselect : 'onRSSItemSelect',
+                    feeditemdblclick : 'onGoToPost'
                 }
             },
             component: {
-                'feedpost button[action=openInTab]': {
+                'feeddetail feedpost button[action=openInTab]': {
                     click: 'onPostInTab'
                 },
-                'feedpost button[action=goToPost]': {
-                    click: 'onGoToPost'
-                },
-                'feedgrid': {
-                    itemdblclick: 'onGoToPost'
+                'feeddetail button[action=openAll]': {
+                    click: 'onOpenAll'
                 }
             }
         });
@@ -50,7 +48,6 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
         if (!active) {
             active = view.add({
                 xtype :'feeddetail',
-                title: title,
                 closable: false,
                 listeners: {
                     scope: 'controller',
@@ -60,8 +57,6 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
                 }
             });
 
-        } else {
-            active.tab.setText(title);
         }
 
         grid = view.down('feedgrid');
@@ -75,16 +70,18 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
                 callback: function(records, operation, success) {
                     if (success){
 
-                        var vm = this.getViewModel();
+                        var vm = this.getViewModel(),
+                            view;
 
                         vm.set('feed', feed);
                         vm.notify(); // notify Feed model binders
 
                         if (grid) {
-                            grid.getView().getScrollable().scrollTo(0, 0);
+                            view = grid.getView();
+                            view.getScrollable().scrollTo(0, 0);
 
                             if (grid.getStore().getCount()) {
-                                grid.getView().getSelectionModel().select(0);
+                                view.getSelectionModel().select(0);
                             }
                         }
                     }
@@ -94,33 +91,71 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
         );
     },
 
+
+    /**
+    * This method inserts rss news items into the TabPanel (if not already present)
+    * and sets the active tab to the first item passed
+    * @private
+    * @param {FeedViewer.model.RSSItem|Array} rssItems One or more rssItems
+    */
+    postToTab: function( rssItems ) {
+        var items = [],
+            parent = this.getView(),
+            duplicate;
+
+        if (!parent) return;
+
+        Ext.each(
+           Ext.Array.from(rssItems),
+           function (rssItem) {
+               var title = rssItem.get('title'),
+                   link = rssItem.get('link'),
+                   item = this.child('feedpost[link="' + link + '"]');
+
+               if (!item) {
+                   items.push({
+                       inTab: true,
+                       xtype: 'feedpost',
+                       title: title,
+                       link : link,
+                       closable: true,
+                       rssItem: rssItem
+                   });
+               } else {
+                   duplicate = duplicate || item;
+               }
+            },
+            parent
+        );
+
+        Ext.suspendLayouts();
+        if (items.length) {
+            items = parent.add(items);
+        }
+        parent.setActiveTab(items[0] || duplicate);
+        Ext.resumeLayouts(true);
+
+    },
+
+    onOpenAll : function(button) {
+        this.postToTab(
+            this.getView().down('feedgrid').getStore().getRange()
+        );
+    },
+
     onPostInTab : function(button) {
 
         var view =  this.getView(),
             post =  view.down('feedpost:not([inTab])'),
-            feedItem = post && post.getRssItem(),
-            link =  feedItem && feedItem.get('link');
+            feedItem = post && post.getRssItem();
 
         if (feedItem) {
-            view.setActiveTab(
-                view.child('feedpost[inTab][link=' + link + ']') ||
-                view.add({
-                    inTab: true,
-                    xtype: 'feedpost',
-                    title: feedItem.get('title'),
-                    link: link,
-                    closable: true,
-                    rssItem: feedItem
-                })
-            );
+            this.postToTab(feedItem);
         }
     },
 
-    onGoToPost : function(button) {
-        var view =  this.getView(),
-            post =  button.up('feedpost'),
-            feedItem = post && post.getRssItem(),
-            link =  feedItem && feedItem.get('link');
+    onGoToPost : function(component, rssItem) {
+        var link =  rssItem && rssItem.get('link');
 
         if (link) {
             window.open(link);

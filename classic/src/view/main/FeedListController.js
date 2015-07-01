@@ -10,6 +10,20 @@ Ext.define('FeedViewer.view.main.FeedListController',{
         'Ext.menu.Menu'
     ],
 
+    /**
+     * @event feedremove Fired when a feed is removed
+     * @param {FeedViewer.model.RSSFeed} feed
+     * @param {String} title The title of the feed
+     * @param {String} url The url of the feed
+     */
+
+    /**
+     * @event feedselect Fired when a feed is selected
+     * @param {FeedViewer.model.RSSFeed} feed
+     * @param {String} title The title of the feed
+     * @param {String} url The url of the feed
+     */
+
     onViewReady: function(view){
 
       var store = Ext.data.StoreManager.lookup('Feeds'),
@@ -28,7 +42,6 @@ Ext.define('FeedViewer.view.main.FeedListController',{
     onFeedSelection: function(selModel){
         var me = this,
             selected = this.getSelectedItem(),
-            view = me.getView(),
             refs = me.getReferences();
 
         refs.removeFeed.setDisabled(!selected);
@@ -42,27 +55,27 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      * React to the load feed menu click.
      * @private
      */
-    onLoadClick: function(){
+    onLoadClick: function() {
         this.loadFeed(this.menu.activeFeed);
     },
 
     /**
      * Loads a feed.
      * @private
-     * @param {Ext.data.Model} rec The feed
+     * @param {FeedViewer.model.RSSFeed} feed The feed
      */
-    loadFeed: function(rec){
-        if (rec) {
-            this.fireEvent('feedselect', this, rec, rec.get('title'), rec.get('feedUrl'));
+    loadFeed: function(feed) {
+        if (feed) {
+            this.fireEvent('feedselect', this, feed, feed.get('title'), feed.get('feedUrl'));
         }
     },
 
     /**
-     * Gets the currently selected record in the view.
+     * Returns the selected feed or false if nothing is selected.
      * @private
-     * @return {Ext.data.Model} Returns the selected model. false if nothing is selected.
+     * @return {FeedViewer.model.RSSFeed}
      */
-    getSelectedItem: function(){
+    getSelectedItem: function() {
         return this.lookupReference('feedList').getSelectionModel().getSelection()[0] || false;
     },
 
@@ -98,33 +111,35 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      * React to a feed attempting to be added
      * @private
      */
-    onAddFeedClick: function(){
-        var win = this.addFeedWindow || (this.addFeedWindow = Ext.create('widget.feedwindow', {
+    onAddFeedClick: function() {
+        var win = this.addFeedWindow || (this.addFeedWindow = Ext.widget('feedwindow', {
                 listeners: {
                     scope: this,
-                    feedvalid: this.onFeedValid
+                    feedvalid: 'onFeedValid'
                 }
             }));
-        win.form.getForm().reset();
+
+        win.down('form').getForm().reset();
         win.show();
     },
 
     /**
      * React to a validation on a feed passing
      * @private
-     * @param {FeedViewer.FeedWindow} win
+     * @param {FeedViewer.view.main.FeedWindow} win
      * @param {String} title The title of the feed
      * @param {String} url The url of the feed
      */
-    onFeedValid: function(win, title, url){
+    onFeedValid: function(win, title, url) {
         var view = this.getView().down('dataview'),
             store = view.store,
             rec;
 
         rec = store.add({
-            url: url,
+            feedUrl: url,
             title: title
         })[0];
+
         this.animateNode(view.getNode(rec), 0, 1);
     },
 
@@ -136,9 +151,9 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      * @param {Number} end The end opacity
      * @param {Object} listeners (optional) Any listeners
      */
-    animateNode: function(el, start, end, listeners){
+    animateNode: function(el, start, end, listeners) {
         Ext.create('Ext.fx.Anim', {
-            target: Ext.get(el),
+            target: Ext.getDom(el),
             duration: 500,
             from: {
                 opacity: start
@@ -151,7 +166,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
     },
 
     // Inherit docs
-    onDestroy: function(){
+    onDestroy: function() {
         this.callParent(arguments);
         Ext.destroy(this.menu, this.addFeedWindow);
     }

@@ -17,19 +17,29 @@ Ext.define('FeedViewer.view.main.FeedPost', {
     border: false,
     bodyPadding : '20',
 
-    config : {
+    renderConfig : {
         rssItem : undefined
+    },
+
+    viewModel : {
+        data: {
+            feed: null
+        }
+    },
+
+    bind : {
+        data : '{feed}'
     },
 
     tpl: [
         '<div class="post-data">',
         '<span class="post-date">{publishedDate:this.formatDate}&nbsp;</span>',
         '<h3 class="post-title">{title}</h3>',
-        '<h4 class="post-author">{author:this.defaultValue}&nbsp;</h4>',
+        '<h4 class="post-author">{author:this.defaultAuthor}&nbsp;</h4>',
         '</div>',
         '<div class="post-body">{content:stripScripts}</div>',
         {
-            defaultValue: function(v){
+            defaultAuthor: function(v){
                 return v ? 'By: ' + v : '';
             },
 
@@ -53,10 +63,16 @@ Ext.define('FeedViewer.view.main.FeedPost', {
      * @param {FeedViewer.model.RSSItem} prevItem The previous feed item
      */
     updateRssItem: function(rssItem, prevItem) {
-        var me = this;
+        var me = this,
+            goToPost;
 
         if (rssItem && rssItem.isRssItem) {
-            me.setData(rssItem.getData());
+            me.getViewModel().set('feed', rssItem);
+
+            goToPost = me.down('button[action=goToPost]');
+            if (goToPost) {
+                goToPost.setHref(rssItem.get('link'));
+            }
         }
     },
 
@@ -82,7 +98,9 @@ Ext.define('FeedViewer.view.main.FeedPost', {
         else {
             config.cls += ' x-docked-noborder-top';
         }
+
         items.push({
+            hrefTarget : '_blank',
             action: 'goToPost',
             text: 'Go to post',
             iconCls: 'post-go'

@@ -18,12 +18,11 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      * Reacts to a double click
      * @private
      * @param {Object} view The view
-     * @param {Object} index The row index
+     * @param {Object} record The row index
      */
-    onRowDblClick: function(view, record, item, index, e) {
-        this.fireEvent('rowdblclick', this.getView(), this.getView().store.getAt(index));
+    onRowDblClick: function(view, record, node, index, e) {
+        this.fireEvent('feeditemdblclick', this.getView(), record);
     },
-
 
     /**
      * Title renderer
@@ -32,7 +31,10 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
     formatTitle: function(value, p, record) {
         var author;
         return Ext.String.format(
-            '<div class="topic"><b>{0}</b><span class="author">{1}</span></div>', value, (author = record.get('author')) ? ' by: ' + author : '');
+            '<div class="topic"><b>{0}</b><span class="author">{1}</span></div>',
+            value,
+            (author = record.get('author')) ? ' by: ' + author : ''
+        );
     },
 
     /**

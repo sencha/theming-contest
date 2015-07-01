@@ -13,25 +13,9 @@ Ext.define('FeedViewer.view.main.FeedList', {
     extend: 'Ext.panel.Panel',
 
     xtype: 'feedlist',
-
-
-    layout: 'fit',
-
     controller: 'feedlist',
 
-    /**
-     * @event feedremove Fired when a feed is removed
-     * @param {FeedList} this
-     * @param {String} title The title of the feed
-     * @param {String} url The url of the feed
-     */
-
-    /**
-     * @event feedselect Fired when a feed is selected
-     * @param {FeedList} this
-     * @param {String} title The title of the feed
-     * @param {String} url The url of the feed
-     */
+    layout: 'fit',
 
     items : [
         {
@@ -80,12 +64,6 @@ Ext.define('FeedViewer.view.main.FeedList', {
 
             ]
         }
-    ],
-
-    listeners: {
-        feedselect: 'onFeedSelect',
-        select: 'onFeedSelect',
-        viewready:'onViewReady'
-    }
+    ]
 
 });

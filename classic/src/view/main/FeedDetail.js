@@ -13,6 +13,9 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     extend: 'Ext.panel.Panel',
     xtype: 'feeddetail',
 
+    requires : [
+        'Ext.button.Cycle'
+    ],
 
     viewModel : {
         links: {
@@ -24,8 +27,14 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     },
 
     controller : 'feeddetail',
+    reference : 'feedDetail',
+    referenceHolder : true,
 
     layout: 'border',
+
+    bind : {
+        title: '{feed.title}'
+    },
 
     items:[{
         xtype: 'feedgrid',
@@ -36,7 +45,46 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
         },
         minHeight: 200,
         minWidth: 200,
-        split : true
+        split : true,
+
+        dockedItems: [{
+            xtype:'toolbar',
+            dock: 'top',
+            cls: 'x-docked-noborder-top',
+            border : true,
+            items: [{
+                iconCls: 'open-all',
+                text: 'Open All',
+                action : 'openAll'
+            }, '-', {
+                xtype: 'cycle',
+                text: 'Reading Pane',
+                action : 'cyclePreview',
+                prependText: 'Preview: ',
+                showText: true,
+                menu: {
+                    id: 'reading-menu',
+                    items: [{
+                        text: 'Bottom',
+                        checked: true,
+                        iconCls:'preview-bottom'
+                    }, {
+                        text: 'Right',
+                        iconCls:'preview-right'
+                    }, {
+                        text: 'Hidden',
+                        iconCls:'preview-hide'
+                    }]
+                }
+            }, {
+                iconCls: 'summary',
+                text: 'Summary',
+                enableToggle: true,
+                pressed: true,
+                toggleHandler: 'onSummaryToggle'
+            }]
+
+        }]
 
     },
     {
@@ -47,44 +95,7 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
         height: '50%',
         minHeight: 200
 
-    }],
-
-    dockedItems: [{
-        xtype:'toolbar',
-        dock: 'top',
-        cls: 'x-docked-noborder-top',
-        border : true,
-        items: [{
-            iconCls: 'open-all',
-            text: 'Open All',
-            handler: 'onOpenAllClick'
-        }, '-', {
-            xtype: 'cycle',
-            text: 'Reading Pane',
-            prependText: 'Preview: ',
-            showText: true,
-            changeHandler: 'readingPaneChange',
-            menu: {
-                id: 'reading-menu',
-                items: [{
-                    text: 'Bottom',
-                    checked: true,
-                    iconCls:'preview-bottom'
-                }, {
-                    text: 'Right',
-                    iconCls:'preview-right'
-                }, {
-                    text: 'Hide',
-                    iconCls:'preview-hide'
-                }]
-            }
-        }, {
-            iconCls: 'summary',
-            text: 'Summary',
-            enableToggle: true,
-            pressed: true,
-            toggleHandler: 'onSummaryToggle'
-        }]
-
     }]
+
+
 });

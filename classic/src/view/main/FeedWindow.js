@@ -90,6 +90,7 @@ Ext.define('FeedViewer.view.main.FeedWindow', {
         addBtn.disable();
         var url = this.form.getComponent('feed').getValue(),
             feed = Ext.create('FeedViewer.model.RSSFeed');
+
         this.form.setLoading({
             msg: 'Validating feed...'
         });

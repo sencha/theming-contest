@@ -43,7 +43,8 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
     }],
 
     listeners: {
-        select: 'onItemSelect'
+        select: 'onItemSelect',
+        rowdblclick : 'onRowDblClick'
     }
 
 });
