@@ -11,40 +11,80 @@
 Ext.define('FeedViewer.view.main.FeedDetail', {
 
     extend: 'Ext.panel.Panel',
-    alias: 'widget.feeddetail',
+    xtype: 'feeddetail',
 
 
-    border: false,
+    viewModel : {
+        links: {
+            feed: {
+                type: 'FeedViewer.model.RSSFeed',
+                create : true
+            }
+        }
+    },
+
+    controller : 'feeddetail',
 
     layout: 'border',
 
     items:[{
         xtype: 'feedgrid',
         region: 'center',
-        flex: 2,
+        reference: 'feedItems',
+        bind : {
+            store : '{feed.entries}'
+        },
         minHeight: 200,
-        minWidth: 150
+        minWidth: 200,
+        split : true
 
-    },{
-        xtype: 'panel',
-        layout: 'fit',
-        region: 'south',
-        border: false,
-        split: true,
-        flex: 2,
-        minHeight: 150,
-        items: {
-            xtype: 'feedpost',
-            reference: 'feedpost'
-        }
-    },{
-        xtype: 'panel',
-        layout: 'fit',
-        region: 'east',
-        flex: 1,
-        split: true,
-        hidden: true,
-        minWidth: 150,
-        border: false
+    },
+    {
+        xtype: 'feedpost',
+        reference: 'feedpost',
+        region : 'south',
+        split : true,
+        height: '50%',
+        minHeight: 200
+
+    }],
+
+    dockedItems: [{
+        xtype:'toolbar',
+        dock: 'top',
+        cls: 'x-docked-noborder-top',
+        border : true,
+        items: [{
+            iconCls: 'open-all',
+            text: 'Open All',
+            handler: 'onOpenAllClick'
+        }, '-', {
+            xtype: 'cycle',
+            text: 'Reading Pane',
+            prependText: 'Preview: ',
+            showText: true,
+            changeHandler: 'readingPaneChange',
+            menu: {
+                id: 'reading-menu',
+                items: [{
+                    text: 'Bottom',
+                    checked: true,
+                    iconCls:'preview-bottom'
+                }, {
+                    text: 'Right',
+                    iconCls:'preview-right'
+                }, {
+                    text: 'Hide',
+                    iconCls:'preview-hide'
+                }]
+            }
+        }, {
+            iconCls: 'summary',
+            text: 'Summary',
+            enableToggle: true,
+            pressed: true,
+            toggleHandler: 'onSummaryToggle'
+        }]
+
     }]
 });

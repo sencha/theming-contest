@@ -1,2 +1,2 @@
 // @tag full-page
-// @require /Volumes/Data/Sencha/SenchaProSvcGit/FeedViewer/app.js
+// @require /Users/doug/Repos/FeedViewer/app.js

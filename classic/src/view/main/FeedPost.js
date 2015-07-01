@@ -12,10 +12,14 @@ Ext.define('FeedViewer.view.main.FeedPost', {
 
     extend: 'Ext.panel.Panel',
     xtype: 'feedpost',
-    cls: 'preview',
+    cls: 'feed-post-preview',
     scrollable: true,
     border: false,
     bodyPadding : '20',
+
+    config : {
+        rssItem : undefined
+    },
 
     tpl: [
         '<div class="post-data">',
@@ -45,15 +49,15 @@ Ext.define('FeedViewer.view.main.FeedPost', {
 
     /**
      * Set the active post
-     * @param {Ext.data.Model} rec The record
+     * @param {FeedViewer.model.RSSItem} rssItem The feed item
+     * @param {FeedViewer.model.RSSItem} prevItem The previous feed item
      */
-    setActive: function(rec) {
-        var me = this,
-            gotoButton = me.down('button[action=gotoPost]');
+    updateRssItem: function(rssItem, prevItem) {
+        var me = this;
 
-        me.active = rec;
-        me.update(rec.getData());
-        gotoButton.setHref(rec.get('link'));
+        if (rssItem && rssItem.isRssItem) {
+            me.setData(rssItem.getData());
+        }
     },
 
     /**
@@ -63,43 +67,28 @@ Ext.define('FeedViewer.view.main.FeedPost', {
      */
     createToolbar: function(){
         var items = [],
-            config = {};
+            config = {
+                dock: 'top',
+                cls: 'feed-post-toolbar'
+            };
+
         if (!this.inTab) {
             items.push({
-                scope: this,
-                handler: this.openTab,
+                action: 'openInTab',
                 text: 'View in new tab',
                 iconCls: 'tab-new'
-            }, '-');
+            });
         }
         else {
-            config.cls = 'x-docked-noborder-top';
+            config.cls += ' x-docked-noborder-top';
         }
         items.push({
-            href: this.inTab ? this.getData().link : '#',
-            target: '_blank',
-            action: 'gotoPost',
+            action: 'goToPost',
             text: 'Go to post',
             iconCls: 'post-go'
         });
         config.items = items;
-        return Ext.create('widget.toolbar', config);
-    },
-
-    /**
-     * Navigate to the active post in a new window
-     * @private
-     */
-    goToPost: function(){
-        window.open(this.active.get('link'));
-    },
-
-    /**
-     * Open the post in a new tab
-     * @private
-     */
-    openTab: function(){
-        this.fireEvent('opentab', this, this.active);
+        return Ext.widget('toolbar', config);
     }
 
 });

@@ -12,7 +12,7 @@
 Ext.define('FeedViewer.view.main.FeedWindow', {
     extend: 'Ext.window.Window',
 
-    alias: 'widget.feedwindow',
+    xtype: 'feedwindow',
 
     plain: true,
     resizable: false,
@@ -49,7 +49,7 @@ Ext.define('FeedViewer.view.main.FeedWindow', {
                 labelAlign: 'top',
                 msgTarget: 'under',
                 xtype: 'combo',
-                controller: 'main',
+                //controller: 'main',
                 viewModel: 'main',
                 store: this.defaultFeeds,
                 getInnerTpl: function(){

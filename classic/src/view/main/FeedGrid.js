@@ -5,53 +5,11 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
         'FeedViewer.view.main.FeedGridController'
     ],
 
-    alias: 'widget.feedgrid',
+    xtype: 'feedgrid',
 
     controller: 'feedgrid',
 
-
     cls: 'feed-grid',
-
-    dockedItems: [{
-        xtype:'toolbar',
-        dock: 'top',
-        cls: 'x-docked-noborder-top',
-        items: [{
-            iconCls: 'open-all',
-            text: 'Open All',
-            scope:  'controller',
-            handler: 'onOpenAllClick'
-        }, '-', {
-            xtype: 'cycle',
-            text: 'Reading Pane',
-            prependText: 'Preview: ',
-            showText: true,
-            scope: 'controller',
-            changeHandler: 'readingPaneChange',
-            menu: {
-                id: 'reading-menu',
-                items: [{
-                    text: 'Bottom',
-                    checked: true,
-                    iconCls:'preview-bottom'
-                }, {
-                    text: 'Right',
-                    iconCls:'preview-right'
-                }, {
-                    text: 'Hide',
-                    iconCls:'preview-hide'
-                }]
-            }
-        }, {
-            iconCls: 'summary',
-            text: 'Summary',
-            enableToggle: true,
-            pressed: true,
-            scope:  'controller',
-            toggleHandler: 'onSummaryToggle'
-        }]
-
-    }],
 
     viewConfig: {
         itemId: 'view',
@@ -60,11 +18,7 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
             ptype: 'preview',
             bodyField: 'contentSnippet',
             expanded: true
-        }],
-        listeners: {
-            scope: 'controller',
-            itemdblclick: 'onRowDblClick'
-        }
+        }]
     },
 
     columns: [{
@@ -84,13 +38,12 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
         dataIndex: 'publishedDate',
         dateFormat : 'Y/m/d g:i a',
         hidden: true,
-        // renderer: 'formatDate',
+        renderer: 'formatDate',
         width: 120
     }],
 
     listeners: {
-        scope: 'controller',
-        select: 'onSelect'
+        select: 'onItemSelect'
     }
 
 });

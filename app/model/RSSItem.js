@@ -5,6 +5,8 @@ Ext.define('FeedViewer.model.RSSItem', {
     extend: 'FeedViewer.model.Base',
     alias: 'model.rssitem',
 
+    isRssItem : true,
+
     fields: [
 
         'title',

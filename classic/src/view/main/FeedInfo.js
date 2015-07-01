@@ -11,10 +11,17 @@
 Ext.define('FeedViewer.view.main.FeedInfo', {
 
     extend: 'Ext.tab.Panel',
-    alias: 'widget.feedinfo',
+    xtype: 'feedinfo',
     maxTabWidth: 250,
     border: false,
     controller: 'feedinfo',
+
+    reference : 'feedTabs',
+
+    defaults : {
+        border : false
+    },
+
     tabBar: {
         border: true
     }

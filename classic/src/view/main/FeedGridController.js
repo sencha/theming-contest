@@ -6,71 +6,13 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
     alias: 'controller.feedgrid',
 
     /**
-     * Fires when a grid row is selected
-     * @private
-     * @param {FeedViewer.FeedGrid} grid
-     * @param {Ext.data.Model} rec
-     */
-    onSelect: function(grid, rec) {
-        if(rec){
-            this.getView().up().down('feedpost').setActive(rec);
-        }
-    },
-
-    /**
-     * Reacts to the open all being clicked
-     * @private
-     */
-    onOpenAllClick: function(){
-        this.fireEvent('openall', this);
-    },
-
-    /**
-     * Gets a list of titles/urls for each feed.
-     * @return {Array} The feed details
-     */
-    getFeedData: function(){
-        return this.grid.store.getRange();
-    },
-
-    /**
      * @private
      * @param {Ext.button.Button} button The button
-     * @param {Boolean} pressed Whether the button is pressed
+     * @param {Boolean} pressed button pressed state
      */
-    onSummaryToggle: function(btn, pressed) {
+    onSummaryToggle: function(button, pressed) {
         this.getView().getView().getPlugin('preview').toggleExpanded(pressed);
     },
-
-    /**
-     * Handle the checked item being changed
-     * @private
-     * @param {Ext.menu.CheckItem} item The checked item
-     */
-    readingPaneChange: function(cycle, activeItem){
-        var east = this.getView().up().down('[region=east]'),
-            south = this.getView().up().down('[region=south]'),
-            display = this.getView().up().down('feedpost');
-
-        switch (activeItem.text) {
-            case 'Bottom':
-                east.hide();
-                south.show();
-                south.add(display);
-                break;
-            case 'Right':
-                south.hide();
-                east.show();
-                east.add(display);
-                break;
-            default:
-                south.hide();
-                east.hide();
-                break;
-        }
-    },
-
-
 
     /**
      * Reacts to a double click
@@ -80,28 +22,6 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      */
     onRowDblClick: function(view, record, item, index, e) {
         this.fireEvent('rowdblclick', this.getView(), this.getView().store.getAt(index));
-    },
-
-
-    /**
-     * Listens for the store loading
-     * @private
-     */
-    onLoad: function(store, records, success) {
-        if (this.getView().getStore().getCount()) {
-            this.getView().getSelectionModel().select(0);
-        }
-    },
-
-    /**
-     * Listen for proxy errors.
-     */
-    onProxyException: function(proxy, response, operation) {
-        Ext.Msg.alert("Error with data from server", operation.error);
-        this.view.el.update('');
-
-        // Update the detail view with a dummy empty record
-        this.fireEvent('select', this, {data:{}});
     },
 
 
@@ -119,7 +39,7 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
      * Date renderer
      * @private
      */
-    formatDate: function(date){
+    formatDate: function(date) {
         if (Ext.isDate(date)) {
             return '';
         }
@@ -135,5 +55,17 @@ Ext.define('FeedViewer.view.main.FeedGridController', {
             return Ext.Date.format(date, 'D g:i a');
         }
         return Ext.Date.format(date, 'Y/m/d g:i a');
+    },
+
+    /**
+     * Fires when a grid row is selected
+     * @private
+     * @param {FeedViewer.view.main.FeedGrid} grid
+     * @param {FeedViewer.model.RSSItem} item
+     */
+    onItemSelect: function(grid, item) {
+        if (item) {
+            this.fireEvent('rssitemselect', grid, item);
+        }
     }
 });
