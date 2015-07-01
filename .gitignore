@@ -25,3 +25,6 @@ LICENSE
 build/
 /build/*
 build/*
+build/development/*
+build/testing/*
+build/production/*
