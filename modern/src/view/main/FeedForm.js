@@ -16,6 +16,7 @@ Ext.define('FeedViewer.view.main.FeedForm', {
             {
                 xtype: 'searchfield',
                 label: 'URL',
+                allowBlank: false,
                 name: 'feedUrl'
             }
         ]

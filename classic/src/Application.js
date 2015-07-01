@@ -32,10 +32,6 @@ Ext.define('FeedViewer.Application', {
     
     launch: function () {
         // TODO - Launch the application
-        if (hasOption('simjax')) {
-            initAjaxSim();
-        }
-
     },
 
     onAppUpdate: function () {

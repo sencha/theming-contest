@@ -1,5 +1,8 @@
 /**
- * This view is an example list of people.
+ * @class FeedViewer.view.main.FeedList
+ * @extends Ext.dataview.List
+ *
+ * A data view that shows default rss feeds and allows you to add or view them
  */
 Ext.define('FeedViewer.view.main.FeedList', {
     extend: 'Ext.dataview.List',
@@ -8,10 +11,6 @@ Ext.define('FeedViewer.view.main.FeedList', {
     itemTpl: '{title}',
     store: {
         type: 'feeds'
-    },
-    listeners:{
-        select: function(){
-            console.log('selected');
-        }
     }
+
 });

@@ -555,7 +555,7 @@
 
         "modern": {
             "toolkit": "modern",
-            "theme": "theme-neptune",
+            "theme": "theme-cupertino",
             "sass": {
                 "save": "modern/sass/save.json"
             }
