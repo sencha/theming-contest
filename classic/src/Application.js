@@ -9,21 +9,7 @@ Ext.define('FeedViewer.Application', {
     name: 'FeedViewer',
 
     requires: [
-        'Ext.grid.*',
-        'Ext.data.*',
-        'Ext.util.*',
-        'Ext.Action',
-        'Ext.tab.*',
-        'Ext.button.*',
-        'Ext.form.*',
-        'Ext.layout.container.Card',
-        'Ext.layout.container.Border',
-
-        'Ext.ux.ajax.SimManager',
-        'Ext.ux.PreviewPlugin',
-
         'FeedViewer.*'
-
     ],
 
     stores: [

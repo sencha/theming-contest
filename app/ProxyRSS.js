@@ -33,13 +33,6 @@ Ext.define('FeedViewer.ProxyRSS', {
      *         read    : 'load'
      *     }
      *
-     * For example:
-     *
-     *     api: {
-
-     *         read    : 'findFeeds'
-     *     }
-     *
      * If the specific URL for a given CRUD action is undefined, the CRUD action request will be directed to the
      * configured {@link Ext.data.proxy.Server#url url}.
      */
@@ -83,28 +76,22 @@ Ext.define('FeedViewer.ProxyRSS', {
     doRequest: function(operation, callback, scope) {
         var me = this,
             request = me.buildRequest(operation),
-            method = me.getMethod(request),
             feed;
 
         //<debug>
         if (!operation.isReadOperation) {
            Ext.raise("The RssProxy only supports 'read' operations");
         }
-       //</debug>
+        //</debug>
 
         request.setConfig({
             scope               : scope,
             callback            : callback
         });
 
-        if (method === 'findFeeds') {
-            feed = google.feeds;
-        } else {
-            feed = new google.feeds.Feed(request.getUrl());
-            feed.setNumEntries( operation.getLimit() || 4);
-        }
+        feed = request.feed = new google.feeds.Feed(request.getUrl());
+        feed.setNumEntries( operation.getLimit() || 4);
 
-        request.feed = feed;
         return me.sendRequest(request);
     },
 
@@ -117,22 +104,11 @@ Ext.define('FeedViewer.ProxyRSS', {
     sendRequest: function(request) {
         var me = this,
             feed = request.feed,
-            operation = request.getOperation(),
-            method = me.getMethod(request),
-            args = [Ext.Function.bind( me.createRequestCallback(request, operation), me )];
+            operation = request.getOperation();
 
-        if (method !== 'load') {
-            /**
-             * Typical query would look like:
-                  site:cnn.com president
-             */
-            args.unshift(operation.query || '');
-        } else {
-            feed.setResultFormat( google.feeds.Feed.JSON_FORMAT );
-            feed.includeHistoricalEntries();
-        }
-
-        (feed[method]).apply(feed, args);
+        feed.setResultFormat( google.feeds.Feed.JSON_FORMAT );
+        feed.includeHistoricalEntries();
+        feed.load( Ext.Function.bind( me.createRequestCallback(request, operation), me ));
 
         me.lastRequest = request;
         return request;

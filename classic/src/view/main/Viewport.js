@@ -12,6 +12,9 @@
 Ext.define('FeedViewer.view.main.Viewport', {
     extend: 'Ext.container.Container',
 
+    requires : [
+        'Ext.layout.container.Border'
+    ],
 
     layout: {
         type: 'border',

@@ -2,7 +2,7 @@ Ext.define('FeedViewer.view.main.FeedGrid', {
     extend: 'Ext.grid.Panel',
 
     requires: [
-        'FeedViewer.view.main.FeedGridController'
+        'Ext.ux.PreviewPlugin'
     ],
 
     xtype: 'feedgrid',
