@@ -8,10 +8,11 @@
 Ext.define('FeedViewer.view.main.FeedForm', {
     extend: 'Ext.form.Panel',
     alias: 'widget.feedform',
-
+    controller: 'feedform',
+    reference : 'feedForm',
     items : [{
         xtype: 'fieldset',
-        title: 'Feed',
+        title: 'New RSS Feed',
         items: [
             {
                 xtype: 'searchfield',
@@ -20,6 +21,15 @@ Ext.define('FeedViewer.view.main.FeedForm', {
                 name: 'feedUrl'
             }
         ]
+    },{
+        xtype : 'toolbar',
+        docked: 'bottom',
+        items:[{
+            xtype: 'button',
+            reference: 'savebutton',
+            text: 'save',
+            handler: 'onSaveClick'
+        }]
     }]
 
 });

@@ -5,12 +5,42 @@
  * A data view that shows items from an RSS list
  */
 Ext.define('FeedViewer.view.main.FeedItemList', {
-    extend: 'Ext.dataview.List',
+    extend: 'Ext.Panel',
     xtype: 'feeditemlist',
     layout: 'fit',
-    itemTpl: '{title}',
-    store: {
-        type: 'feeditems'
-    }
+    controller: 'feeditemlist',
+
+    viewModel : {
+        links: {
+            feed: {
+                type: 'FeedViewer.model.RSSFeed',
+                create : true
+            }
+        }
+    },
+    items:[{
+        xtype: 'list',
+        reference: 'feeditemlist',
+        itemTpl: '{title}',
+        bind:{
+            store: '{feed.entries}'
+        },
+        listeners: {
+            select: 'onFeedListItemSelect'
+        }
+    },{
+        xtype : 'toolbar',
+        docked: 'bottom',
+        items:[{
+            xtype: 'spacer'
+        },{
+            xtype: 'button',
+            reference: 'removebutton',
+            text: 'Remove',
+            handler: 'onRemoveClick'
+
+        }]
+    }]
+
 
 });
