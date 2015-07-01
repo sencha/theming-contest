@@ -42,13 +42,6 @@ Ext.define('FeedViewer.view.main.FeedListController', {
         );
     },
 
-    onNewFeedClick: function () {   //TODO: NO reaching UP!  Use the Viewport Controller instead
-        this.getView().up('app-main').push({
-            xtype: 'feedform',
-            reference: 'feedform'
-        });
-    },
-
     onRemoveSelectedFeed: function () {
         var refs = this.getReferences(),
             active;
@@ -72,9 +65,7 @@ Ext.define('FeedViewer.view.main.FeedListController', {
     onFeedRequest: function(feed, title, url) {
         var view = this.getView().down('list'),
             store = view.getStore();
-
         store.add(feed);
-        //this.animateNode(view.getNode(feed), 0, 1);
     }
 
 });
