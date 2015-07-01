@@ -9,7 +9,6 @@ Ext.define('FeedViewer.view.main.FeedPost', {
     xtype: 'feedpost',
 
     scrollable: true,
-    reference: 'feeditemdetail',
 
     viewModel : {
         data: {
