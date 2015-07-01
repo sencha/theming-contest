@@ -6,9 +6,18 @@ Ext.define('FeedViewer.view.main.FeedListController',{
     alias: 'controller.feedlist',
 
     requires: [
-        'Ext.fx.Anim',
-        'Ext.menu.Menu'
+        'Ext.fx.Anim'
     ],
+
+    init: function() {
+        this.listen({
+            controller: {
+                '*': {
+                    feedrequest: 'onFeedRequest'
+                }
+            }
+        });
+    },
 
     /**
      * @event feedremove Fired when a feed is removed
@@ -112,35 +121,24 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      * @private
      */
     onAddFeedClick: function() {
-        var win = this.addFeedWindow || (this.addFeedWindow = Ext.widget('feedwindow', {
-                listeners: {
-                    scope: this,
-                    feedvalid: 'onFeedValid'
-                }
-            }));
-
+        var win = this.addFeedWindow || (this.addFeedWindow = Ext.widget('feedwindow'));
         win.down('form').getForm().reset();
         win.show();
     },
 
     /**
-     * React to a validation on a feed passing
+     * Inserts a new model.RSSFeed into the dataview
      * @private
-     * @param {FeedViewer.view.main.FeedWindow} win
+     * @param {FeedViewer.model.RSSFeed} feed
      * @param {String} title The title of the feed
      * @param {String} url The url of the feed
      */
-    onFeedValid: function(win, title, url) {
+    onFeedRequest: function(feed, title, url) {
         var view = this.getView().down('dataview'),
-            store = view.store,
-            rec;
+            store = view.getStore();
 
-        rec = store.add({
-            feedUrl: url,
-            title: title
-        })[0];
-
-        this.animateNode(view.getNode(rec), 0, 1);
+        store.add(feed);
+        this.animateNode(view.getNode(feed), 0, 1);
     },
 
     /**
@@ -168,7 +166,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
     // Inherit docs
     onDestroy: function() {
         this.callParent(arguments);
-        Ext.destroy(this.menu, this.addFeedWindow);
+        Ext.destroy(this.addFeedWindow);
     }
 
 });
