@@ -23,5 +23,5 @@ version.properties
 licenses/file-header.js
 LICENSE
 build/
-/build/
-/build
+/build/*
+build/*
