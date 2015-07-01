@@ -46,6 +46,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         refs.savebutton.show();
 
     },
+
     onCancelClick: function () {
         var refs = this.getReferences();
         this.getView().pop();
