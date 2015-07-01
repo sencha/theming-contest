@@ -167,9 +167,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         vm = refs.feeditemdetail.getViewModel();
 
         vm.set('feed', record.data);
-        vm.notify();
 
-       // refs.feeditemdetail.data.setFeed(record);
     }
 
 });
