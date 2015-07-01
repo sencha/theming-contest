@@ -154,40 +154,20 @@ Ext.define('FeedViewer.view.main.ViewportController', {
     onFeedListItemSelect : function (view,record) {
         var me = this,
             refs = this.getReferences(),
-            html = 'You selected: ' + record.get('title'),
-
+            vm,
             viewport = me.getView();
 
         this.hideNavButtons();
 
         viewport.push({
-            xtype: 'panel',
-            tpl: [
-                '<div class="post-data">',
-                '<span class="post-date">{publishedDate:this.formatDate}</span>',
-                '<h3 class="post-title">{title}</h3>',
-                '<h4 class="post-author">{author:this.defaultValue}</h4>',
-                '</div>',
-                '<div class="post-body">{content:stripScripts}</div>',
-                {
-                    defaultValue: function(v){
-                        return v ? 'By: ' + v : '';
-                    },
-
-                    formatDate: function(value){
-                        if (!Ext.isDate(value)) {
-                            return '';
-                        }
-                        return Ext.Date.format(value, 'M j, Y, g:i a');
-                    }
-                }
-            ],
-            title: record.get('title'),
-            scrollable: true,
-            reference: 'feeditemdetail'
+            xtype: 'feedpost',
+            title: record.get('title')
         });
 
-        refs.feeditemdetail.setRecord(record);
+        vm = refs.feeditemdetail.getViewModel();
+
+        vm.set('feed', record.data);
+
     }
 
 });
