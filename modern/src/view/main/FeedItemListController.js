@@ -23,17 +23,7 @@ Ext.define('FeedViewer.view.main.FeedItemListController', {
     },
 
     onRemoveClick: function () {
-        var refs = this.getReferences(),
-            active;
-
-        active = refs.feedlist.getSelection()[0];
-        if (active) {
-            refs.feedlist.deselectAll();
-            refs.feedlist.getStore().remove(active);
-        }
-        this.getView().pop();
-        this.hideNavButtons();
-        refs.newfeedbutton.show();
+        this.fireEvent('removeselectedfeed');
     }
 
 });
