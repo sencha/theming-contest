@@ -14,9 +14,10 @@ Ext.define('FeedViewer.view.main.FeedWindow', {
 
     xtype: 'feedwindow',
 
-    requires : [
+    uses : [
         'Ext.form.Panel',
-        'Ext.button.Button'
+        'Ext.button.Button',
+        'Ext.toolbar.Toolbar'
     ],
 
     plain: true,

@@ -7,17 +7,20 @@
 Ext.define('FeedViewer.view.main.FeedPost', {
     extend: 'Ext.Panel',
     xtype: 'feedpost',
-    layout: 'fit',
+
     scrollable: true,
     reference: 'feeditemdetail',
+
     viewModel : {
         data: {
             feed: null
         }
     },
+
     bind : {
        data : '{feed}'
     },
+
     tpl: [
         '<div class="post-data">',
         '<span class="post-date">{publishedDate:this.formatDate}</span>',
@@ -38,7 +41,5 @@ Ext.define('FeedViewer.view.main.FeedPost', {
             }
         }
     ]
-
-
 
 });
