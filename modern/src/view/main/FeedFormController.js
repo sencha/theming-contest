@@ -6,6 +6,10 @@ Ext.define('FeedViewer.view.main.FeedFormController', {
 
     alias: 'controller.feedform',
 
+    /**
+    * React to the save button being clicked.
+    * @private
+    */
     onSaveClick: function () {
         var form = this.getView().getValues(),
             feed = Ext.create('FeedViewer.model.RSSFeed');
@@ -19,6 +23,10 @@ Ext.define('FeedViewer.view.main.FeedFormController', {
         }
     },
 
+    /**
+     * validates a feed from save click callback
+     * @private
+     */
     validateFeed: function(records, operation, success) {
         var me = this,
             form = me.lookupReference('feedForm');

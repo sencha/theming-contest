@@ -5,28 +5,28 @@
  * A data view that shows default rss feeds and allows you to add or view them
  */
 Ext.define('FeedViewer.view.main.FeedList', {
-    extend: 'Ext.Panel',
+    extend: 'Ext.dataview.List',
     xtype: 'feedlist',
     layout: 'fit',
     controller: 'feedlist',
+    reference: 'feedlist',
+    itemTpl: '{title}',
+    store:{
+        type: 'feeds'
+    },
+    listeners: {
+        select:'onFeedListSelect'
+    },
     items:[{
-        xtype: 'list',
-        reference: 'feedlist',
-        itemTpl: '{title}',
-        store:{
-          type: 'feeds'
-        },
-        listeners: {
-            select:'onFeedListSelect'
-        }
-    },{
         xtype : 'toolbar',
         docked: 'bottom',
         items:[{
             xtype: 'button',
             text: 'New',
-            reference: 'newfeedbutton',
-            handler: 'onNewFeedClick'
+            action:'new'
+            //,
+            // reference: 'newfeedbutton',
+            // handler: 'onNewFeedClick'
         }]
     }]
 });
