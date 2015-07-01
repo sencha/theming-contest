@@ -52,7 +52,7 @@ Ext.define('Ext.util.KeyboardInteractive', {
         // when that happens.
         // The loop is just to check that the keyHandlers object is not empty.
         for (handler in handlers) {
-            focusEl.on('keydown', me.handleKeydown, me, { delegated: false });
+            focusEl.on('keydown', me.handleKeydown, me);
             me.keydownListenerAttached = true;
             break;
         }
@@ -103,7 +103,7 @@ Ext.define('Ext.util.KeyboardInteractive', {
                 focusEl = me.getFocusEl();
                 
                 if (focusEl && !me.keydownListenerAttached) {
-                    focusEl.on('keydown', me.handleKeydown, me, { delegated: false });
+                    focusEl.on('keydown', me.handleKeydown, me);
                     me.keydownListenerAttached = true;
                 }
             }

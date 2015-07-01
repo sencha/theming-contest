@@ -21,10 +21,20 @@ describe("Ext.button.Button", function() {
         button = null;
     }
 
-    function makeButton (config) {
+    function makeButton(config) {
         button = new Ext.button.Button(Ext.apply({
             text: 'Button'
         }, config));
+        
+        return button;
+    }
+    
+    function createButton(config) {
+        config = Ext.apply({
+            renderTo: document.body
+        }, config);
+        
+        return makeButton(config);
     }
 
     afterEach(destroyButton);
@@ -1241,6 +1251,94 @@ describe("Ext.button.Button", function() {
                 });
             });
         });
+        
+        describe("keyboard interaction", function() {
+            var enterSpy, downSpy;
+            
+            beforeEach(function() {
+                makeButton({
+                    text: 'foo',
+                    menu: [{
+                        text: 'item1'
+                    }]
+                });
+                
+                enterSpy = spyOn(button, 'onEnterKey').andCallThrough();
+                downSpy  = spyOn(button, 'onDownKey').andCallThrough();
+                
+                button.render(Ext.getBody());
+            });
+            
+            afterEach(function() {
+                enterSpy = downSpy = null;
+            });
+            
+            describe("Space key", function() {
+                beforeEach(function() {
+                    jasmine.pressKey(button.el, 'space');
+                    
+                    waitForSpy(enterSpy);
+                });
+                
+                it("should open the menu", function() {
+                    expect(button.menu.isVisible()).toBe(true);
+                });
+                
+                it("should stop the keydown event", function() {
+                    var args = enterSpy.mostRecentCall.args;
+                    
+                    expect(args[0].isStopped).toBeTruthy();
+                });
+                
+                it("should return false to stop Event propagation loop", function() {
+                    expect(enterSpy.mostRecentCall.result).toBe(false);
+                });
+            });
+            
+            describe("Enter key", function() {
+                beforeEach(function() {
+                    jasmine.pressKey(button.el, 'enter');
+                    
+                    waitForSpy(enterSpy);
+                });
+                
+                it("should open the menu", function() {
+                    expect(button.menu.isVisible()).toBe(true);
+                });
+                
+                it("should stop the keydown event", function() {
+                    var args = enterSpy.mostRecentCall.args;
+                    
+                    expect(args[0].isStopped).toBeTruthy();
+                });
+                
+                it("should return false to stop Event propagation loop", function() {
+                    expect(enterSpy.mostRecentCall.result).toBe(false);
+                });
+            });
+            
+            describe("Down arrow key", function() {
+                beforeEach(function() {
+                    jasmine.pressKey(button.el, 'down');
+                    
+                    waitForSpy(downSpy);
+                });
+                
+                it("should open the menu", function() {
+                    expect(button.menu.isVisible()).toBe(true);
+                });
+                
+                it("should stop the keydown event", function() {
+                    var args = downSpy.mostRecentCall.args;
+                    
+                    expect(args[0].isStopped).toBeTruthy();
+                });
+                
+                it("should return false to stop Event propagation loop", function() {
+                    expect(downSpy.mostRecentCall.result).toBe(false);
+                });
+            });
+        });
     });
 
     describe("tooltip", function() {
@@ -1940,7 +2038,11 @@ describe("Ext.button.Button", function() {
                     display = 'table-row-group';
                 }
 
-                expect(style.display).toBe(display);
+                if (display === 'flex') {
+                    expect(style.display === 'flex' || style.display === '-ms-flexbox' || style.display === '-webkit-box').toBe(true);
+                } else {
+                    expect(style.display).toBe(display);
+                }
 
                 if (Ext.isWebKit) {
                     // width/height check can only be done in webkit, the other browsers
@@ -2502,7 +2604,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-cell',
+                                display: Ext.isIE9m ? 'table-cell' : 'flex',
                                 width: '8px',
                                 height: (shrinkHeight && !stretch) ? '16px' : '94px'
                             });
@@ -2528,7 +2630,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-cell',
+                                display: Ext.isIE9m ? 'table-cell' : 'flex',
                                 width: '8px',
                                 height: (shrinkHeight && !stretch) ? '16px' : '94px'
                             });
@@ -2554,7 +2656,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-cell',
+                                display: Ext.isIE9m ? 'table-cell' : 'flex',
                                 width: '8px',
                                 height: (shrinkHeight && !stretch) ? '16px' : '94px'
                             });
@@ -2582,7 +2684,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-row',
+                                display: Ext.isIE9m ? 'table-row' : 'block',
                                 width: '94px',
                                 height: '8px'
                             });
@@ -2608,7 +2710,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-row',
+                                display: Ext.isIE9m ? 'table-row' : 'block',
                                 width: '94px',
                                 height: '8px'
                             });
@@ -2634,7 +2736,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-row',
+                                display: Ext.isIE9m ? 'table-row' : 'block',
                                 width: '94px',
                                 height: '8px'
                             });
@@ -2674,7 +2776,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-cell',
+                                display: Ext.isIE9m ? 'table-cell' : 'flex',
                                 width: '14px',
                                 height: (shrinkHeight && !stretch) ? '16px' : '94px'
                             });
@@ -2700,7 +2802,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-cell',
+                                display: Ext.isIE9m ? 'table-cell' : 'flex',
                                 width: '14px',
                                 height: (shrinkHeight && !stretch) ? '16px' : '94px'
                             });
@@ -2726,7 +2828,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-cell',
+                                display: Ext.isIE9m ? 'table-cell' : 'flex',
                                 width: '14px',
                                 height: (shrinkHeight && !stretch) ? '16px' : '94px'
                             });
@@ -2754,7 +2856,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-row',
+                                display: Ext.isIE9m ? 'table-row' : 'block',
                                 width: '94px',
                                 height: '14px'
                             });
@@ -2780,7 +2882,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-row',
+                                display: Ext.isIE9m ? 'table-row' : 'block',
                                 width: '94px',
                                 height: '14px'
                             });
@@ -2806,7 +2908,7 @@ describe("Ext.button.Button", function() {
                             });
 
                             expectArrowStyle({
-                                display: 'table-row',
+                                display: Ext.isIE9m ? 'table-row' : 'block',
                                 width: '94px',
                                 height: '14px'
                             });
@@ -2867,7 +2969,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: shrinkHeight ? '16px' : '94px'
                                 });
@@ -2902,7 +3004,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -2937,7 +3039,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -2972,7 +3074,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -3003,7 +3105,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: shrinkWidth ? '16px' : '94px',
                                     height: '8px'
                                 });
@@ -3038,7 +3140,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3073,7 +3175,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3108,7 +3210,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3141,7 +3243,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: shrinkHeight ? '16px' : '94px'
                                 });
@@ -3176,7 +3278,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -3211,7 +3313,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -3246,7 +3348,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -3277,7 +3379,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: shrinkWidth ? '16px' : '94px',
                                     height: '8px'
                                 });
@@ -3312,7 +3414,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3347,7 +3449,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3382,7 +3484,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3415,7 +3517,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: shrinkHeight ? '16px' : '94px'
                                 });
@@ -3450,7 +3552,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -3485,7 +3587,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -3520,7 +3622,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -3551,7 +3653,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: shrinkWidth ? '16px' : '94px',
                                     height: '8px'
                                 });
@@ -3586,7 +3688,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3621,7 +3723,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3656,7 +3758,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3689,7 +3791,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: shrinkHeight ? '16px' : '94px'
                                 });
@@ -3724,7 +3826,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -3759,7 +3861,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -3794,7 +3896,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '8px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -3825,7 +3927,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: shrinkWidth ? '16px' : '94px',
                                     height: '8px'
                                 });
@@ -3860,7 +3962,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3895,7 +3997,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3930,7 +4032,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '8px'
                                 });
@@ -3992,7 +4094,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: shrinkHeight ? '16px' : '94px'
                                 });
@@ -4027,7 +4129,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -4062,7 +4164,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -4097,7 +4199,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -4128,7 +4230,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: shrinkWidth ? '16px' : '94px',
                                     height: '14px'
                                 });
@@ -4163,7 +4265,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -4198,7 +4300,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -4233,7 +4335,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -4266,7 +4368,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: shrinkHeight ? '16px' : '94px'
                                 });
@@ -4301,7 +4403,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -4336,7 +4438,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -4371,7 +4473,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -4402,7 +4504,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: shrinkWidth ? '16px' : '94px',
                                     height: '14px'
                                 });
@@ -4437,7 +4539,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -4472,7 +4574,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -4507,7 +4609,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -4540,7 +4642,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: shrinkHeight ? '16px' : '94px'
                                 });
@@ -4575,7 +4677,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -4610,7 +4712,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -4645,7 +4747,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '36px' : '94px'
                                 });
@@ -4676,7 +4778,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: shrinkWidth ? '16px' : '94px',
                                     height: '14px'
                                 });
@@ -4711,7 +4813,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -4746,7 +4848,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -4781,7 +4883,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -4814,7 +4916,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: shrinkHeight ? '16px' : '94px'
                                 });
@@ -4849,7 +4951,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -4884,7 +4986,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -4919,7 +5021,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-cell',
+                                    display: Ext.isIE9m ? 'table-cell' : 'flex',
                                     width: '14px',
                                     height: (shrinkHeight && !stretch) ? '16px' : '94px'
                                 });
@@ -4950,7 +5052,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: shrinkWidth ? '16px' : '94px',
                                     height: '14px'
                                 });
@@ -4985,7 +5087,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -5020,7 +5122,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -5055,7 +5157,7 @@ describe("Ext.button.Button", function() {
                                 expectIconPosition();
 
                                 expectArrowStyle({
-                                    display: 'table-row',
+                                    display: Ext.isIE9m ? 'table-row' : 'block',
                                     width: '94px',
                                     height: '14px'
                                 });
@@ -5563,6 +5665,38 @@ describe("Ext.button.Button", function() {
         });
     });
     
+    describe("tabIndex", function() {
+        describe("rendering", function() {
+            it("should render tabIndex when not disabled", function() {
+                createButton();
+                
+                expectAria('tabIndex', '0');
+            });
+            
+            it("should not render tabIndex when disabled", function() {
+                createButton({ disabled: true });
+                
+                expectNoAria('tabIndex');
+            });
+        });
+        
+        describe("disabling", function() {
+            beforeEach(function() {
+                createButton();
+                button.disable();
+            });
+            
+            it("should remove tabIndex when disabled", function() {
+                expectNoAria('tabIndex');
+            });
+            
+            it("should add tabIndex back when re-enabled", function() {
+                button.enable();
+                expectAria('tabIndex', '0');
+            });
+        });
+    });
+    
     describe("toggle", function() {
         beforeEach(function() {
             makeButton({
@@ -5674,6 +5808,118 @@ describe("Ext.button.Button", function() {
                     
                     expectAria('aria-pressed', 'false');
                 });
+            });
+        });
+    });
+
+    describe("disable/enable", function() {
+        describe("from parent", function() {
+            it("should remain disabled if configured as disabled and the parent is enabled", function() {
+                makeButton({
+                    disabled: true
+                });
+
+                var ct = new Ext.container.Container({
+                    renderTo: document.body,
+                    items: button
+                });
+
+                ct.disable();
+                expect(button.el).toHaveCls(button._disabledCls);
+                expect(button.disabled).toBe(true);
+                ct.enable();
+                expect(button.el).toHaveCls(button._disabledCls);
+                expect(button.disabled).toBe(true);
+
+                ct.destroy();
+            });
+        });
+    });
+    
+    describe("keyboard interaction", function() {
+        var handlerSpy, enterSpy, downSpy;
+        
+        beforeEach(function() {
+            handlerSpy = jasmine.createSpy('button handler');
+            
+            makeButton({
+                text: 'foo',
+                handler: handlerSpy
+            });
+            
+            enterSpy = spyOn(button, 'onEnterKey').andCallThrough();
+            downSpy  = spyOn(button, 'onDownKey').andCallThrough();
+            
+            button.render(Ext.getBody());
+        });
+        
+        afterEach(function() {
+            handlerSpy = enterSpy = downSpy = null;
+        });
+        
+        describe("Space key", function() {
+            beforeEach(function() {
+                jasmine.pressKey(button.el, 'space');
+                
+                waitForSpy(enterSpy);
+            });
+            
+            it("should have fired the handler", function() {
+                expect(handlerSpy).toHaveBeenCalled();
+            });
+            
+            it("should stop the keydown event", function() {
+                var args = enterSpy.mostRecentCall.args;
+                
+                expect(args[0].isStopped).toBe(true);
+            });
+            
+            it("should return false to stop Event propagation loop", function() {
+                expect(enterSpy.mostRecentCall.result).toBe(false);
+            });
+        });
+        
+        describe("Enter key", function() {
+            beforeEach(function() {
+                jasmine.pressKey(button.el, 'enter');
+                
+                waitForSpy(enterSpy);
+            });
+            
+            it("should have fired the handler", function() {
+                expect(handlerSpy).toHaveBeenCalled();
+            });
+            
+            it("should stop the keydown event", function() {
+                var args = enterSpy.mostRecentCall.args;
+                
+                expect(args[0].isStopped).toBe(true);
+            });
+            
+            it("should return false to stop Event propagation loop", function() {
+                expect(enterSpy.mostRecentCall.result).toBe(false);
+            });
+        });
+        
+        describe("Down key", function() {
+            beforeEach(function() {
+                jasmine.pressKey(button.el, 'down');
+                
+                waitForSpy(downSpy);
+            });
+            
+            it("should NOT have fired the handler", function() {
+                expect(handlerSpy).not.toHaveBeenCalled();
+            });
+            
+            it("should NOT stop the keydown event", function() {
+                var args = downSpy.mostRecentCall.args;
+                
+                expect(args[0].isStopped).toBeFalsy();
+            });
+            
+            it("should NOT return false to stop Event propagation loop", function() {
+                expect(downSpy.mostRecentCall.result).not.toBeDefined();
             });
         });
     });

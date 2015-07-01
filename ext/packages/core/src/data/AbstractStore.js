@@ -505,6 +505,31 @@ Ext.define('Ext.data.AbstractStore', {
         return sortersCollection;
     },
 
+    /**
+     * Filters the data in the Store by one or more fields. Example usage:
+     *
+     *     //filter with a single field
+     *     myStore.filter('firstName', 'Don');
+     *
+     *     //filtering with multiple filters
+     *     myStore.filter([
+     *         {
+     *             property : 'firstName',
+     *             value    : 'Don'
+     *         },
+     *         {
+     *             property : 'lastName',
+     *             direction: 'Griffin'
+     *         }
+     *     ]);
+     *
+     * Internally, Store converts the passed arguments into an array of {@link Ext.util.Filter} instances, and delegates
+     * the actual filtering to its internal {@link Ext.util.MixedCollection}.
+     *
+     * @param {String/Ext.util.Filter[]} [filters] Either a string name of one of the fields in this Store's configured
+     * {@link Ext.data.Model Model}, or an array of filter configurations.
+     * @param {String} [value] The property value by which to filter. Only applicable if `filters` is a string.
+     */
     filter: function(filters, value, supressEvent) {
         if (Ext.isString(filters)) {
             filters = {
@@ -992,7 +1017,9 @@ Ext.define('Ext.data.AbstractStore', {
     },
 
     fireGroupChange: function() {
-        this.fireEvent('groupchange', this, this.getGrouper());
+        if (!this.destroyed) {
+            this.fireEvent('groupchange', this, this.getGrouper());
+        }
     },
 
     /**

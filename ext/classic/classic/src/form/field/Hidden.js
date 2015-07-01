@@ -68,12 +68,43 @@ Ext.define('Ext.form.field.Hidden', {
         return this.isEqualAsString(value1, value2);
     },
 
+    /**
+     * @hide
+     */
     initEvents: Ext.emptyFn,
+
+    /**
+     * @hide
+     */
     setSize : Ext.emptyFn,
+
+    /**
+     * @hide
+     */
     setWidth : Ext.emptyFn,
+
+    /**
+     * @hide
+     */
     setHeight : Ext.emptyFn,
+
+    /**
+     * @hide
+     */
     setPosition : Ext.emptyFn,
+
+    /**
+     * @hide
+     */
     setPagePosition : Ext.emptyFn,
+
+    /**
+     * @hide
+     */
     markInvalid : Ext.emptyFn,
+
+    /**
+     * @hide
+     */
     clearInvalid : Ext.emptyFn
 });

@@ -748,45 +748,74 @@ describe("Ext.tab.Panel", function() {
             });
 
             describe("mouse", function() {
-                it("should set the active tab", function() {
-                    clickTab(item2);
-                    
-                    waitForFocus(tab2);
-                    
-                    expectActiveItem(item2);
-                });
-
-                it("should not set the active tab if the beforetabchange event returns false", function() {
-                    runs(function() {
-                        beforeSpy.andReturn(false);
+                describe("interaction", function() {
+                    it("should set the active tab", function() {
+                        clickTab(item2);
+                        
+                        waitForFocus(tab2);
+                        
+                        expectActiveItem(item2);
                     });
                     
-                    clickTab(item3);
-                    
-                    expectActiveItem(item1);
-                });
+                    it("should not set the active tab if the beforetabchange event returns false", function() {
+                        runs(function() {
+                            beforeSpy.andReturn(false);
+                        });
+                        
+                        clickTab(item3);
+                        
+                        expectActiveItem(item1);
+                    });
 
-                it("should not set the active tab if the tab is disabled", function() {
-                    item2.setDisabled(true);
-                    clickTab(item2);
-                    expectActiveItem(item1);
+                    it("should not set the active tab if the tab is disabled", function() {
+                        item2.setDisabled(true);
+                        clickTab(item2);
+                        expectActiveItem(item1);
+                    });
                 });
                 
-                it("should not force focus to the tab", function() {
-                    var textfield = item2.add({
-                        xtype: 'textfield'
-                    });
-                    
-                    item2.on('activate', function() {
-                        textfield.focus();
-                    });
-                    
-                    clickTab(item2);
-                    
-                    // Delay here because the tab containing the field
-                    // is not rendered yet
-                    runs(function() {
-                        expectFocused(textfield);
+                describe("focus handling", function() {
+                    describe("during tab activate event", function() {
+                        var textfield, tabFocusSpy, fieldFocusSpy;
+                        
+                        beforeEach(function() {
+                            tabFocusSpy   = jasmine.createSpy('tab focus');
+                            fieldFocusSpy = jasmine.createSpy('textfield focus');
+                            
+                            textfield = item3.add({
+                                xtype: 'textfield',
+                                listeners: {
+                                    focus: fieldFocusSpy
+                                }
+                            });
+                            
+                            item3.on('activate', function() {
+                                // Give IE enough time to repaint the textfield,
+                                // otherwise it won't properly focus but *will*
+                                // fire the focus event, which results in repeatable
+                                // but very confusing failures.
+                                // ***PURE UNDILUTED HATRED***
+                                jasmine.waitAWhile();
+                                
+                                runs(function() {
+                                    tab3.getFocusEl().on('focus', tabFocusSpy);
+                                    textfield.focus();
+                                });
+                            });
+                        });
+                        
+                        it("should not force focus back to the tab", function() {
+                            clickTab(item3);
+                                    
+                            waitForSpy(fieldFocusSpy);
+                            
+                            // Unwind the handlers that could potentially refocus
+                            jasmine.waitAWhile();
+                            
+                            runs(function() {
+                                expect(tabFocusSpy).not.toHaveBeenCalled();
+                            });
+                        });
                     });
                 });
 
@@ -1196,9 +1225,12 @@ describe("Ext.tab.Panel", function() {
         });
     });
 
+    // Tests in this suite are about non-visual things, and rendering is disabled
+    // to avoid odd layout failures in IE9m
     describe("ui", function() {
         it("should use the TabPanel's ui as the default UI for the Tab Bar and Tab", function() {
             createTabPanel({
+                renderTo: undefined,
                 ui: 'foo',
                 items: [{ title: 'A' }]
             });
@@ -1209,6 +1241,7 @@ describe("Ext.tab.Panel", function() {
 
         it("should use the Tab Bar's ui as the default UI for Tabs", function() {
             createTabPanel({
+                renderTo: undefined,
                 ui: 'foo',
                 tabBar: {
                     ui: 'bar'
@@ -1222,6 +1255,7 @@ describe("Ext.tab.Panel", function() {
 
         it("should allow the tab to override the default UI", function() {
             createTabPanel({
+                renderTo: undefined,
                 ui: 'foo',
                 tabBar: {
                     ui: 'bar'

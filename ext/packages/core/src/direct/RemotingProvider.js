@@ -243,8 +243,10 @@ Ext.define('Ext.direct.RemotingProvider', {
      * Fires before callback function is executed. By returning `false` from an event handler
      * you can prevent the callback from executing.
      *
-     * @param {Ext.direct.RemotingProvider} provider
-     * @param {Ext.direct.Transaction} transaction
+     * @param {Ext.direct.RemotingProvider} provider The provider instance
+     * @param {Ext.direct.Event} event Event associated with the callback invocation
+     * @param {Ext.direct.Transaction} transaction Transaction for which the callback
+     * is about to be fired
      */
 
     constructor: function(config) {
@@ -450,8 +452,9 @@ Ext.define('Ext.direct.RemotingProvider', {
 
                 if (transaction && me.fireEvent('beforecallback', me, event, transaction) !== false) {
                     me.runCallback(transaction, event, true);
-                    Ext.direct.Manager.removeTransaction(transaction);
                 }
+                
+                Ext.direct.Manager.removeTransaction(transaction);
             }
         }
         else {
@@ -474,10 +477,11 @@ Ext.define('Ext.direct.RemotingProvider', {
 
                     me.fireEvent('data', me, event);
 
-                    if (transaction && me.fireEvent('beforecallback', me, transaction) !== false) {
+                    if (transaction && me.fireEvent('beforecallback', me, event, transaction) !== false) {
                         me.runCallback(transaction, event, false);
-                        Ext.direct.Manager.removeTransaction(transaction);
                     }
+                    
+                    Ext.direct.Manager.removeTransaction(transaction);
                 }
             }
         }

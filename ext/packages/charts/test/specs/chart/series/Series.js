@@ -1,5 +1,7 @@
 describe('Ext.chart.series.Series', function() {
 
+    var proto = Ext.chart.series.Series.prototype;
+
     describe('resolveListenerScope', function () {
 
         var testScope;
@@ -468,6 +470,7 @@ describe('Ext.chart.series.Series', function() {
 
                 afterEach(function () {
                     chart.destroy();
+                    container.destroy();
                 });
 
                 it("listener scoped to 'this' should refer to the series", function () {
@@ -869,6 +872,7 @@ describe('Ext.chart.series.Series', function() {
 
                 afterEach(function () {
                     chart.destroy();
+                    container.destroy();
                 });
 
                 it("listener scoped to 'this' should refer to the series", function () {
@@ -900,7 +904,99 @@ describe('Ext.chart.series.Series', function() {
                 });
             });
 
-        })
+        });
 
     });
+
+    describe('coordinateData', function () {
+        it("should handle empty strings as valid discrete axis values", function () {
+            var originalMethod = proto.coordinateData,
+                data;
+
+            proto.coordinateData = function (items, field, axis) {
+                var result = originalMethod.apply(this, arguments);
+                if (field === 'xfield') {
+                    data = result;
+                }
+                return result;
+            };
+
+            Ext.create('Ext.chart.CartesianChart', {
+                store: {
+                    fields: ['xfield', 'a', 'b', 'c'],
+                    data: [{
+                        xfield: '',
+                        a: 10,
+                        b: 20,
+                        c: 30
+                    }]
+                },
+                axes: [{
+                    type: 'numeric',
+                    position: 'left',
+                    fields: ['a', 'b', 'c']
+                }, {
+                    type: 'category',
+                    position: 'bottom'
+                }],
+                series: {
+                    type: 'bar',
+                    stacked: true,
+                    xField: 'xfield',
+                    yField: ['a', 'b', 'c']
+                }
+            }).destroy();
+            proto.coordinateData = originalMethod;
+
+            expect(data).toEqual([0]);
+        });
+    });
+
+    describe('updateChart', function () {
+        it("should remove sprites from the old chart, destroying them", function () {
+            var chart = new Ext.chart.CartesianChart({
+                store: {
+                    fields: ['xfield', 'a', 'b', 'c'],
+                    data: [{
+                        xfield: 'A',
+                        a: 10,
+                        b: 20,
+                        c: 30
+                    }, {
+                        xfield: 'B',
+                        a: 30,
+                        b: 20,
+                        c: 10
+                    }]
+                },
+                axes: [{
+                    type: 'numeric',
+                    position: 'left',
+                    fields: ['a', 'b', 'c']
+                }, {
+                    type: 'category',
+                    position: 'bottom'
+                }],
+                series: {
+                    type: 'bar',
+                    stacked: true,
+                    xField: 'xfield',
+                    yField: ['a', 'b', 'c']
+                }
+            });
+
+            // Series create 3 bar series sprites (Ext.chart.series.sprite.Bar - marker holder)
+            // and 3 marker sprites (Ext.chart.Markers) with 'rect' sprite as a template.
+            // So 6 sprites total are in the 'series' surface. The 'rect' sprite templates belong
+            // to the markers themselves.
+            // This actually checks MarkerHolder's 'destroy' method as well.
+
+            var series = chart.getSeries()[0];
+            series.setChart(null);
+            expect(chart.getSurface('series').getItems().length).toBe(0);
+
+            chart.destroy();
+        });
+    });
+
 });

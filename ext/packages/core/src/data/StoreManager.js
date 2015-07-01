@@ -69,9 +69,11 @@ Ext.define('Ext.data.StoreManager', {
     /**
      * Gets a registered Store by id
      * @param {String/Object} store The id of the Store, or a Store instance, or a store configuration
+     * @param {String} [defaultType] The store type to create when used with store configuration and there
+     * is no type specified on the config.
      * @return {Ext.data.Store}
      */
-    lookup : function(store) {
+    lookup : function(store, defaultType) {
         // handle the case when we are given an array or an array of arrays.
         if (Ext.isArray(store)) {
             var fields = ['field1'], 
@@ -104,7 +106,7 @@ Ext.define('Ext.data.StoreManager', {
             return this.get(store);
         } else {
             // store instance or store config
-            return Ext.Factory.store(store);
+            return Ext.Factory.store(store, defaultType);
         }
     },
 
@@ -172,9 +174,8 @@ Ext.define('Ext.data.StoreManager', {
     emptyStore.isEmptyStore = true;
 
     //<debug>
-    emptyStore.add = emptyStore.remove = emptyStore.insert =
-        emptyStore.load = emptyStore.loadData = function () {
-            Ext.raise('Cannot modify ext-empty-store');
-        };
+    emptyStore.add = emptyStore.remove = emptyStore.insert = emptyStore.loadData = function () {
+        Ext.raise('Cannot modify ext-empty-store');
+    };
     //</debug>
 });

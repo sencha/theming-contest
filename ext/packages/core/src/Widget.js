@@ -121,6 +121,35 @@ Ext.define('Ext.Widget', {
 
     observableType: 'component',
 
+    cachedConfig: {
+        /**
+         * @cfg {String/Object} style
+         * Additional CSS styles that will be rendered into an inline style attribute when
+         * the widget is rendered.
+         *
+         * You can pass either a string syntax:
+         *
+         *     style: 'background:red'
+         *
+         * Or by using an object:
+         *
+         *     style: {
+         *         background: 'red'
+         *     }
+         *
+         * When using the object syntax, you can define CSS Properties by using a string:
+         *
+         *     style: {
+         *         'border-left': '1px solid red'
+         *     }
+         *
+         * Although the object syntax is much easier to read, we suggest you to use the
+         * string syntax for better performance.
+         * @accessor
+         */
+        style: null
+    },
+
     eventedConfig: {
         /**
          * @cfg {Number/String} width
@@ -151,7 +180,7 @@ Ext.define('Ext.Widget', {
      * @protected
      */
     template: [],
-
+    
     constructor: function(config) {
         var me = this,
             controller;
@@ -178,13 +207,13 @@ Ext.define('Ext.Widget', {
         var me = this,
             prototype = me.self.prototype,
             referenceList = me.referenceList,
-            renderElement = me.renderElement.dom,
+            renderElement = me.renderElement,
             renderTemplate, element, i, ln, reference, elements;
 
         // This is where we take the first instance's DOM and clone it as the template
         // for future instances
         prototype.renderTemplate = renderTemplate = document.createDocumentFragment();
-        renderTemplate.appendChild(renderElement.cloneNode(true));
+        renderTemplate.appendChild(renderElement.clone(true, true));
 
         elements = renderTemplate.querySelectorAll('[id]');
 
@@ -201,6 +230,10 @@ Ext.define('Ext.Widget', {
             reference = referenceList[i];
             me[reference].dom.removeAttribute('reference');
         }
+    },
+
+    addCls: function(cls) {
+        this.el.addCls(cls);
     },
 
     applyWidth: function(width) {
@@ -307,7 +340,10 @@ Ext.define('Ext.Widget', {
         var me = this,
             prototype = me.self.prototype,
             id = me.getId(),
-            referenceList = me.referenceList = [],
+            // The double assignment is intentional to workaround a JIT issue that prevents
+            // me.referenceList from being assigned in random scenarios. The issue occurs on 4th gen 
+            // iPads and lower, possibly other older iOS devices. See EXTJS-16494.
+            referenceList = me.referenceList = me.referenceList = [],
             cleanAttributes = true,
             renderTemplate, renderElement, element, referenceNodes, i, ln, referenceNode,
             reference;
@@ -414,6 +450,21 @@ Ext.define('Ext.Widget', {
                 !!this.xtypesMap[xtype];
     },
 
+    removeCls: function(cls) {
+        this.el.removeCls(cls);
+    },
+
+    /**
+     * Toggles the specified CSS class on this element (removes it if it already exists,
+     * otherwise adds it).
+     * @param {String} className The CSS class to toggle.
+     * @param {Boolean} [state] If specified as `true`, causes the class to be added. If
+     * specified as `false`, causes the class to be removed.
+     */
+    toggleCls: function (cls, state) {
+        this.element.toggleCls(cls,state);
+    },
+
     resolveListenerScope: function(defaultScope, skipThis) {
         // break the tie between Observable and Inheritable resolveListenerScope
         return this.mixins.inheritable.resolveListenerScope.call(this, defaultScope, skipThis);
@@ -431,6 +482,29 @@ Ext.define('Ext.Widget', {
         if (height !== undefined) {
             this.setHeight(height);
         }
+    },
+
+    /**
+     * @protected
+     */
+    applyStyle: function(style, oldStyle) {
+        // If we're doing something with data binding, say:
+        // style: {
+        //     backgroundColor: 'rgba({r}, {g}, {b}, 1)'
+        // }
+        // The inner values will change, but the object won't, so force
+        // a copy to be created here if necessary
+        if (oldStyle && style === oldStyle && Ext.isObject(oldStyle)) {
+            style = Ext.apply({}, style);
+        }
+        return style;
+    },
+
+    /**
+     * @protected
+     */
+    updateStyle: function(style) {
+        this.element.applyStyles(style);
     },
 
     /**

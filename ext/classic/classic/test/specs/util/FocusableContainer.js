@@ -4,6 +4,8 @@ describe("Ext.util.FocusableContainer", function() {
         pressTab = jasmine.pressTabKey,
         pressArrow = jasmine.pressArrowKey,
         expectFocused = jasmine.expectFocused,
+        expectAria = jasmine.expectAriaAttr,
+        expectNoAria = jasmine.expectNoAriaAttr,
         Container, fc, fcEl;
     
     function makeButton(config) {
@@ -27,7 +29,7 @@ describe("Ext.util.FocusableContainer", function() {
     function makeContainer(config) {
         var items, i, len, item;
         
-        config = Ext.applyIf(config || {}, {
+        config = Ext.apply({
             id: 'focusableContainer-' + ++autoId,
             width: 1000,
             height: 50,
@@ -36,7 +38,7 @@ describe("Ext.util.FocusableContainer", function() {
             },
             layout: 'hbox',
             renderTo: Ext.getBody()
-        });
+        }, config);
         
         items = config.items;
         
@@ -80,46 +82,126 @@ describe("Ext.util.FocusableContainer", function() {
     });
     
     describe("init/destroy", function() {
+        var proto, first, second, third;
+        
+        function setupContainer(config) {
+            config = Ext.apply({
+                activeChildTabIndex: 42,
+                items: [{
+                    xtype: 'button',
+                    itemId: 'first',
+                    text: 'first'
+                }, {
+                    xtype: 'button',
+                    itemId: 'second',
+                    text: 'second',
+                    disabled: true
+                }, {
+                    xtype: 'button',
+                    itemId: 'third',
+                    text: 'third',
+                    tabIndex: -10
+                }]
+            }, config);
+            
+            makeContainer(config);
+            
+            first = fc.down('#first');
+            second = fc.down('#second');
+            third = fc.down('#third');
+            
+            return fc;
+        }
+        
+        beforeEach(function() {
+            proto = Container.prototype;
+            
+            spyOn(proto, 'doInitFocusableContainer').andCallThrough();
+            spyOn(proto, 'doDestroyFocusableContainer').andCallThrough();
+        });
+        
+        afterEach(function() {
+            proto = first = second = third = null;
+        });
+        
         describe("enableFocusableContainer === true (default)", function() {
-            beforeEach(function() {
-                var proto = Container.prototype;
+            describe("enableFocusableContainer stays true", function() {
+                beforeEach(function() {
+                    setupContainer();
+                });
                 
-                spyOn(proto, 'doInitFocusableContainer').andCallThrough();
-                spyOn(proto, 'doDestroyFocusableContainer').andCallThrough();
+                it("should call init", function() {
+                    expect(fc.doInitFocusableContainer).toHaveBeenCalled();
+                });
                 
-                makeContainer({
-                    activeChildTabIndex: 42
+                it("should place tabindex on container el", function() {
+                    expectTabIndex(42);
+                });
+                
+                it("should create keyNav", function() {
+                    expect(fc.focusableKeyNav).toBeDefined();
+                });
+                
+                it("should set tabindex on the first child", function() {
+                    expectAria(first, 'tabIndex', '-1');
+                });
+                
+                it("should set tabindex on the second child", function() {
+                    expectAria(second, 'tabIndex', '-1');
+                });
+                
+                it("should not set tabindex on the third child", function() {
+                    expectAria(third, 'tabIndex', '-1');
+                });
+                
+                it("should call destroy", function() {
+                    fc.destroy();
+                    
+                    expect(fc.doDestroyFocusableContainer).toHaveBeenCalled();
                 });
             });
             
-            it("should call init", function() {
-                expect(fc.doInitFocusableContainer).toHaveBeenCalled();
-            });
-            
-            it("should place tabindex on container el", function() {
-                expectTabIndex(42);
-            });
-            
-            it("should create keyNav", function() {
-                expect(fc.focusableKeyNav).toBeDefined();
-            });
-            
-            it("should call destroy", function() {
-                fc.destroy();
+            // This is common case when a toolbar needs to make a late decision to bail out
+            // of being a FocusableContainer because one or more of its children needs to handle
+            // arrow key presses. See https://sencha.jira.com/browse/EXTJS-17458
+            describe("enableFocusableContainer changes to false before rendering", function() {
+                beforeEach(function() {
+                    setupContainer({ renderTo: undefined });
+                    fc.enableFocusableContainer = false;
+                    fc.render(Ext.getBody());
+                });
                 
-                expect(fc.doDestroyFocusableContainer).toHaveBeenCalled();
+                it("should not call init", function() {
+                    expect(fc.doInitFocusableContainer).not.toHaveBeenCalled();
+                });
+                
+                it("should not place tabindex on container el", function() {
+                    expectNoAria(fc, 'tabIndex');
+                });
+                
+                it("should not create keyNav", function() {
+                    expect(fc.focusableKeyNav).not.toBeDefined();
+                });
+                
+                it("should not add tabindex to second child", function() {
+                    expectNoAria(second, 'tabIndex');
+                });
+                
+                it("should not alter tabindex on last child", function() {
+                    expectAria(third, 'tabIndex', '-10');
+                });
+                
+                it("should not call destroy", function() {
+                    fc.destroy();
+                    
+                    expect(fc.doDestroyFocusableContainer).not.toHaveBeenCalled();
+                });
             });
         });
         
         describe("enableFocusableContainer === false", function() {
             beforeEach(function() {
-                spyOn(Container.prototype, 'doInitFocusableContainer');
-                spyOn(Container.prototype, 'doDestroyFocusableContainer');
-                
-                makeContainer({
-                    activeChildTabIndex: 42,
-                    enableFocusableContainer: false
-                });
+                setupContainer({ enableFocusableContainer: false });
             });
             
             it("should not call init", function() {
@@ -127,11 +209,23 @@ describe("Ext.util.FocusableContainer", function() {
             });
             
             it("should not place tabindex on container el", function() {
-                expect(fcEl.dom.hasAttribute('tabindex')).toBe(false);
+                expectNoAria(fc, 'tabIndex');
             });
             
             it("should not create keyNav", function() {
                 expect(fc.focusableKeyNav).not.toBeDefined();
+            });
+            
+            it("should not alter tabindex on first child", function() {
+                expectAria(first, 'tabIndex', '0');
+            });
+            
+            it("should not add tabindex to second child", function() {
+                expectNoAria(second, 'tabIndex');
+            });
+            
+            it("should not alter tabindex on last child", function() {
+                expectAria(third, 'tabIndex', '-10');
             });
             
             it("should not call destroy", function() {
@@ -139,6 +233,25 @@ describe("Ext.util.FocusableContainer", function() {
                 
                 expect(fc.doDestroyFocusableContainer).not.toHaveBeenCalled();
             });
+        });
+    });
+    
+    describe("show", function() {
+        beforeEach(function() {
+            makeContainer({
+                items: [{
+                    xtype: 'button',
+                    text: 'OK'
+                }]
+            });
+        });
+        
+        it("should reactivate FC el upon show", function() {
+            fc.hide();
+            fc.el.set({ tabIndex: -1 });
+            fc.show();
+            
+            expect(fc.el.getAttribute('tabIndex')).toBe('0');
         });
     });
     
@@ -519,200 +632,345 @@ describe("Ext.util.FocusableContainer", function() {
     // Some tests in this suite are failing in IE8; most probably because of
     // asynchronous focusing implications, as well as general browser slowness.
     (Ext.isIE8 ? xdescribe : describe)("keyboard event handling", function() {
-        var beforeBtn, afterBtn, fooBtn, barBtn, fooInput, barInput, slider,
+        var forward = true,
+            backward = false,
+            beforeBtn, afterBtn, fooBtn, barBtn, fooInput, barInput, slider,
             disabledBtn1, disabledBtn2;
         
-        beforeEach(function() {
-            runs(function() {
-                beforeBtn = makeButton({ text: 'beforeBtn' });
+        function tabAndExpect(from, direction, to) {
+            pressTab(from, direction);
             
-                makeContainer({
-                    items: [
-                        { xtype: 'tbtext', text: '**' },
-                        { xtype: 'button', text: 'disabledBtn1', disabled: true },
-                        { xtype: 'button', text: 'fooBtn' },
-                        { xtype: 'tbseparator' },
-                        { xtype: 'textfield', id: 'fooInput-' + ++autoId },
-                        { xtype: 'tbseparator' },
-                        {
-                            xtype: 'slider',
-                            id: 'slider-' + ++autoId,
-                            value: 50,
-                            width: 100,
-                            animate: false
-                        },
-                        { xtype: 'tbseparator' },
-                        { xtype: 'tbfill' },
-                        { xtype: 'tbseparator' },
-                        { xtype: 'button', text: 'barBtn' },
-                        { xtype: 'button', text: 'disabledBtn2', disabled: true },
-                        { xtype: 'combobox', id: 'barInput-' + ++autoId },
-                        { xtype: 'tbtext', text: '***' }
-                    ]
+            expectFocused(to);
+        }
+        
+        function arrowAndExpect(from, arrow, to) {
+            pressArrow(from, arrow);
+            
+            expectFocused(to);
+        }
+        
+        describe("enableFocusableContainer === true", function() {
+            beforeEach(function() {
+                runs(function() {
+                    beforeBtn = makeButton({ text: 'beforeBtn' });
+                    
+                    makeContainer({
+                        items: [
+                            { xtype: 'tbtext', text: '**' },
+                            { xtype: 'button', text: 'disabledBtn1', disabled: true },
+                            { xtype: 'button', text: 'fooBtn' },
+                            { xtype: 'tbseparator' },
+                            { xtype: 'textfield', id: 'fooInput-' + ++autoId },
+                            { xtype: 'tbseparator' },
+                            {
+                                xtype: 'slider',
+                                id: 'slider-' + ++autoId,
+                                value: 50,
+                                width: 100,
+                                animate: false
+                            },
+                            { xtype: 'tbseparator' },
+                            { xtype: 'tbfill' },
+                            { xtype: 'tbseparator' },
+                            { xtype: 'button', text: 'barBtn' },
+                            { xtype: 'button', text: 'disabledBtn2', disabled: true },
+                            { xtype: 'combobox', id: 'barInput-' + ++autoId },
+                            { xtype: 'tbtext', text: '***' }
+                        ]
+                    });
+                    
+                    fooBtn = fc.down('button[text=fooBtn]');
+                    barBtn = fc.down('button[text=barBtn]');
+                    
+                    fooInput = fc.down('textfield');
+                    barInput = fc.down('combobox');
+                    slider   = fc.down('slider');
+                    
+                    disabledBtn1 = fc.down('button[text=disabledBtn1]');
+                    disabledBtn2 = fc.down('button[text=disabledBtn2]');
+                    
+                    afterBtn = makeButton({ text: 'afterBtn' });
                 });
             
-                fooBtn = fc.down('button[text=fooBtn]');
-                barBtn = fc.down('button[text=barBtn]');
-            
-                fooInput = fc.down('textfield');
-                barInput = fc.down('combobox');
-                slider   = fc.down('slider');
-            
-                disabledBtn1 = fc.down('button[text=disabledBtn1]');
-                disabledBtn2 = fc.down('button[text=disabledBtn2]');
-            
-                afterBtn = makeButton({ text: 'afterBtn' });
+                jasmine.waitAWhile();
             });
             
-            jasmine.waitAWhile();
+            afterEach(function() {
+                beforeBtn.destroy();
+                afterBtn.destroy();
+            });
+            
+            describe("tabbing", function() {
+                describe("clean state in/out", function() {
+                    it("should tab from beforeBtn to fooBtn", function() {
+                        tabAndExpect(beforeBtn, forward, fooBtn);
+                    });
+                    
+                    it("should shift-tab from fooBtn fo beforeBtn", function() {
+                        tabAndExpect(fooBtn, backward, beforeBtn);
+                    });
+                    
+                    it("should tab from fooBtn to afterBtn", function() {
+                        tabAndExpect(fooBtn, forward, afterBtn);
+                    });
+                    
+                    it("should shift-tab from afterBtn to fooBtn", function() {
+                        tabAndExpect(afterBtn, backward, fooBtn);
+                    });
+                });
+                
+                describe("needArrowKeys children", function() {
+                    it("should tab from fooInput to slider", function() {
+                        tabAndExpect(fooInput, forward, slider);
+                    });
+                    
+                    it("should tab from slider to barBtn", function() {
+                        tabAndExpect(slider, forward, barBtn);
+                    });
+                    
+                    it("should tab from barInput to afterBtn", function() {
+                        tabAndExpect(barInput, forward, afterBtn);
+                    });
+                    
+                    it("should shift-tab from barInput to barBtn", function() {
+                        tabAndExpect(barInput, backward, barBtn);
+                    });
+                    
+                    it("should shift-tab from slider to fooInput", function() {
+                        tabAndExpect(slider, backward, fooInput);
+                    });
+                    
+                    it("should shift-tab from fooInput to fooBtn", function() {
+                        tabAndExpect(fooInput, backward, fooBtn);
+                    });
+                });
+                
+                describe("last focused child", function() {
+                    it("should shift-tab back into barInput from afterBtn", function() {
+                        tabAndExpect(barInput, forward, afterBtn);
+                        tabAndExpect(afterBtn, backward, barInput);
+                    });
+                    
+                    it("should shift-tab back to barBtn from afterBtn", function() {
+                        tabAndExpect(barBtn, forward, afterBtn);
+                        tabAndExpect(afterBtn, backward, barBtn);
+                    });
+                });
+            });
+            
+            describe("arrow keys", function() {
+                describe("simple children (buttons, etc)", function() {
+                    it("should go right from fooBtn to fooInput", function() {
+                        arrowAndExpect(fooBtn, 'right', fooInput);
+                    });
+                    
+                    it("should go down from fooBtn to fooInput", function() {
+                        arrowAndExpect(fooBtn, 'down', fooInput);
+                    });
+                    
+                    it("should wrap over left from fooBtn to barInput", function() {
+                        arrowAndExpect(fooBtn, 'left', barInput);
+                    });
+                    
+                    it("should wrap over up from fooBtn to barInput", function() {
+                        arrowAndExpect(fooBtn, 'up', barInput);
+                    });
+                    
+                    it("should go left from barBtn to slider", function() {
+                        arrowAndExpect(barBtn, 'left', slider);
+                    });
+                    
+                    it("should go up from barBtn to slider", function() {
+                        arrowAndExpect(barBtn, 'up', slider);
+                    });
+                });
+                
+                describe("needArrowKeys children", function() {
+                    describe("slider", function() {
+                        function makeSpec(key) {
+                            it("should not block " + key + " arrow key", function() {
+                                var changed = false;
+                                
+                                runs(function() {
+                                    slider.on('change', function() { changed = true });
+                                });
+                                
+                                pressArrow(slider, key);
+                                
+                                runs(function() {
+                                    expect(changed).toBeTruthy();
+                                });
+                            });
+                        }
+                        
+                        makeSpec('left');
+                        makeSpec('right');
+                        makeSpec('up');
+                        makeSpec('down');
+                    });
+                    
+                    describe("combo box", function() {
+                        beforeEach(function() {
+                            Ext.apply(barInput, {
+                                queryMode: 'local',
+                                displayField: 'name'
+                            });
+                            
+                            var store = new Ext.data.Store({
+                                fields: ['name'],
+                                data: [{ name: 'foo' }]
+                            });
+                            
+                            barInput.setStore(store);
+                        });
+                        
+                        it("should not block down arrow key", function() {
+                            pressArrow(barInput, 'down');
+                            
+                            runs(function() {
+                                expect(barInput.isExpanded).toBeTruthy();
+                            });
+                        });
+                    });
+                });
+            });
         });
         
-        afterEach(function() {
-            beforeBtn.destroy();
-            afterBtn.destroy();
-        });
-        
-        describe("tabbing", function() {
-            describe("clean state in/out", function() {
+        describe("enableFocusableContainer === false", function() {
+            beforeEach(function() {
+                runs(function() {
+                    beforeBtn = makeButton({ text: 'beforeBtn' });
+                    
+                    makeContainer({
+                        renderTo: undefined,
+                        items: [
+                            { xtype: 'tbtext', text: '**' },
+                            { xtype: 'button', text: 'disabledBtn1', disabled: true },
+                            { xtype: 'button', text: 'fooBtn' },
+                            { xtype: 'tbseparator' },
+                            { xtype: 'textfield', id: 'fooInput-' + ++autoId },
+                            { xtype: 'tbseparator' },
+                            {
+                                xtype: 'slider',
+                                id: 'slider-' + ++autoId,
+                                value: 50,
+                                width: 100,
+                                animate: false
+                            },
+                            { xtype: 'tbseparator' },
+                            { xtype: 'tbfill' },
+                            { xtype: 'tbseparator' },
+                            { xtype: 'button', text: 'barBtn' },
+                            { xtype: 'button', text: 'disabledBtn2', disabled: true },
+                            { xtype: 'combobox', id: 'barInput-' + ++autoId },
+                            { xtype: 'tbtext', text: '***' }
+                        ]
+                    });
+                    
+                    fooBtn = fc.down('button[text=fooBtn]');
+                    barBtn = fc.down('button[text=barBtn]');
+                    
+                    fooInput = fc.down('textfield');
+                    barInput = fc.down('combobox');
+                    slider   = fc.down('slider');
+                    
+                    disabledBtn1 = fc.down('button[text=disabledBtn1]');
+                    disabledBtn2 = fc.down('button[text=disabledBtn2]');
+                    
+                    fc.enableFocusableContainer = false;
+                    fc.render(Ext.getBody());
+                    
+                    afterBtn = makeButton({ text: 'afterBtn' });
+                });
+                
+                jasmine.waitAWhile();
+            });
+            
+            afterEach(function() {
+                beforeBtn.destroy();
+                afterBtn.destroy();
+            });
+            
+            describe("tabbing", function() {
                 it("should tab from beforeBtn to fooBtn", function() {
-                    pressTab(beforeBtn, true);
-                    
-                    expectFocused(fooBtn);
-                });
-        
-                it("should shift-tab from fooBtn fo beforeBtn", function() {
-                    pressTab(fooBtn, false);
-                    
-                    expectFocused(beforeBtn);
-                });
-        
-                it("should tab from fooBtn to afterBtn", function() {
-                    pressTab(fooBtn, true);
-                    
-                    expectFocused(afterBtn);
-                });
-        
-                it("should shift-tab from afterBtn to fooBtn", function() {
-                    pressTab(afterBtn, false);
-            
-                    expectFocused(fooBtn);
-                });
-            });
-            
-            describe("needArrowKeys children", function() {
-                it("should tab from fooInput to slider", function() {
-                    pressTab(fooInput, true);
-                
-                    expectFocused(slider);
-                });
-            
-                it("should tab from slider to barBtn", function() {
-                    pressTab(slider, true);
-                
-                    expectFocused(barBtn);
+                    tabAndExpect(beforeBtn, forward, fooBtn);
                 });
                 
-                it("should tab from barInput to afterBtn", function() {
-                    pressTab(barInput, true);
-                    
-                    expectFocused(afterBtn);
+                it("should shift-tab from fooBtn to beforeBtn", function() {
+                    tabAndExpect(fooBtn, backward, beforeBtn);
                 });
                 
-                it("should shift-tab from barInput to barBtn", function() {
-                    pressTab(barInput, false);
-                    
-                    expectFocused(barBtn);
-                });
-                
-                it("should shift-tab from slider to fooInput", function() {
-                    pressTab(slider, false);
-                    
-                    expectFocused(fooInput);
+                it("should tab from fooBtn to fooInput", function() {
+                    tabAndExpect(fooBtn, forward, fooInput);
                 });
                 
                 it("should shift-tab from fooInput to fooBtn", function() {
-                    pressTab(fooInput, false);
-                    
-                    expectFocused(fooBtn);
+                    tabAndExpect(fooInput, backward, fooBtn);
+                });
+                
+                it("should tab from fooInput to slider", function() {
+                    tabAndExpect(fooInput, forward, slider);
+                });
+                
+                it("should shift-tab from slider to fooInput", function() {
+                    tabAndExpect(slider, backward, fooInput);
+                });
+                
+                it("should tab from slider to barBtn", function() {
+                    tabAndExpect(slider, forward, barBtn);
+                });
+                
+                it("should shift-tab from barBtn to slider", function() {
+                    tabAndExpect(barBtn, backward, slider);
+                });
+                
+                it("should tab from barBtn to barInput", function() {
+                    tabAndExpect(barBtn, forward, barInput);
+                });
+                
+                it("should shift-tab from barInput to barBtn", function() {
+                    tabAndExpect(barInput, backward, barBtn);
+                });
+                
+                it("should tab from barInput to afterBtn", function() {
+                    tabAndExpect(barInput, forward, afterBtn);
+                });
+                
+                it("should shift-tab from afterBtn to barInput", function() {
+                    tabAndExpect(afterBtn, backward, barInput);
                 });
             });
             
-            describe("last focused child", function() {
-                it("should shift-tab back into barInput from afterBtn", function() {
-                    pressTab(barInput, true);
-                
-                    expectFocused(afterBtn);
+            // Arrow keys should not navigate when FocusableContainer is disabled;
+            // we have to make sure of that!
+            describe("arrow keys", function() {
+                describe("fooBtn", function() {
+                    it("should stay focused on left arrow", function() {
+                        arrowAndExpect(fooBtn, 'left', fooBtn);
+                    });
                     
-                    pressTab(afterBtn, false);
-                
-                    expectFocused(barInput);
+                    it("should stay focused on right arrow", function() {
+                        arrowAndExpect(fooBtn, 'right', fooBtn);
+                    });
+                    
+                    it("should stay focused on up arrow", function() {
+                        arrowAndExpect(fooBtn, 'up', fooBtn);
+                    });
+                    
+                    it("should stay focused on down arrow", function() {
+                        arrowAndExpect(fooBtn, 'down', fooBtn);
+                    });
                 });
                 
-                it("should shift-tab back to barBtn from afterBtn", function() {
-                    pressTab(barBtn, true);
-                    
-                    expectFocused(afterBtn);
-                    
-                    pressTab(afterBtn, false);
-                    
-                    expectFocused(barBtn);
-                });
-            });
-        });
-        
-        describe("arrow keys", function() {
-            // Firefox and Safari in Mac do not focus <anchor> tags by default,
-            // so the tests below may fail. This is a known issue.
-            var todoDescribe = (Ext.isMac && (Ext.isGecko || Ext.isSafari) ? xdescribe : describe);
-            
-            todoDescribe("simple children (buttons, etc)", function() {
-                it("should go right from fooBtn to fooInput", function() {
-                    pressArrow(fooBtn, 'right');
-                
-                    expectFocused(fooInput);
-                });
-                
-                it("should go down from fooBtn to fooInput", function() {
-                    pressArrow(fooBtn, 'down');
-                    
-                    expectFocused(fooInput);
-                });
-            
-                it("should wrap over left from fooBtn to barInput", function() {
-                    pressArrow(fooBtn, 'left');
-                    
-                    expectFocused(barInput);
-                });
-                
-                it("should wrap over up from fooBtn to barInput", function() {
-                    pressArrow(fooBtn, 'up');
-                    
-                    expectFocused(barInput);
-                });
-                
-                it("should go left from barBtn to slider", function() {
-                    pressArrow(barBtn, 'left');
-                    
-                    expectFocused(slider);
-                });
-                
-                it("should go up from barBtn to slider", function() {
-                    pressArrow(barBtn, 'up');
-                    
-                    expectFocused(slider);
-                });
-            });
-            
-            describe("needArrowKeys children", function() {
                 describe("slider", function() {
                     function makeSpec(key) {
                         it("should not block " + key + " arrow key", function() {
                             var changed = false;
-                        
+                            
                             runs(function() {
                                 slider.on('change', function() { changed = true });
                             });
-                        
+                            
                             pressArrow(slider, key);
                             
                             runs(function() {
@@ -720,7 +978,7 @@ describe("Ext.util.FocusableContainer", function() {
                             });
                         });
                     }
-                
+                    
                     makeSpec('left');
                     makeSpec('right');
                     makeSpec('up');

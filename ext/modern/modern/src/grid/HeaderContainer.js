@@ -9,7 +9,6 @@ Ext.define('Ext.grid.HeaderContainer', {
 
     config: {
         baseCls: Ext.baseCSSPrefix + 'grid-header-container',
-        height: 65,
         docked: 'top',
         translationMethod: 'auto',
         defaultType: 'column',
@@ -42,6 +41,7 @@ Ext.define('Ext.grid.HeaderContainer', {
             show: 'onGroupShow',
             hide: 'onGroupHide',
             add: 'onColumnAdd',
+            move: 'onColumnMove',
             remove: 'onColumnRemove',
             scope: me,
             delegate: 'gridheadergroup'
@@ -49,6 +49,7 @@ Ext.define('Ext.grid.HeaderContainer', {
 
         me.on({
             add: 'onColumnAdd',
+            move: 'onColumnMove',
             remove: 'onColumnRemove',
             scope: me
         });
@@ -94,18 +95,67 @@ Ext.define('Ext.grid.HeaderContainer', {
         var me = this,
             columns = me.columns,
             columnIndex = me.getAbsoluteColumnIndex(column),
-            groupColomns, ln, i;
+            groupColumns, ln, i;
 
         if (column.isHeaderGroup) {
-            groupColomns = column.getItems().items;
+            groupColumns = column.getItems().items;
 
-            for (i = 0, ln = groupColomns.length; i < ln; i++) {
-                columns.splice(columnIndex + i, 0, groupColomns[i]);
-                me.fireEvent('columnadd', me, groupColomns[i], column);
+            for (i = 0, ln = groupColumns.length; i < ln; i++) {
+                columns.splice(columnIndex + i, 0, groupColumns[i]);
+                me.fireEvent('columnadd', me, groupColumns[i], column);
             }
         } else {
             columns.splice(columnIndex, 0, column);
             me.fireEvent('columnadd', me, column, null);
+        }
+    },
+
+    onColumnMove: function(parent, column) {
+        var me = this,
+            columns = me.columns,
+            columnIndex = me.getAbsoluteColumnIndex(column),
+            groupColumns, ln, i, groupColumn,
+            after, fromIdx, toIdx;
+
+        if (column.isHeaderGroup) {
+            groupColumns = column.getItems().items;
+
+            for (i = 0, ln = groupColumns.length; i < ln; i++) {
+                groupColumn = groupColumns[i];
+
+                if (i === 0) {
+                    oldIndex = columns.indexOf(groupColumn);
+                    after = oldIndex - columnIndex < 0;
+                }
+
+                // Treat the moves as sequential
+                if (after) {
+                    // |  Group   | c | d     ->     | c | d |   Group   | 
+                    //    a   b                                  a   b
+                    //    
+                    // We need to fire:
+                    // a from 0 -> 3, since b is still in place
+                    // b from 0 -> 3, to account for a still in place
+                    toIdx = columnIndex + ln - 1;
+                    fromIdx = oldIndex;
+                } else {
+                    // | c | d |   Group   |      ->     |  Group   | c | d 
+                    //             a   b                    a   b
+                    //    
+                    // We need to fire:
+                    // a from 2 -> 0
+                    // b from 2 -> 1, to account for a moving
+                    fromIdx = oldIndex + i;
+                    toIdx = columnIndex + i;
+                }
+                Ext.Array.move(columns, fromIdx, toIdx);
+                me.fireEvent('columnmove', me, groupColumn, column, fromIdx, toIdx);
+            }
+        } else {
+            fromIdx = columns.indexOf(column);
+            toIdx = columnIndex;
+            Ext.Array.move(columns, fromIdx, toIdx);
+            me.fireEvent('columnmove', me, column, null, fromIdx, toIdx);
         }
     },
 

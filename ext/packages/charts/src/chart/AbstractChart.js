@@ -452,7 +452,7 @@ Ext.define('Ext.chart.AbstractChart', {
     /**
      * @private
      */
-    layoutSuspendCount: 0,
+    chartLayoutSuspendCount: 0,
 
     /**
      * @private
@@ -486,6 +486,7 @@ Ext.define('Ext.chart.AbstractChart', {
 
         me.itemListeners = {};
         me.surfaceMap = {};
+        me.chartComponents = {};
 
         me.isInitializing = true;
 
@@ -579,8 +580,8 @@ Ext.define('Ext.chart.AbstractChart', {
      * Suspends chart's layout.
      */
     suspendChartLayout: function () {
-        this.layoutSuspendCount++;
-        if (this.layoutSuspendCount === 1) {
+        this.chartLayoutSuspendCount++;
+        if (this.chartLayoutSuspendCount === 1) {
             if (this.scheduledLayoutId) {
                 this.layoutInSuspension = true;
                 this.cancelChartLayout();
@@ -596,8 +597,8 @@ Ext.define('Ext.chart.AbstractChart', {
      * a layout is scheduled.
      */
     resumeChartLayout: function () {
-        this.layoutSuspendCount--;
-        if (this.layoutSuspendCount === 0) {
+        this.chartLayoutSuspendCount--;
+        if (this.chartLayoutSuspendCount === 0) {
             if (this.layoutInSuspension) {
                 this.scheduleLayout();
             }
@@ -630,7 +631,7 @@ Ext.define('Ext.chart.AbstractChart', {
     },
 
     doScheduleLayout: function () {
-        if (this.layoutSuspendCount) {
+        if (this.chartLayoutSuspendCount) {
             this.layoutInSuspension = true;
         } else {
             this.performLayout();
@@ -827,11 +828,39 @@ Ext.define('Ext.chart.AbstractChart', {
         }
     },
 
+    register: function (component) {
+        var map = this.chartComponents,
+            id = component.getId();
+
+        //<debug>
+        if (id === undefined) {
+            Ext.raise('Chart component id is undefined. ' +
+                'Please ensure the component has an id.');
+        }
+        if (id in map) {
+            Ext.raise('Registering duplicate chart component id "' + id + '"');
+        }
+        //</debug>
+
+        map[id] = component;
+    },
+
+    unregister: function (component) {
+        var map = this.chartComponents,
+            id = component.getId();
+
+        delete map[id];
+    },
+
+    get: function (id) {
+        return this.chartComponents[id];
+    },
+
     /**
      * @method getAxis Returns an axis instance based on the type of data passed. 
      * @param {String/Number/Ext.chart.axis.Axis} axis You may request an axis by passing
      * an id, the number of the array key returned by {@link #getAxes}, or an axis instance.
-     * @return {Ext.chart.axis.Axis} The axis requested
+     * @return {Ext.chart.axis.Axis} The axis requested.
      */
     getAxis: function (axis) {
         if (axis instanceof Ext.chart.axis.Axis) {
@@ -839,29 +868,46 @@ Ext.define('Ext.chart.AbstractChart', {
         } else if (Ext.isNumber(axis)) {
             return this.getAxes()[axis];
         } else if (Ext.isString(axis)) {
-            return Ext.ComponentMgr.get(axis);
-        } else {
-            return null;
+            return this.get(axis);
         }
     },
 
     getSurface: function (name, type) {
         name = name || 'main';
         type = type || name;
+
         var me = this,
             surface = this.callParent([name]),
-            zIndexes = me.surfaceZIndexes;
+            zIndexes = me.surfaceZIndexes,
+            map = me.surfaceMap;
+
         if (type in zIndexes) {
             surface.element.setStyle('zIndex', zIndexes[type]);
         }
-        if (!me.surfaceMap[type]) {
-            me.surfaceMap[type] = [];
+        if (!map[type]) {
+            map[type] = [];
         }
-        if (Ext.Array.indexOf(me.surfaceMap[type], (surface)) < 0) {
+        if (Ext.Array.indexOf(map[type], surface) < 0) {
             surface.type = type;
-            me.surfaceMap[type].push(surface);
+            map[type].push(surface);
+            surface.on('destroy', me.forgetSurface, me);
         }
         return surface;
+    },
+
+    forgetSurface: function (surface) {
+        var map = this.surfaceMap;
+
+        if (!map || this.isDestroying) {
+            return;
+        }
+
+        var group = map[surface.type],
+            index = group ? Ext.Array.indexOf(group, surface) : -1;
+
+        if (index >= 0) {
+            group.splice(index, 1);
+        }
     },
 
     applyAxes: function (newAxes, oldAxes) {
@@ -893,6 +939,7 @@ Ext.define('Ext.chart.AbstractChart', {
             }
             if (axis instanceof Ext.chart.axis.Axis) {
                 oldAxis = oldMap[axis.getId()];
+                axis.setChart(me);
             } else {
                 axis = Ext.Object.chain(axis);
                 linkedTo = axis.linkedTo;
@@ -908,6 +955,7 @@ Ext.define('Ext.chart.AbstractChart', {
                     });
                 }
                 axis.id = id;
+                axis.chart = me;
                 if (me.getInherited().rtl) {
                     axis.position = positions[axis.position] || axis.position;
                 }
@@ -916,7 +964,6 @@ Ext.define('Ext.chart.AbstractChart', {
             }
 
             if (axis) {
-                axis.setChart(me);
                 result.push(axis);
                 result.map[axis.getId()] = axis;
                 if (!oldAxis) {
@@ -937,8 +984,10 @@ Ext.define('Ext.chart.AbstractChart', {
         return result;
     },
 
-    updateAxes: function (newAxes) {
-        this.scheduleLayout();
+    updateAxes: function () {
+        if (!this.isDestroying) {
+            this.scheduleLayout();
+        }
     },
 
     circularCopyArray: function(inArray, startIndex, count) {
@@ -1118,6 +1167,8 @@ Ext.define('Ext.chart.AbstractChart', {
     },
 
     updateSpriteTheme: function (theme) {
+        this.getSprites();
+
         var me = this,
             chartSurface = me.getSurface('chart'),
             sprites = chartSurface.getItems(),
@@ -1298,10 +1349,17 @@ Ext.define('Ext.chart.AbstractChart', {
     updateSeries: function (newSeries, oldSeries) {
         var me = this;
 
+        if (me.isDestroying) {
+            return;
+        }
+
         me.animationSuspendCount++;
 
         me.fireEvent('serieschange', me, newSeries, oldSeries);
         me.refreshLegendStore();
+        if (!Ext.isEmpty(newSeries)) {
+            me.updateTheme(me.getTheme());
+        }
         me.scheduleLayout();
 
         me.animationSuspendCount--;
@@ -1559,10 +1617,7 @@ Ext.define('Ext.chart.AbstractChart', {
         }
     },
 
-    /**
-     * @private
-     */
-    destroy: function () {
+    destroyChart: function () {
         var me = this,
             legend = me.getLegend(),
             axes = me.getAxes(),
@@ -1572,7 +1627,6 @@ Ext.define('Ext.chart.AbstractChart', {
             i, ln;
 
         me.surfaceMap = null;
-        me.setHighlightItem(null);
 
         for (i = 0, ln = interactions.length; i < ln; i++) {
             interactions[i].destroy();
@@ -1596,7 +1650,6 @@ Ext.define('Ext.chart.AbstractChart', {
         me.legendStore = null;
         me.setStore(null);
         me.cancelChartLayout();
-        me.callParent();
     },
 
     /* ---------------------------------

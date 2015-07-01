@@ -41,14 +41,6 @@ Ext.define('Ext.field.Spinner', {
      */
 
     /**
-     * @event change
-     * Fires just before the field blurs if the field value has changed.
-     * @param {Ext.field.Text} this This field.
-     * @param {Number} newValue The new value.
-     * @param {Number} oldValue The original value.
-     */
-
-    /**
      * @event updatedata
      * @hide
      */
@@ -128,7 +120,9 @@ Ext.define('Ext.field.Spinner', {
          */
         component: {
             disabled: true
-        }
+        },
+
+        value: undefined
     },
 
     platformConfig: {
@@ -140,41 +134,28 @@ Ext.define('Ext.field.Spinner', {
         }
     },
 
-    constructor: function() {
-        var me = this;
-
-        me.callParent(arguments);
-
-        if (!me.getValue()) {
-            me.suspendEvents(true);
-            me.setValue(me.getDefaultValue());
-            me.resumeEvents();
-        }
-    },
-
     syncEmptyCls: Ext.emptyFn,
 
     /**
      * Updates the {@link #component} configuration
      */
     updateComponent: function(newComponent) {
-        this.callParent(arguments);
+        var me = this,
+            cls = me.getCls();
 
-        var cls = this.getCls();
+        me.callParent(arguments);
 
         if (newComponent) {
-            this.spinDownButton = Ext.Element.create({
-                cls : cls + '-button ' + cls + '-button-down',
-                html: '-'
+            me.spinDownButton = Ext.Element.create({
+                cls : cls + '-button ' + cls + '-button-down'
             });
 
-            this.spinUpButton = Ext.Element.create({
-                cls : cls + '-button ' + cls + '-button-up',
-                html: '+'
+            me.spinUpButton = Ext.Element.create({
+                cls : cls + '-button ' + cls + '-button-up'
             });
 
-            this.downRepeater = this.createRepeater(this.spinDownButton, this.onSpinDown);
-            this.upRepeater = this.createRepeater(this.spinUpButton,     this.onSpinUp);
+            me.downRepeater = me.createRepeater(me.spinDownButton, me.onSpinDown);
+            me.upRepeater = me.createRepeater(me.spinUpButton, me.onSpinUp);
         }
     },
 
@@ -187,11 +168,11 @@ Ext.define('Ext.field.Spinner', {
 
         if (newGroupButtons != oldGroupButtons) {
             if (newGroupButtons) {
-                this.addCls(cls);
+                me.addCls(cls);
                 innerElement.appendChild(me.spinDownButton);
                 innerElement.appendChild(me.spinUpButton);
             } else {
-                this.removeCls(cls);
+                me.removeCls(cls);
                 innerElement.insertFirst(me.spinDownButton);
                 innerElement.appendChild(me.spinUpButton);
             }

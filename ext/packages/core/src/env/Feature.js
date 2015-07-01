@@ -155,7 +155,7 @@ Ext.feature = {
             notRun = [],
             supports = Ext.supports,
             has = me.has,
-            name, test, vector, value;
+            name, names, test, vector, value;
 
         //<feature legacyBrowser>
         // Only the legacy browser tests use this div so clip this out if we don't need
@@ -179,6 +179,7 @@ Ext.feature = {
             test = toRun[n];
             value = vector[n];
             name = test.name;
+            names = test.names;
 
             if (value === undefined) {
                 if (!isReady && test.ready) {
@@ -191,7 +192,14 @@ Ext.feature = {
             }
 
             // Store test results on Ext.supports and Ext.feature.has
-            supports[name] = has[name] = value;
+            if (name) {
+                supports[name] = has[name] = value;
+            } else if (names) {
+                while (names.length) {
+                    name = names.pop();
+                    supports[name] = has[name] = value;
+                }
+            }
         }
 
         if (isReady) {
@@ -228,6 +236,20 @@ Ext.feature = {
      * @singleton
      */
     tests: [{
+        /**
+         * @property CloneNodeCopiesExpando `true` if the native DOM cloneNode method copies
+         * expando properties to the newly cloned node.
+         *
+         * This property is available at application boot time, before document ready.
+         * @type {Boolean}
+         */
+        name: 'CloneNodeCopiesExpando',
+        fn: function() {
+            var el = document.createElement('div');
+            el.expandoProp = {};
+            return el.cloneNode().expandoProp === el.expandoProp;
+        }
+    }, {
         /**
          * @property CSSPointerEvents `true` if document environment supports the CSS3
          * pointer-events style.
@@ -358,7 +380,7 @@ Ext.feature = {
         }
     },{
         /**
-         * @property Touch`true` if the browser supports touch input.
+         * @property Touch `true` if the browser supports touch input.
          *
          * This property is available at application boot time, before document ready.
          * @type {Boolean}
@@ -514,8 +536,7 @@ Ext.feature = {
         name: 'Css3dTransforms',
         fn: function() {
             // See https://sencha.jira.com/browse/TOUCH-1544
-            return this.has('CssTransforms') && this.isStyleSupported('perspective') && 
-                    !Ext.browser.is.AndroidStock2;
+            return this.has('CssTransforms') && this.isStyleSupported('perspective');
             // TODO - double check vs Ext JS flavor:
             //return (typeof WebKitCSSMatrix != 'undefined' && new WebKitCSSMatrix().hasOwnProperty('m41'));
         }

@@ -10,36 +10,14 @@ Ext.define('Ext.button.Manager', {
 
     pressedButton: null,
 
-    buttonSelector: '.' + Ext.baseCSSPrefix + 'btn',
-
     init: function() {
         var me = this;
         if (!me.initialized) {
             Ext.getDoc().on({
-                keydown: me.onDocumentKeyDown,
                 mouseup: me.onDocumentMouseUp,
                 scope: me
             });
             me.initialized = true;
-        }
-    },
-
-    // Buttons must react to SPACE and ENTER to trigger the click handler.
-    // Now that they are `<a>` elements, we use a keydown listener.
-    onDocumentKeyDown: function(e) {
-        var k = e.getKey(),
-            btn;
-
-        // SPACE and ENTER trigger a click
-        if (k === e.SPACE || k === e.ENTER) {
-
-            // Look for a Button's encapsulating element
-            btn = e.getTarget(this.buttonSelector);
-
-            // If found, fire the Button's onClick
-            if (btn) {
-                Ext.getCmp(btn.id).onClick(e);
-            }
         }
     },
 

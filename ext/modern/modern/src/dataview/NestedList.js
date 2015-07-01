@@ -281,7 +281,7 @@ Ext.define('Ext.dataview.NestedList', {
          * configuration in combination with setting the {@link #variableHeights} to false you
          * can improve the scrolling speed
          */
-        itemHeight: 47,
+        itemHeight: null,
 
         /**
          * @cfg {Boolean} variableHeights

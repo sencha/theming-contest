@@ -28,8 +28,5 @@ Ext.define('FeedViewer.view.main.FeedList', {
             reference: 'newfeedbutton',
             handler: 'onNewFeedClick'
         }]
-    }],
-    listeners: {
-        select:'onFeedListSelect'
-    }
+    }]
 });

@@ -74,7 +74,7 @@ describe("Ext.event.publisher.Focus", function() {
             c[i] = Ext.get('c' + i);
         }
         
-        body.setAttribute('tabindex', -1);
+        body.setAttribute('tabIndex', -1);
     });
     
     afterEach(function() {
@@ -86,7 +86,7 @@ describe("Ext.event.publisher.Focus", function() {
             });
         });
 
-        body.removeAttribute('tabindex');
+        body.removeAttribute('tabIndex');
     });
     
     describe("focusenter", function() {

@@ -1,9 +1,9 @@
 describe("Ext.data.Store", function() {
     var fakeScope = {},
         abeRaw, aaronRaw, edRaw, tommyRaw,
-        abeRec, aaronRec, edRec, tommyRec, 
-        store, User, spy;
-        
+        abeRec, aaronRec, edRec, tommyRec,
+        store, User, data, spy;
+
     function customSort(v) {
         return v * -1;
     }
@@ -28,7 +28,7 @@ describe("Ext.data.Store", function() {
         aaronRec = store.getAt(2);
         tommyRec = store.getAt(3);
     }
-    
+
     function makeUser(email, data) {
         if (Ext.isObject(email)) {
             data = email;
@@ -40,7 +40,7 @@ describe("Ext.data.Store", function() {
         }
         return new User(data);
     }
-    
+
     function createStore(cfg, withData) {
         cfg = cfg || {};
         store = new Ext.data.Store(Ext.applyIf(cfg, {
@@ -50,8 +50,9 @@ describe("Ext.data.Store", function() {
         if (withData) {
             assignRecs();
         }
+        data = store.data;
     }
-    
+
     function completeWithData(data) {
         Ext.Ajax.mockComplete({
             status: 200,
@@ -65,7 +66,7 @@ describe("Ext.data.Store", function() {
             responseText: ''
         });
     }
-    
+
     beforeEach(function() {
         MockAjaxManager.addMethods();
         User = Ext.define('spec.User', {
@@ -95,16 +96,15 @@ describe("Ext.data.Store", function() {
         aaronRaw = {name: 'Aaron Conran', email: 'aaron@sencha.com', evilness: 5,   group: 'admin', old: true,  age: 26, valid: 'yes'};
         tommyRaw = {name: 'Tommy Maintz', email: 'tommy@sencha.com', evilness: -15, group: 'code',  old: true,  age: 70, valid: 'yes'};
     });
-    
+
     afterEach(function() {
         MockAjaxManager.removeMethods();
         Ext.undefine('spec.User');
         Ext.data.Model.schema.clear();
-        store.destroy();
-        store = spy = User = null;
+        store = spy = User = data = Ext.destroy(store);
         edRaw = edRec = abeRaw = abeRec = aaronRaw = aaronRec = tommyRaw = tommyRec = null;
     });
-    
+
     describe("initializing", function() {
         describe("store manager", function() {
             it("should register if a storeId is passed", function() {
@@ -114,7 +114,7 @@ describe("Ext.data.Store", function() {
                 expect(Ext.data.StoreManager.get('foo')).toBe(store);
             });
         });
-        
+
         describe("proxy", function() {
             describe("configured on the store", function() {
                 it("should create from a string", function() {
@@ -458,7 +458,7 @@ describe("Ext.data.Store", function() {
             });
             
             it("should return null with an empty store", function() {
-                createStore();
+                store.removeAll();
                 expect(store.last()).toBeNull();
             });
 
@@ -481,7 +481,7 @@ describe("Ext.data.Store", function() {
             });
             
             it("should return null when the store is empty", function() {
-                createStore();
+                store.removeAll();
                 expect(store.getAt(0)).toBe(null);
             });
         });
@@ -496,7 +496,7 @@ describe("Ext.data.Store", function() {
             });
             
             it("should return null when the store is empty", function() {
-                createStore();
+                store.removeAll();
                 expect(store.getById('ed@sencha.com')).toBe(null);
             });
             
@@ -516,11 +516,22 @@ describe("Ext.data.Store", function() {
             });
             
             it("should return null when the store is empty", function() {
-                createStore();
+                store.removeAll();
                 expect(store.getByInternalId('ed@sencha.com')).toBe(null);
             });
             
             it("should ignore filters", function() {
+                store.filter('email', 'ed@sencha.com');
+                expect(store.getByInternalId(aaronRec.internalId)).toBe(aaronRec);
+            });
+
+            it("should work correctly if not called before filtering", function() {
+                store.filter('email', 'ed@sencha.com');
+                expect(store.getByInternalId(aaronRec.internalId)).toBe(aaronRec);
+            });
+
+            it("should work correctly if called before & after filtering", function() {
+                expect(store.getByInternalId(aaronRec.internalId)).toBe(aaronRec);
                 store.filter('email', 'ed@sencha.com');
                 expect(store.getByInternalId(aaronRec.internalId)).toBe(aaronRec);
             });
@@ -563,7 +574,7 @@ describe("Ext.data.Store", function() {
             });
             
             it("should return null when the store is empty", function() {
-                createStore();
+                store.removeAll();
                 coders = store.query('group', 'code');
                 expect(coders.length).toBe(0);
             });
@@ -1944,9 +1955,89 @@ describe("Ext.data.Store", function() {
                 });
             });
         });
+
+        describe("getRemovedRecords", function() {
+            it("should be empty by default", function() {
+                expect(store.getRemovedRecords()).toEqual([]);
+            });
+
+            it("should return removed records", function() {
+                store.remove(edRec);
+                store.remove(aaronRec);
+                expect(store.getRemovedRecords()).toEqual([edRec, aaronRec]);
+            });
+
+            it("should return a copy of the records, modifying the value should not mutate the records", function() {
+                store.remove(edRec);
+                store.remove(aaronRec);
+                var records = store.getRemovedRecords();
+                records.splice(0, 2);
+                expect(records).toEqual([]);
+                expect(store.getRemovedRecords()).toEqual([edRec, aaronRec]);
+            });
+
+            it("should exclude phantom records", function() {
+                var rec = new spec.User();
+                store.add(rec);
+                store.remove(rec);
+                expect(store.getRemovedRecords()).toEqual([]);
+            });
+
+            it("should exclude re-added records", function() {
+                store.remove(edRec);
+                store.add(edRec);
+                expect(store.getRemovedRecords()).toEqual([]);
+            });
+
+            it("should be cleared after calling rejectChanges", function() {
+                store.remove(edRec);
+                store.rejectChanges();
+                expect(store.getRemovedRecords()).toEqual([]);
+            });
+
+            it("should be cleared after calling commitChanges", function() {
+                store.remove(edRec);
+                store.commitChanges();
+                expect(store.getRemovedRecords()).toEqual([]);
+            });
+
+            describe("clearRemovedOnLoad", function() {
+                describe("clearRemovedOnLoad: true", function() {
+                    it("should clear removed records", function() {
+                        store.setClearRemovedOnLoad(true);
+                        store.remove(edRec);
+                        store.loadData([]);
+                        expect(store.getRemovedRecords()).toEqual([]);
+                    });
+                });
+
+                describe("clearRemovedOnLoad: false", function() {
+                    it("should not clear removed records", function() {
+                        store.setClearRemovedOnLoad(false);
+                        store.remove(edRec);
+                        store.loadData([]);
+                        expect(store.getRemovedRecords()).toEqual([edRec]);
+                    });
+                });
+            });
+        });
     });
-    
+
     describe("loading", function() {
+        describe('an empty store', function () {
+            // Note that we need to test the actual empty store that is registered with the StoreMgr
+            // because it neuters several store operations, and this is part of what is being tested.
+            // See the StoreManager class callback function.
+            it('should allow an empty store to load', function () {
+                expect(function () {
+                    Ext.StoreMgr.get('ext-empty-store').load();
+                }).not.toThrow();
+            });
+
+            it('should return an empty result set', function () {
+                expect(Ext.StoreMgr.get('ext-empty-store').load().getCount()).toBe(0);
+            });
+        });
 
         describe("loadCount", function() {
             it("should default to 0", function() {
@@ -5569,15 +5660,15 @@ describe("Ext.data.Store", function() {
                             store.clearFilter();
                             expect(store.indexOf(edRec)).toBe(-1);
                         });
-                        
-                        it("should not remove records filtered out", function() {
+
+                        it("should still remove any records filtered out", function() {
                             store.filter('group', 'code');
                             store.remove(abeRec);
                             store.clearFilter();
-                            expect(store.indexOf(abeRec)).toBe(1);
+                            expect(store.indexOf(abeRec)).toBe(-1);
                         });
                     });
-                    
+
                     describe("removeAll", function() {
                         it("should only remove the filtered items", function() {
                             store.filter('group', 'code');
@@ -6573,6 +6664,47 @@ describe("Ext.data.Store", function() {
                 expect(abeSpy).not.toHaveBeenCalled();
                 expect(aaronSpy).not.toHaveBeenCalled();
                 expect(tommySpy).not.toHaveBeenCalled();
+            });
+        });
+
+        describe('rejecting non-filtered records', function () {
+            it('should reject dirty records', function() {
+                store.filter('name', 'Ed Spencer');
+                expect(data.getAt(0)).toBe(edRec);
+
+                edRec.set('name', 'Utley Spencer');
+                expect(data.length).toBe(0);
+
+                // Rejecting the change should move the record back into the data collection.
+                store.rejectChanges();
+                expect(data.getAt(0)).toBe(edRec);
+            });
+
+            it('should reject phantom records', function () {
+                var len = store.getDataSource().length,
+                    phantom = store.add({
+                        name: 'X'
+                    })[0];
+
+                store.filter('name', 'Pete');
+                // Rejecting the change should remove the phantom record should from the source.
+                store.rejectChanges();
+
+                expect(store.getDataSource().length).toBe(len);
+            });
+
+            it('should reject phantom + dirty records', function () {
+                var len = store.getDataSource().length,
+                    phantom = store.add({
+                        name: 'X'
+                    })[0];
+
+                store.filter('name', 'Molly');
+                phantom.set('name', 'Y');
+
+                // Rejecting the change should remove the phantom record should from the source.
+                store.rejectChanges();
+                expect(store.getDataSource().length).toBe(len);
             });
         });
 

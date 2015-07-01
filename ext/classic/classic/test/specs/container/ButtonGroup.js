@@ -36,6 +36,8 @@ describe("Ext.container.ButtonGroup", function() {
                 }]
             });
             expect(panel.items.getAt(0) instanceof Ext.container.ButtonGroup).toBeTruthy();
+            
+            panel.destroy();
         });
     });
 

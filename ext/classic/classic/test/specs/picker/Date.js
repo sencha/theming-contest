@@ -66,7 +66,7 @@ describe("Ext.picker.Date", function() {
                     
                 for(; i < len; ++i) {
                     cell = cells[range[i]];
-                    cellTitle = cell.title || cell.getAttribute('aria-label');
+                    cellTitle = cell.getAttribute('data-qtip');
                     if (cell.className.indexOf(component.disabledCellCls) === -1 || (checkTitle && cellTitle !== title)) {
                         return false;
                     }

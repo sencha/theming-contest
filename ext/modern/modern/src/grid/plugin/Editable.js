@@ -108,17 +108,17 @@ Ext.define('Ext.grid.plugin.Editable', {
         grid: null,
 
         /**
+         * @cfg {String} triggerEvent
          * The event used to trigger the showing of the editor form.
-         * @type {String}
          */
         triggerEvent: 'doubletap',
 
         /**
+         * @cfg {Object} formConfig
          * By changing the formConfig you can hardcode the form that gets created when editing a row.
          * Note that the fields are not set on this form, so you will have to define them yourself in this config.
          * If you want to alter certain form configurations, but still have the default editor fields applied, use
          * the defaultFormConfig instead.
-         * @type Object
          */
         formConfig: null,
 

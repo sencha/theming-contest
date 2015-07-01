@@ -186,6 +186,8 @@ Ext.define('Ext.Button', {
 
     xtype: 'button',
 
+    isButton: true,
+
     /**
      * @event tap
      * @preventable doTap
@@ -304,7 +306,7 @@ Ext.define('Ext.Button', {
          * @cfg {String} ui
          * The ui style to render this button with. The valid default options are:
          *
-         * - `'normal'` - a basic gray button (default).
+         * - `null` - a basic gray button (default).
          * - `'back'` - a back button.
          * - `'forward'` - a forward button.
          * - `'round'` - a round button.
@@ -321,7 +323,7 @@ Ext.define('Ext.Button', {
          *
          * @accessor
          */
-        ui: 'normal',
+        ui: null,
 
         /**
          * @cfg {String} html The HTML to put in this button.
@@ -335,6 +337,8 @@ Ext.define('Ext.Button', {
          */
         baseCls: Ext.baseCSSPrefix + 'button'
     },
+
+    defaultBindProperty: 'text',
 
     template: [
         {
@@ -660,8 +664,7 @@ Ext.define('Ext.Button', {
      * @private
      */
     doTap: function(me, e) {
-        var handler = me.getHandler(),
-            scope = me.getScope();
+        var handler = me.getHandler();
 
         if (!handler) {
             return;
@@ -673,6 +676,6 @@ Ext.define('Ext.Button', {
             e.preventDefault();
         }
 
-        Ext.callback(handler, scope, [me, e], 0, me);
+        Ext.callback(handler, me.getScope(), [me, e], 0, me);
     }
 });

@@ -28,7 +28,7 @@ Ext.define('Ext.chart.overrides.AbstractChart', {
         if (this.isVisible(true)) {
             return this.callParent();
         }
-        this.cancelLayout();
+        this.cancelChartLayout();
         return false;
     },
 
@@ -39,5 +39,11 @@ Ext.define('Ext.chart.overrides.AbstractChart', {
 
     allowSchedule: function() {
         return this.rendered;
+    },
+
+    onDestroy: function () {
+        this.destroyChart();
+        this.callParent(arguments);
     }
+
 });

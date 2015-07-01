@@ -1,9 +1,3 @@
-/**
- * @var {boolean}
- * `true` to include the FontAwesome font-face for use in the theme or application.
- */
-$enable-font-awesome: false !dynamic;
-
 $fa-font-path: get-resource-path('fonts');
 
 @import "_mixins";
@@ -17,3 +11,10 @@ $fa-font-path: get-resource-path('fonts');
 @import "_rotated-flipped";
 @import "_stacked";
 @import "_icons";
+
+// The "x-fa" class should be used in Ext JS applications instead
+// of "fa".  The "fa" class sets some properties that may collide
+// with theme properties, whereas "x-fa" sets only the font-family.
+.x-fa:before {
+    font-family: FontAwesome;
+}

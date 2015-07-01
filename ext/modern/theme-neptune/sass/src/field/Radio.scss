@@ -1,34 +1,42 @@
-/**
- * @class Ext.field.Radio
- */
+.x-field-radio .x-input-el {
+    padding: 0;
+    height: $textfield-input-line-height + vertical($textfield-input-padding);
 
-@mixin radiomark($color: #000, $size: 20px) {
-    @include insertion($size, $size, ($size * -.5) + 24, auto);
-    right: ($size * -.5) + 24;
-    background-color: $color;
-    @include border-radius($size);
-}
-
-.x-field-radio .x-field-mask {
-    @include absolute-position;
-
-    &::after {
-        @include radiomark(darken($form-light, 5), 16px);
-    }
-
-    &::before {
-        @include radiomark($form-light, 26px);
+    @if $enable-big {
+        .x-big & {
+            height: $textfield-input-line-height-big + vertical($textfield-input-padding-big);
+        }
     }
 }
 
-.x-input-radio:checked + .x-field-mask::after {
-    background: $active-color;
+.x-field-radio .x-field-mask:after {
+    color: $radiofield-checkbox-color;
+    position: absolute;
+    right: .6em;
+    height: $radiofield-checkbox-size;
+    width: $radiofield-checkbox-size;
+    font-size: $radiofield-checkbox-font-size;
+    top: 50%;
+    margin-top: -($radiofield-checkbox-size / 2);
+    @if $enable-big {
+        .x-big & {
+            font-size: $radiofield-checkbox-font-size-big;
+        }
+    }
+    @include font-icon($radiofield-checkbox-icon, $pseudo: false);
+    text-align: center;
 }
 
-.x-item-disabled {
-    &.x-field-radio {
-        .x-input-radio:checked + .x-field-mask::after {
-            background: mix($form-light, $active-color, 60);
+.x-input-radio {
+    visibility: hidden;
+}
+
+.x-field-radio .x-input-el:checked + .x-field-mask:after {
+    @include font-icon($radiofield-checked-checkbox-icon, $pseudo: false);
+
+    @if $enable-big {
+        .x-big & {
+            font-size: $radiofield-checkbox-font-size-big;
         }
     }
 }

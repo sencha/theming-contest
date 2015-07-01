@@ -43,18 +43,24 @@ Ext.define('Ext.grid.plugin.Clipboard', {
             isRaw = format === 'raw',
             isText = format === 'text',
             viewNode,
-            cell, data, dataIndex, lastRecord, record, row, view;
+            cell, data, dataIndex, lastRecord, column, record, row, view;
 
         selModel.getSelected().eachCell(function (cellContext) {
+            column = cellContext.column,
             view = cellContext.column.getView();
             record = cellContext.record;
+
+            // Do not copy the check column or row numberer column
+            if (column.ignoreExport) {
+                return;
+            }
 
             if (lastRecord !== record) {
                 lastRecord = record;
                 ret.push(row = []);
             }
             
-            dataIndex = cellContext.column.dataIndex;
+            dataIndex = column.dataIndex;
 
             if (isRaw) {
                 data = record.data[dataIndex];
@@ -65,7 +71,7 @@ Ext.define('Ext.grid.plugin.Clipboard', {
                 if (!viewNode) {
                     viewNode = Ext.fly(view.createRowElement(record, cellContext.rowIdx));
                 }
-                cell = viewNode.down(cellContext.column.getCellInnerSelector());
+                cell = viewNode.down(column.getCellInnerSelector());
                 data = cell.dom.innerHTML;
                 if (isText) {
                     data = Ext.util.Format.stripTags(data);
@@ -186,5 +192,9 @@ Ext.define('Ext.grid.plugin.Clipboard', {
 
     putTextData: function (data, format) {
         this.putCellData(data, format);
+    },
+
+    getTarget: function(comp) {
+        return comp.body;
     }
 });

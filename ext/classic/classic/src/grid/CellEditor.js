@@ -167,7 +167,7 @@ Ext.define('Ext.grid.CellEditor', {
      */
     onShow: function() {
         var me = this,
-            innerCell = me.boundEl.down(me.editingPlugin.view.innerSelector);
+            innerCell = me.boundEl.down(me.context.view.innerSelector);
 
         if (innerCell) {
             if (me.isForTree) {
@@ -234,7 +234,7 @@ Ext.define('Ext.grid.CellEditor', {
 
     restoreCell: function() {
         var me = this,
-            innerCell = me.boundEl.down(me.editingPlugin.view.innerSelector);
+            innerCell = me.boundEl.down(me.context.view.innerSelector);
 
         if (innerCell) {
             if (me.isForTree) {
@@ -288,7 +288,7 @@ Ext.define('Ext.grid.CellEditor', {
     realign: function(autoSize) {
         var me = this,
             boundEl = me.boundEl,
-            innerCell = boundEl.down(me.editingPlugin.view.innerSelector),
+            innerCell = boundEl.down(me.context.view.innerSelector),
             innerCellTextNode = innerCell.dom.firstChild,
             width = boundEl.getWidth(),
             offsets = Ext.Array.clone(me.offsets),

@@ -5,14 +5,14 @@
     "creator": "Sencha",
     "summary": "Sencha Charts",
     "detailedDescription": "Sencha Charts is a package that allows to generate charts of different types (line, columns, scatter, radar, gauge, etc...). It also includes the Drawing library which provides an abstraction sitting on top of HTML Canvas and SVG.",
-    "version": "6.0.0.415",
+    "version": "6.0.0.640",
     "compatVersion": "1.0.0",
     "format": "1",
     "sass": {
         "namespace": "Ext",
-        "srcpath": "${package.dir}/sass/src,${package.dir}/${toolkit.name}/sass/src",
-        "varpath": "${package.dir}/sass/var,${package.dir}/${toolkit.name}/sass/var",
-        "etcpath": "${package.dir}/sass/etc/all.scss,${package.dir}/${toolkit.name}/sass/etc/all.scss"
+        "etc": "${package.dir}/sass/etc/all.scss,${package.dir}/${toolkit.name}/sass/etc/all.scss",
+        "var": "${package.dir}/sass/var,${package.dir}/${toolkit.name}/sass/var",
+        "src": "${package.dir}/sass/src,${package.dir}/${toolkit.name}/sass/src"
     },
     "slicer": {
         "js": [
@@ -37,6 +37,10 @@
     ],
 
     "builds": {
+        "triton": {
+            "toolkit": "classic",
+            "theme": "theme-triton"
+        },
         "neptune": {
             "toolkit": "classic",
             "theme": "theme-neptune"

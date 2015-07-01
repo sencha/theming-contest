@@ -16,7 +16,7 @@
  *         extend : 'Ext.app.ViewController',
  *         alias: 'controller.userlist',
  *       
- *         init: function() {
+ *         init: function(view) {
  *             this.userCount = 0;
  *             var users = [],
  *                 i;
@@ -24,7 +24,7 @@
  *             for (i = 0; i < 5; ++i) {
  *                 users.push(this.getUser());
  *             }  
- *             this.getView().getStore().add(users);
+ *             view.getStore().add(users);
  *         },
  *       
  *         onAddClick: function() {
@@ -291,13 +291,21 @@ Ext.define('Ext.app.ViewController', {
      * @return {Boolean} returns false if any of the handlers return false otherwise it returns true.
      * @protected
      */
-    fireViewEvent: function(eventName) {
+    fireViewEvent: function(eventName, firstArg) {
         var view = this.view,
-            result = false;
+            result = false,
+            args = arguments;
 
         if (view) {
-            result = view.fireEvent.apply(view, arguments);
+            if (view !== firstArg) {
+                args = Ext.Array.slice(args);
+
+                args.splice(1, 0, view);
+            }
+
+            result = view.fireEvent.apply(view, args);
         }
+
         return result;
     },
 

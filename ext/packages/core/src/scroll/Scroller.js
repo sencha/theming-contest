@@ -219,6 +219,13 @@ Ext.define('Ext.scroll.Scroller', {
 
         me.onDomScrollEnd = Ext.Function.createBuffered(me.onDomScrollEnd, 100, me);
     },
+    
+    destroy: function() {
+        this.setElement(null);
+        this.onDomScrollEnd = this._partners = this.component = null;
+        
+        this.callParent();
+    },
 
     /**
      * Adds a "partner" scroller.  Partner scrollers reflect each other's scroll position

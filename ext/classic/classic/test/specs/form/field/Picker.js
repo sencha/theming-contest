@@ -616,7 +616,7 @@ describe("Ext.form.field.Picker", function() {
 
             runs(function() {
                 // Down arrow to show the picker
-                jasmine.fireKeyEvent(editorField.inputEl.dom, 'keydown', Ext.EventObject.DOWN);
+                jasmine.fireKeyEvent(editorField.inputEl.dom, 'keydown', Ext.event.Event.DOWN);
                 expect(editorField.picker.isVisible()).toBe(true);
                 staticField.inputEl.dom.focus();
             });
@@ -637,7 +637,7 @@ describe("Ext.form.field.Picker", function() {
                 expect(cellEditor.isVisible()).toBe(true);
 
                 // Down arrow to show the picker
-                jasmine.fireKeyEvent(editorField.inputEl.dom, 'keydown', Ext.EventObject.DOWN);
+                jasmine.fireKeyEvent(editorField.inputEl.dom, 'keydown', Ext.event.Event.DOWN);
                 expect(editorField.picker.isVisible()).toBe(true);
 
                 // Start editing within the picker grid at row 0, column 2
@@ -659,7 +659,7 @@ describe("Ext.form.field.Picker", function() {
             // Wait for the blur to result from the focus of the other field to hide the editor and obviously its picker
             waitsFor(function() {
                 return !cellEditor.isVisible() && !editorField.picker.isVisible() && !pickerCellEditor.isVisible();
-            }, 'the CellEditor, and its picker, and its picker\'s CellEditor to be hidden');
+            }, 'the CellEditor, and its picker, and its picker\'s CellEditor to be hidden for the first time');
 
             // Now to open the editor in the editor's picker, and stop the edit by clicking on row 0, column 3
             runs(function() {
@@ -671,7 +671,7 @@ describe("Ext.form.field.Picker", function() {
                 expect(cellEditor.isVisible()).toBe(true);
 
                 // Down arrow to show the picker
-                jasmine.fireKeyEvent(editorField.inputEl.dom, 'keydown', Ext.EventObject.DOWN);
+                jasmine.fireKeyEvent(editorField.inputEl.dom, 'keydown', Ext.event.Event.DOWN);
                 expect(editorField.picker.isVisible()).toBe(true);
 
                 // Start editing within the picker grid at row 0, column 2
@@ -694,7 +694,7 @@ describe("Ext.form.field.Picker", function() {
             // Wait for the blur to result from the focus of the other field to hide the editor and obviously its picker
             waitsFor(function() {
                 return !cellEditor.isVisible() && !editorField.picker.isVisible() && !pickerCellEditor.isVisible();
-            }, 'the CellEditor, and its picker, and its picker\'s CellEditor to be hidden');
+            }, 'the CellEditor, and its picker, and its picker\'s CellEditor to be hidden for the second time');
 
             runs(function() {
                 // The edit should have been canceled, and focus should move to the clicked cell

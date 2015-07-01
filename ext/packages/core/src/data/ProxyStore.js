@@ -544,7 +544,9 @@ Ext.define('Ext.data.ProxyStore', {
      * @return {Ext.data.Model[]} The removed Model instances
      */
     getRemovedRecords: function() {
-        return this.removed;
+        var removed = this.removed;
+        // If trackRemoved: false, removed will be null
+        return removed ? Ext.Array.clone(removed) : removed;
     },
 
     /**
@@ -822,11 +824,14 @@ Ext.define('Ext.data.ProxyStore', {
             proxy = me.getProxy();
         
         me.blockLoad();
-        me.clearData();
+        me.getData().destroy();
+        me.data = null;
         me.setProxy(null);
+        
         if (proxy.autoCreated) {
             proxy.destroy();
         }
+        
         me.setModel(null);
     },
 

@@ -2,10 +2,10 @@ describe("Ext.data.association.HasOne_legacy", function() {
     
     var rec;
     
-    function definePerson(cfg) {
+    function definePerson(cfg, fields) {
         Ext.define('spec.Person', {
             extend: 'Ext.data.Model',
-            fields: ['id', 'profile_id', 'aField'],
+            fields: fields || ['id', 'profile_id', 'aField'],
             hasOne: Ext.apply({
                 model: 'spec.Profile'
             }, cfg)
@@ -473,6 +473,21 @@ describe("Ext.data.association.HasOne_legacy", function() {
                 }
             }]).getRecords()[0];
             
+            expect(doGet().getId()).toBe(3);
+        });
+
+        it("should read when there is no attached field", function() {
+            definePerson(null, ['id']);
+            var reader = new Ext.data.reader.Json({
+                model: spec.Person
+            });
+            
+            rec = reader.read([{
+                id: 1,
+                profile: {
+                    id: 3
+                }
+            }]).getRecords()[0];
             expect(doGet().getId()).toBe(3);
         });
         

@@ -127,6 +127,10 @@ function makeObservableSuite(Observable) {
 
             employee = new Employee(employeeConfig);
         });
+        
+        afterEach(function() {
+            Observable.prototype.fireEventArgs.target = null;
+        });
 
         describe("constructor", function() {
             it("should allow the constructor to be called multiple times", function() {
@@ -2703,6 +2707,10 @@ function makeObservableSuite(Observable) {
                 capturer = jasmine.createSpy('capturer');
                 Observable.capture(boss, capturer, fakeScope);
             });
+            
+            afterEach(function() {
+                Observable.releaseCapture(boss);
+            });
 
             describe("capture", function() {
                 it("should create an interceptor of observable fireEventArgs method", function() {
@@ -2775,6 +2783,11 @@ function makeObservableSuite(Observable) {
                 }
 
                 Boss.un('fired', bossFiredFn, fakeScope);
+            });
+            
+            afterEach(function() {
+                Boss.un('fired', firedListener);
+                Observable.releaseCapture(Boss);
             });
 
             it("should call bossFiredFn several times", function() {
@@ -3480,6 +3493,189 @@ function makeObservableSuite(Observable) {
                         expect(spy.mostRecentCall.object).toBe(o);
                     });
                 });
+            });
+        });
+
+        describe('fireEventedAction', function () {
+            var C;
+            var after, before, fooArgs, fooRet;
+            var fooPause;
+
+            beforeEach(function () {
+                before = after = fooArgs = fooRet = null;
+                fooPause = false;
+
+                C = Ext.define(null, {
+                    mixins: [Observable],
+
+                    constructor: function() {
+                        this.mixins.observable.constructor.call(this);
+                    },
+
+                    doFoo: function (a, b, controller) {
+                        fooArgs = Ext.Array.slice(arguments);
+                        if (fooPause) {
+                            controller.pause();
+                        }
+                        return fooRet;
+                    },
+
+                    foo: function (a, b) {
+                        this.fireEventedAction('foo', [this, a, b], 'doFoo', this, false);
+                    }
+                });
+            });
+
+            it('should fire events before and after the action', function () {
+                var c = new C();
+
+                c.on({
+                    blurp: 42,
+
+                    beforefoo: function (sender, a, b) {
+                        expect(fooArgs).toBe(null);
+                        before = Ext.Array.slice(arguments);
+                    },
+
+                    foo: function (sender, a, b) {
+                        expect(fooArgs).not.toBe(null);
+                        after = Ext.Array.slice(arguments);
+                    }
+                });
+
+                c.foo(2, 4);
+
+                expect(before.length).toBe(5); // sender, a, b, controller, options
+                expect(before[0] === c).toBe(true);
+                expect(before[1]).toBe(2);
+                expect(before[2]).toBe(4);
+                expect(typeof before[3].pause).toBe('function');
+                expect(before[4].blurp).toBe(42);
+
+                expect(fooArgs.length).toBe(3);
+                expect(fooArgs[0]).toBe(2);
+                expect(fooArgs[1]).toBe(4);
+                expect(typeof fooArgs[2].pause).toBe('function');
+
+                expect(after.length).toBe(4); // sender, a, b, options
+                expect(after[0] === c).toBe(true);
+                expect(after[1]).toBe(2);
+                expect(after[2]).toBe(4);
+                expect(after[3].blurp).toBe(42);
+            });
+
+            it('should allow before events to prevent action', function () {
+                var c = new C();
+
+                c.on({
+                    blurp: 42,
+
+                    beforefoo: function (sender, a, b) {
+                        expect(fooArgs).toBe(null);
+                        before = Ext.Array.slice(arguments);
+                        return false;
+                    },
+
+                    foo: function (sender, a, b) {
+                        expect(fooArgs !== null).toBe(true);
+                        after = Ext.Array.slice(arguments);
+                    }
+                });
+
+                c.foo(2, 4);
+
+                expect(fooArgs).toBe(null); // we returned false
+                expect(after).toBe(null);
+
+                expect(before.length).toBe(5); // sender, a, b, controller, options
+                expect(before[0] === c).toBe(true);
+                expect(before[1]).toBe(2);
+                expect(before[2]).toBe(4);
+                expect(typeof before[3].pause).toBe('function');
+                expect(before[4].blurp).toBe(42);
+            });
+
+            it('should allow action to prevent events', function () {
+                var c = new C();
+
+                c.on({
+                    blurp: 42,
+
+                    beforefoo: function (sender, a, b) {
+                        expect(fooArgs).toBe(null);
+                        before = Ext.Array.slice(arguments);
+                    },
+
+                    foo: function (sender, a, b) {
+                        expect(fooArgs !== null).toBe(true);
+                        after = Ext.Array.slice(arguments);
+                    }
+                });
+
+                fooRet = false;
+                c.foo(2, 4);
+
+                expect(fooArgs !== null).toBe(true);
+                expect(after).toBe(null); // doFoo returned false
+
+                expect(before.length).toBe(5); // sender, a, b, controller, options
+                expect(before[0] === c).toBe(true);
+                expect(before[1]).toBe(2);
+                expect(before[2]).toBe(4);
+                expect(typeof before[3].pause).toBe('function');
+                expect(before[4].blurp).toBe(42);
+            });
+
+            it('should allow pausing of action and events', function () {
+                var c = new C();
+
+                c.on({
+                    blurp: 42,
+
+                    beforefoo: function (sender, a, b, controller) {
+                        expect(fooArgs).toBe(null);
+                        before = Ext.Array.slice(arguments);
+                        controller.pause();
+                    },
+
+                    foo: function (sender, a, b) {
+                        expect(fooArgs !== null).toBe(true);
+                        after = Ext.Array.slice(arguments);
+                    }
+                });
+
+                c.foo(2, 4);
+
+                expect(fooArgs).toBe(null);
+                expect(after).toBe(null);
+
+                expect(before.length).toBe(5); // sender, a, b, controller, options
+                expect(before[0] === c).toBe(true);
+                expect(before[1]).toBe(2);
+                expect(before[2]).toBe(4);
+                expect(typeof before[3].pause).toBe('function');
+                expect(before[4].blurp).toBe(42);
+
+                fooPause = true; // tell doFoo action to pause controller
+                before[3].resume();
+
+                // Ensure doFoo was called
+                expect(fooArgs.length).toBe(3);
+                expect(fooArgs[0]).toBe(2);
+                expect(fooArgs[1]).toBe(4);
+                expect(typeof fooArgs[2].pause).toBe('function');
+
+                // But foo event was not fired
+                expect(after).toBe(null);
+
+                // Now resume to finish
+                before[3].resume();
+
+                expect(after.length).toBe(4); // sender, a, b, options
+                expect(after[0] === c).toBe(true);
+                expect(after[1]).toBe(2);
+                expect(after[2]).toBe(4);
+                expect(after[3].blurp).toBe(42);
             });
         });
 

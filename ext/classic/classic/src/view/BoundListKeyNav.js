@@ -24,7 +24,7 @@ Ext.define('Ext.view.BoundListKeyNav', {
         if (!me.keyNav) {
             me.callParent([view]);
 
-            // Add ESC handling to the View's KeyMap to caollapse the field
+            // Add ESC handling to the View's KeyMap to collapse the field
             me.keyNav.map.addBinding({
                 key: Ext.event.Event.ESC,
                 fn: me.onKeyEsc,

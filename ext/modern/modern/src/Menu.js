@@ -118,7 +118,7 @@ Ext.define('Ext.Menu', {
     },
 
     constructor: function() {
-        this.config.translatable.translationMethod = Ext.browser.is.AndroidStock2 ? 'cssposition' : 'csstransform';
+        this.config.translatable.translationMethod = 'csstransform';
         this.callParent(arguments);
     },
 

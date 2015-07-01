@@ -58,6 +58,11 @@ Ext.define('Ext.data.ChainedStore', {
         var source = this.getSource();
         return source.remove.apply(source, arguments);
     },
+
+    removeAll: function() {
+        var source = this.getSource();
+        return source.removeAll();
+    },
     
     getData: function() {
         var me = this,

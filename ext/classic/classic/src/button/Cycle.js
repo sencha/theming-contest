@@ -156,10 +156,13 @@ Ext.define('Ext.button.Cycle', {
     initComponent: function() {
         //<debug>
         // Ext JS Cycle buttons are implemented in a way that clashes with WAI-ARIA requirements,
-        // so we warn about that.
-        // Don't warn if we're under the slicer
-        if (Ext.enableAriaButtons && !Ext.theme) {
-            Ext.log.warn(
+        // so we warn the developer about that.
+        // Don't warn if we're under the slicer though.
+        if (Ext.enableAriaButtons && !Ext.slicer) {
+            // Hard error if full ARIA compatibility is enabled, otherwise a warning
+            var logFn = Ext.enableAria ? Ext.log.error : Ext.log.warn;
+            
+            logFn(
                 "Using Cycle buttons is not recommended in WAI-ARIA " +
                 "compliant applications, because their behavior conflicts " +
                 "with accessibility best practices. See WAI-ARIA 1.0 " +

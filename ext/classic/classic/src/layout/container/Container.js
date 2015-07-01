@@ -544,10 +544,10 @@ Ext.define('Ext.layout.container.Container', {
         this.callParent([item]);
     },
 
-    onRemove: function(item) {
+    onRemove: function(item, isDestroying) {
         if (!item.liquidLayout) {
             --this.activeItemCount;
         }
-        this.callParent([item]);
+        this.callParent([item, isDestroying]);
     }
 });

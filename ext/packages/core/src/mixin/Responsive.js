@@ -199,7 +199,7 @@ Ext.define('Ext.mixin.Responsive', function (Responsive) { return {
          *          small: {
          *              hidden: true
          *          },
-         *          medium: {
+         *          'medium && !tuesday': {
          *              hidden: false,
          *              region: 'north'
          *          },

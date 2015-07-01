@@ -1594,6 +1594,22 @@
         }
         @if ($ui-opacity != null) and ($ui-opacity != 1) {
             @include opacity($ui-opacity);
+
+            @if $include-ie {
+                &.#{$prefix}tab-rotate-left {
+                    .#{$prefix}ie8 & {
+                        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity * 100}),
+                                progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+                    }
+                }
+
+                &.#{$prefix}tab-rotate-right {
+                    .#{$prefix}ie8 & {
+                        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity * 100}),
+                                progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+                    }
+                }
+            }
         }
         @if ($ui-background-opacity != null) and ($ui-background-opacity != 1) {
             @include background-opacity($ui-background-color, $ui-background-opacity);
@@ -2092,7 +2108,7 @@
 
         // inner el requires max-width in order for ellipsis to work.
         max-width: 100%;
-        
+
         .#{$prefix}tab-icon-right > &,
         .#{$prefix}tab-icon-left > & {
             // since calc is only supported in IE9+ ellipsis will not work in IE8 when
@@ -2112,7 +2128,7 @@
             min-width: $ui-icon-width;
         }
 
-        line-height: $ui-icon-height;
+        min-height: $ui-icon-height;
         background-position: $ui-icon-background-position;
         font-size: $ui-icon-height;
         line-height: $ui-icon-height;
@@ -2179,6 +2195,22 @@
 
         @if ($ui-opacity-focus != null) {
             @include opacity($ui-opacity-focus);
+
+            @if $include-ie {
+                &.#{$prefix}tab-rotate-left {
+                    .#{$prefix}ie8 & {
+                        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-focus * 100}),
+                                progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+                    }
+                }
+
+                &.#{$prefix}tab-rotate-right {
+                    .#{$prefix}ie8 & {
+                        filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-focus * 100}),
+                                progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+                    }
+                }
+            }
         }
 
         @if ($ui-background-opacity-focus != null) {
@@ -2284,6 +2316,22 @@
 
             @if ($ui-opacity-over != null) {
                 @include opacity($ui-opacity-over);
+
+                @if $include-ie {
+                    &.#{$prefix}tab-rotate-left {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-over * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+                        }
+                    }
+
+                    &.#{$prefix}tab-rotate-right {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-over * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+                        }
+                    }
+                }
             }
 
             @if ($ui-background-opacity-over != null) {
@@ -2365,6 +2413,22 @@
 
             @if ($ui-opacity-focus-over != null) {
                 @include opacity($ui-opacity-focus-over);
+
+                @if $include-ie {
+                    &.#{$prefix}tab-rotate-left {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-focus-over * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+                        }
+                    }
+
+                    &.#{$prefix}tab-rotate-right {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-focus-over * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+                        }
+                    }
+                }
             }
 
             @if ($ui-background-opacity-focus-over != null) {
@@ -2449,6 +2513,22 @@
 
             @if ($ui-opacity-active != null) {
                 @include opacity($ui-opacity-active);
+
+                @if $include-ie {
+                    &.#{$prefix}tab-rotate-left {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-active * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+                        }
+                    }
+
+                    &.#{$prefix}tab-rotate-right {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-active * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+                        }
+                    }
+                }
             }
 
             @if ($ui-background-opacity-active != null) {
@@ -2529,6 +2609,22 @@
 
             @if ($ui-opacity-focus-active != null) {
                 @include opacity($ui-opacity-focus-active);
+
+                @if $include-ie {
+                    &.#{$prefix}tab-rotate-left {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-focus-active * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+                        }
+                    }
+
+                    &.#{$prefix}tab-rotate-right {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-focus-active * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+                        }
+                    }
+                }
             }
 
             @if ($ui-background-opacity-focus-active != null) {
@@ -2612,11 +2708,27 @@
         &.#{$prefix}tab-#{$ui} {
             border-color: $ui-border-color-disabled;
 
-            @if $ui-opacity-disabled != 1 {
+            @if $ui-opacity-disabled != null {
                 @include opacity($ui-opacity-disabled);
+
+                @if $include-ie {
+                    &.#{$prefix}tab-rotate-left {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-disabled * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+                        }
+                    }
+
+                    &.#{$prefix}tab-rotate-right {
+                        .#{$prefix}ie8 & {
+                            filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=#{$ui-opacity-disabled * 100}),
+                                    progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+                        }
+                    }
+                }
             }
 
-            @if $ui-background-opacity-disabled != 1 {
+            @if $ui-background-opacity-disabled != null {
                 @include background-opacity($ui-background-color-disabled, $ui-background-opacity-disabled);
             } @else {
                 background-color: $ui-background-color-disabled;
@@ -2713,19 +2825,18 @@
         }
 
         $states:
-            (over '.#{$prefix}tab-over' 'tab-over' $ui-background-color-over)
-            (focus '.#{$prefix}tab-focus' 'tab-focus' $ui-background-color-focus)
-            (focus-over '.#{$prefix}tab-focus.#{$prefix}tab-over' 'tab-focus.#{$prefix}tab-over' $ui-background-color-focus-over)
-            (active '.#{$prefix}tab.#{$prefix}tab-active' 'tab-active' $ui-background-color-active)
-            (focus-active '.#{$prefix}tab-focus.#{$prefix}tab-active' 'tab-focus.#{$prefix}tab-active' $ui-background-color-focus-active)
-            (disabled '.#{$prefix}tab.#{$prefix}tab-disabled' 'tab-disabled' $ui-background-color-disabled);
+            (over '.#{$prefix}tab-over' 'tab-over')
+            (focus '.#{$prefix}tab-focus' 'tab-focus')
+            (focus-over '.#{$prefix}tab-focus.#{$prefix}tab-over' 'tab-focus.#{$prefix}tab-over')
+            (active '.#{$prefix}tab.#{$prefix}tab-active' 'tab-active')
+            (focus-active '.#{$prefix}tab-focus.#{$prefix}tab-active' 'tab-focus.#{$prefix}tab-active')
+            (disabled '.#{$prefix}tab.#{$prefix}tab-disabled' 'tab-disabled');
 
         @each $side in top right bottom left {
             @each $item in $states {
                 $state: nth($item, 1);
                 $cls: nth($item, 2);
                 $id-prefix: nth($item, 3);
-                $bgcolor: nth($item, 4);
 
                 #{$cls} {
                     .#{$prefix}tab-#{$ui}-#{$side}-tl,
@@ -2743,7 +2854,6 @@
                     }
 
                     .#{$prefix}tab-#{$ui}-#{$side}-mc {
-                        background-color: $bgcolor;
                         background-repeat: repeat-x;
                         background-image: slicer-frame-background-image('#{$id-prefix}.#{$prefix}tab-#{$ui}-#{$side}', 'tab/tab-#{$ui}-#{$side}-#{$state}-fbg');
                     }

@@ -462,6 +462,7 @@ describe("Ext.app.ViewController", function() {
             ct.items.first().fireEvent('custom');
             expect(controller.method1).toHaveBeenCalled();
             
+            Ext.destroy(other);
         });
     });
     
@@ -864,7 +865,49 @@ describe("Ext.app.ViewController", function() {
                 
                 c.fireEvent('custom');
                 expect(ctrl.method1).not.toHaveBeenCalled();
-            });  
+            });
+        });
+    });
+
+    describe("fireViewEvent", function() {
+        it("view should be first argument", function() {
+            makeContainer({
+                controller : {
+                    type: 'test1',
+                    control: {
+                        '#': {
+                            custom: 'method1'
+                        }
+                    }
+                }
+            });
+
+            spyOn(controller, 'method1');
+
+            controller.fireViewEvent('custom', 'foo');
+
+            expect(controller.method1).toHaveBeenCalled();
+            expect(controller.method1.mostRecentCall.args[0]).toEqual(ct);
+        });
+
+        it("view should not add view as first argument", function() {
+            makeContainer({
+                controller : {
+                    type: 'test1',
+                    control: {
+                        '#': {
+                            custom: 'method1'
+                        }
+                    }
+                }
+            });
+
+            spyOn(controller, 'method1');
+
+            controller.fireViewEvent('custom', ct, 'foo');
+
+            expect(controller.method1).toHaveBeenCalled();
+            expect(controller.method1.mostRecentCall.args[0]).toEqual(ct);
         });
     });
 });

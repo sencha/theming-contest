@@ -5,10 +5,10 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
     config: {
         direction: 'horizontal',
         element: {
-            className: 'x-dock'
+            className: Ext.baseCSSPrefix + 'dock'
         },
         bodyElement: {
-            className: 'x-dock-body'
+            className: Ext.baseCSSPrefix + 'dock-body'
         },
         innerWrapper: null,
         sizeState: false,
@@ -58,8 +58,8 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
         }
 
         item.$dockWrapper = this;
-        item.addCls('x-dock-item');
-        item.addCls('x-docked-' + docked);
+        item.addCls(Ext.baseCSSPrefix + 'dock-item');
+        item.addCls(Ext.baseCSSPrefix + 'docked-' + docked);
 
         for (i = 0, ln = sideItems.length; i < ln; i++) {
             sibling = sideItems[i];
@@ -94,8 +94,8 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
         Ext.Array.remove(items, item);
         item.element.detach();
         delete item.$dockWrapper;
-        item.removeCls('x-dock-item');
-        item.removeCls('x-docked-' + position);
+        item.removeCls(Ext.baseCSSPrefix + 'dock-item');
+        item.removeCls(Ext.baseCSSPrefix + 'docked-' + position);
 
         if (--this.itemsCount === 0) {
             this.destroy();
@@ -130,7 +130,7 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
     },
 
     updateElement: function(element) {
-        element.addCls('x-dock-' + this.getDirection());
+        element.addCls(Ext.baseCSSPrefix + 'dock-' + this.getDirection());
     },
 
     applyBodyElement: function(bodyElement) {
@@ -175,8 +175,7 @@ Ext.define('Ext.layout.wrapper.BoxDock', {
         if (innerWrapper) {
             if (outerWrapper) {
                 outerWrapper.setInnerWrapper(innerWrapper);
-            }
-            else {
+            } else {
                 innerWrapperElement = innerWrapper.getElement();
                 if (!innerWrapperElement.destroyed) {
                     innerWrapperElement.replace(me.getElement());

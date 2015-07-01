@@ -60,22 +60,26 @@ Ext.define('Ext.Sheet', {
          * @cfg
          * @inheritdoc
          */
-        showAnimation: !Ext.browser.is.AndroidStock2 ? {
+        showAnimation: {
             type: 'slideIn',
             duration: 250,
             easing: 'ease-out'
-        } : null,
+        },
 
         /**
          * @cfg
          * @inheritdoc
          */
-        hideAnimation: !Ext.browser.is.AndroidStock2 ? {
+        hideAnimation: {
             type: 'slideOut',
             duration: 250,
             easing: 'ease-in'
-        } : null
+        },
+
+        border: null
     },
+
+    manageBorders: false,
 
     isInputRegex: /^(input|textarea|select|a)$/i,
 

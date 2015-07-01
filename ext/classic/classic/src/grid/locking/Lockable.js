@@ -212,7 +212,6 @@ Ext.define('Ext.grid.locking.Lockable', {
             columns,
             lockedHeaderCt,
             normalHeaderCt,
-            listeners,
             viewConfig = me.viewConfig,
             // When setting the loadMask value, the viewConfig wins if it is defined.
             loadMaskCfg = viewConfig && viewConfig.loadMask,
@@ -231,6 +230,7 @@ Ext.define('Ext.grid.locking.Lockable', {
 
         lockedGrid = {
             id: me.id + '-locked',
+            $initParent: me,
             isLocked: true,
             bufferedRenderer: bufferedRenderer,
             ownerGrid: me,
@@ -267,6 +267,7 @@ Ext.define('Ext.grid.locking.Lockable', {
 
         normalGrid = {
             id: me.id + '-normal',
+            $initParent: me,
             isLocked: false,
             bufferedRenderer: bufferedRenderer,
             ownerGrid: me,
@@ -483,6 +484,11 @@ Ext.define('Ext.grid.locking.Lockable', {
         ]);
     },
 
+    afterInjectLockable: function() {
+        delete this.lockedGrid.$initParent;
+        delete this.normalGrid.$initParent;
+    },
+
     getLockingViewConfig: function(){
         return {
             xclass: 'Ext.grid.locking.View',
@@ -514,18 +520,10 @@ Ext.define('Ext.grid.locking.Lockable', {
                 items: normalHeaders
             },
             result = {
-                lockedWidth: lockedGrid.width || 0,
                 locked: lockedHeaderCt,
                 normal: normalHeaderCt
             },
-            shrinkWrapLocked = !(lockedGrid.width || lockedGrid.flex),
             copy;
-
-        // Only save the initial configuration, since a width will be stamped on
-        // after we sync the width.
-        if (!me.hasOwnProperty('shrinkWrapLocked')) {
-            me.shrinkWrapLocked = shrinkWrapLocked;
-        }
 
         // In case they specified a config object with items...
         if (Ext.isObject(columns)) {
@@ -557,11 +555,6 @@ Ext.define('Ext.grid.locking.Lockable', {
             // trigger the locked subgrid to try to become a split lockable grid itself.
             column.processed = true;
             if (column.locked || column.autoLock) {
-                // If the locked grid has not been configured with a width, we must
-                // Calculate a width from the total width of locked columns
-                if (shrinkWrapLocked && !column.hidden) {
-                    result.lockedWidth += me.getColumnWidth(column) || cp.defaultWidth;
-                }
                 lockedHeaders.push(column);
             } else {
                 normalHeaders.push(column);
@@ -572,33 +565,6 @@ Ext.define('Ext.grid.locking.Lockable', {
         }
         me.fireEvent('processcolumns', me, lockedHeaders, normalHeaders);
         cp.destroy();
-
-        // If grid has not been configured with a width it must shrinkwrap columns with no horiontal scroll
-        // TODO: Use shrinkWrapDock on the locked grid when it works.
-        if (shrinkWrapLocked) {
-            lockedGrid.width = result.lockedWidth;
-        }
-        return result;
-    },
-
-    // Used when calculating total locked column width in processColumns
-    // Use shrinkwrapping of child columns if no top level width.
-    getColumnWidth: function(column) {
-        var result = column.width || 0,
-            subcols, len, i;
-
-        // <debug>
-        if (column.flex) {
-            Ext.raise("Locked columns in an unsized locked side do NOT support a flex width. You must set a width on the " + column.text + "column.");
-        }
-        // </debug>
-        if (!result && column.isGroupHeader) {
-            subcols = column.items.items;
-            len = subcols.length;
-            for (i = 0; i < len; i++) {
-                result += this.getColumnWidth(subcols[i]);
-            }
-        }
         return result;
     },
 
@@ -879,15 +845,18 @@ Ext.define('Ext.grid.locking.Lockable', {
 
                 // The locked grid shrinkwraps the total column width while the normal grid flexes in what remains
                 // UNLESS it has been set to forceFit
-                if (rendered && me.shrinkWrapLocked && !locked.headerCt.forceFit) {
+                if (rendered && locked.shrinkWrapColumns && !locked.headerCt.forceFit) {
                     delete locked.flex;
                     // Don't pass the purge flag here
-                    locked.setWidth(locked.headerCt.getTableWidth() + locked.el.getBorderWidth('lr'));
+                    // Use gridPanelBorderWidth as measured in Ext.table.Panel#onRender
+                    // TODO: Use shrinkWrapDock on the locked grid when it works.
+                    locked.setWidth(locked.headerCt.getTableWidth() + locked.gridPanelBorderWidth);
                 }
                 locked.addCls(me.lockedGridCls);
                 locked.show();
-                if (me.split) {
+                if (locked.split) {
                     me.child('splitter').show();
+                    me.addCls(Ext.baseCSSPrefix + 'grid-locked-split');
                 }
             } else {
                 // No visible locked columns: hide the locked grid
@@ -897,8 +866,9 @@ Ext.define('Ext.grid.locking.Lockable', {
                     locked.getView().clearViewEl(true);
                 }
                 locked.hide();
-                if (me.split) {
+                if (locked.split) {
                     me.child('splitter').hide();
+                    me.removeCls(Ext.baseCSSPrefix + 'grid-locked-split');
                 }
             }
 
@@ -921,11 +891,6 @@ Ext.define('Ext.grid.locking.Lockable', {
         // grid, and cannot have a shrinkwrapped width, but must flex the entire width.
         else {
             normal.hide();
-
-            // When the normal grid is hidden, we no longer need the bottom border "scrollbar replacement"
-            if (rendered) {
-                lockedView.getEl().setStyle('border-bottom-width', '0');
-            }
 
             // The locked now becomes *the* grid and has to flex to occupy the full view width
             locked.flex = 1;
@@ -976,7 +941,7 @@ Ext.define('Ext.grid.locking.Lockable', {
 
         // if column was previously flexed, get/set current width
         // and remove the flex
-        if (activeHd.flex) {
+        if (activeHd.flex && lockedGrid.shrinkWrapColumns) {
             activeHd.width = activeHd.getWidth();
             activeHd.flex = null;
         }
@@ -1016,12 +981,12 @@ Ext.define('Ext.grid.locking.Lockable', {
         if (refreshFlags[1]) {
             normalGrid.getView().refreshView();
         }
+        me.fireEvent('lockcolumn', me, activeHd);
         Ext.resumeLayouts(true);
 
         if (hadFocus) {
             activeHd.focus();
         }
-        me.fireEvent('lockcolumn', me, activeHd);
     },
 
     // going from locked section to unlocked
@@ -1077,12 +1042,12 @@ Ext.define('Ext.grid.locking.Lockable', {
         if (refreshFlags[1]) {
             normalGrid.getView().refreshView();
         }
+        me.fireEvent('unlockcolumn', me, activeHd);
         Ext.resumeLayouts(true);
 
         if (hadFocus) {
             activeHd.focus();
         }
-        me.fireEvent('unlockcolumn', me, activeHd);
     },
 
     // we want to totally override the reconfigure behaviour here, since we're creating 2 sub-grids
@@ -1291,6 +1256,16 @@ Ext.define('Ext.grid.locking.Lockable', {
             task.cancel();
             me.syncLockedWidthTask = null;
         }
+        
+        // Release interceptors created in modifyHeaderCt
+        if (me.lockedGrid && me.lockedGrid.headerCt) {
+            me.lockedGrid.headerCt.showMenuBy = null;
+        }
+        
+        if (me.normalGrid && me.normalGrid.headerCt) {
+            me.normalGrid.headerCt.showMenuBy = null;
+        }
+        
         Ext.destroy(me.view, me.headerCt);
     }
 }, function() {

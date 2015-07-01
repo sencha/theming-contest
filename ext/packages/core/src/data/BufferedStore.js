@@ -248,6 +248,10 @@ Ext.define('Ext.data.BufferedStore', {
 
     load: function(options) {
         var me = this;
+        
+        if (me.loading) {
+            return;
+        }
         options = options || {};
 
         // Buffered stores, a load operation means kick off a clean load from page 1
@@ -328,6 +332,7 @@ Ext.define('Ext.data.BufferedStore', {
         endPage = me.getPageFromRecordIndex(endIdx);
 
         me.loading = true;
+        options.waitForReload = waitForReload;
 
         // Wait for the requested range to become available in the page map
         // Load the range as soon as the whole range is available
@@ -737,7 +742,7 @@ Ext.define('Ext.data.BufferedStore', {
         // generation of the data cache (clearing it changes generations)
         // then request it...
         existingPageRequest = me.pageRequests[options.page];
-        if (!existingPageRequest || existingPageRequest.pageMapGeneration !== data.pageMapGeneration) {
+        if (!existingPageRequest || existingPageRequest.getOperation().pageMapGeneration !== data.pageMapGeneration) {
             // Copy options into a new object so as not to mutate passed in objects
             options = Ext.apply({
                 action : 'read',
@@ -779,7 +784,7 @@ Ext.define('Ext.data.BufferedStore', {
             loadingFlag = me.wasLoading,
             reqs = me.pageRequests,
             data = me.getData(),
-            req, page;
+            page;
 
         // If any requests return, we no longer respond to them.
         data.clearListeners();
@@ -794,12 +799,13 @@ Ext.define('Ext.data.BufferedStore', {
         me.loading = true;
         me.totalCount = 0;
 
-        // Cancel all outstanding requests
+        // Abort all outstanding requests.
+        // onProxyPrefetch will reject them as being for the previous data generation
+        // anyway, if they do return.
+        // because of the pageMapGeneration mismatch.
         for (page in reqs) {
             if (reqs.hasOwnProperty(page)) {
-                req = reqs[page];
-                delete reqs[page];
-                delete req.callback;
+                reqs[page].getOperation().abort();
             }
         }
 
@@ -842,12 +848,19 @@ Ext.define('Ext.data.BufferedStore', {
      * @param {Ext.data.operation.Operation} operation The operation that completed
      */
     onProxyPrefetch: function(operation) {
+        if (this.destroyed) {
+            return;
+        }
+        
         var me = this,
             resultSet = operation.getResultSet(),
             records = operation.getRecords(),
             successful = operation.wasSuccessful(),
             page = operation.getPage(),
-            oldTotal = me.totalCount;
+            waitForReload = operation.waitForReload,
+            oldTotal = me.totalCount,
+            requests = me.pageRequests,
+            key, op;
 
         // Only cache the data if the operation was invoked for the current pageMapGeneration.
         // If the pageMapGeneration has changed since the request was fired off, it will have been cancelled.
@@ -872,7 +885,23 @@ Ext.define('Ext.data.BufferedStore', {
             // Add the page into the page map.
             // pageadd event may trigger the onRangeAvailable
             if (successful) {
-                me.cachePage(records, operation.getPage());
+                if (me.totalCount === 0) {
+                    if (waitForReload) {
+                        for (key in requests) {
+                            op = requests[key].getOperation();
+                            // Created in the same batch, clear the waitForReload so this
+                            // won't be run again
+                            if (op.waitForReload === waitForReload) {
+                                delete op.waitForReload;
+                            }
+                        }
+                        me.getData().un('pageadd', waitForReload);
+                        me.fireEvent('load', me, [], true);
+                        me.fireEvent('refresh', me);
+                    }
+                } else {
+                    me.cachePage(records, operation.getPage());
+                }
             }
 
             //this is a callback that would have been passed to the 'read' function and is optional

@@ -34,14 +34,18 @@ Ext.define('Ext.menu.Manager', {
     checkActiveMenus: function(e) {
         var allMenus = this.visible,
             len = allMenus.length,
-            i, menu;
+            i, menu,
+            mousedownCmp = Ext.Component.fromElement(e.target);
 
         if (len) {
             // Clone here, we may modify this collection while the loop is active
             allMenus = allMenus.slice();
             for (i = 0; i < len; ++i) {
                 menu = allMenus[i];
-                if (!menu.owns(e)) {
+                // Hide the menu if:
+                //      The menu does not own the clicked upon element AND
+                //      The menu is not the child menu of a clicked upon MenuCheckItem
+                if (!(menu.owns(e) || (mousedownCmp && mousedownCmp.isMenuCheckItem && mousedownCmp.menu === menu))) {
                     menu.hide();
                 }
              }

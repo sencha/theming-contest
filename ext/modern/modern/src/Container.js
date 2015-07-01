@@ -307,6 +307,15 @@ Ext.define('Ext.Container', {
         hideOnMaskTap: null
     },
 
+
+    /**
+     * @cfg {Boolean}
+     * @protected
+     * `true` to enable border management of docked items.  When enabled, borders of docked
+     * items will collapse where they meet to avoid duplicated borders.
+     */
+    manageBorders: false,
+
     constructor: function(config) {
         var me = this;
 
@@ -316,6 +325,19 @@ Ext.define('Ext.Container', {
         me.onItemAdd = me.onFirstItemAdd;
 
         me.callParent(arguments);
+
+        if (me.manageBorders) {
+            me.element.addCls('x-managed-borders');
+        }
+    },
+
+    initialize: function() {
+        this.callParent();
+
+        // Ensure the container's layout instance is created, even if the container
+        // has no items.  This ensures border management is handled correctly on empty
+        // panels.
+        this.getLayout();
     },
 
     getElementConfig: function() {
@@ -650,47 +672,50 @@ Ext.define('Ext.Container', {
      *         html: 'This will be added to a Container'
      *     });
      *
-     *     myContainer.add([myPanel]);
+     *     var items = myContainer.add([myPanel]); // Array returned
+     *     var item = myContainer.add(myPanel); // One item is returned
      *
-     * @param {Object/Object[]/Ext.Component/Ext.Component[]} newItems The new items to add to the Container.
-     * @return {Ext.Component} The last item added to the Container from the `newItems` array.
+     * @param {Object/Object[]/Ext.Component/Ext.Component[]} newItems The new item(s) to add
+     * to the Container. Note that if an array of items to add was passed in, an array of added
+     * items will be returned as well even if there was only one item.
+     *
+     * @return {Ext.Component/Ext.Component[]} The Component(s) that were added.
      */
     add: function(newItems) {
         var me = this,
+            addingArray = true,
+            addedItems = [],
             i, ln, item, newActiveItem, instanced;
+        
+        if (!Ext.isArray(newItems)) {
+            newItems = [newItems];
+            addingArray = false;
+        }
 
-        if (Ext.isArray(newItems)) {
-            for (i = 0, ln = newItems.length; i < ln; i++) {
-                item = newItems[i];
-                instanced = item.isWidget;
-                if (!instanced) {
-                    item.$initParent = me;
-                }
-                item = me.factoryItem(item);
-                me.doAdd(item, instanced);
-                delete item.$initParent;
-                if (!newActiveItem && !me.getActiveItem() && me.innerItems.length > 0 && item.isInnerItem()) {
-                    newActiveItem = item;
-                }
-            }
-        } else {
-            instanced = newItems.isWidget;
+        for (i = 0, ln = newItems.length; i < ln; i++) {
+            item = newItems[i];
+            instanced = item.isWidget;
+            
             if (!instanced) {
-                newItems.$initParent = me;
+                item.$initParent = me;
             }
-            item = me.factoryItem(newItems);
+            
+            item = me.factoryItem(item);
             me.doAdd(item, instanced);
             delete item.$initParent;
+            
             if (!newActiveItem && !me.getActiveItem() && me.innerItems.length > 0 && item.isInnerItem()) {
                 newActiveItem = item;
             }
+            
+            addedItems.push(item);
         }
 
         if (newActiveItem) {
             me.setActiveItem(newActiveItem);
         }
 
-        return item;
+        return addingArray ? addedItems : addedItems[0];
     },
 
     /**
@@ -720,10 +745,11 @@ Ext.define('Ext.Container', {
 
     /**
      * Removes an item from this Container, optionally destroying it.
-     * @param {Ext.Component/String} component The component reference or id to remove.
-     * @param {Boolean} [destroy] Calls the Component's {@link Ext.Component#method-destroy destroy}
-     * method if `true`.
-     * @return {Ext.Component} this
+     * @param {Ext.Component/String/Number} component The component instance or id or index to remove.
+     * @param {Boolean} [destroy] `true` to automatically call Component's
+     * {@link Ext.Component#method-destroy destroy} method.
+     *
+     * @return {Ext.Component} The Component that was removed.
      */
     remove: function(item, destroy) {
         var me = this,
@@ -758,7 +784,7 @@ Ext.define('Ext.Container', {
             }
         }
 
-        return me;
+        return item;
     },
 
     doResetActiveItem: function(innerIndex) {
@@ -790,14 +816,17 @@ Ext.define('Ext.Container', {
 
     /**
      * Removes all items currently in the Container, optionally destroying them all.
+     *
      * @param {Boolean} destroy If `true`, {@link Ext.Component#method-destroy destroys}
      * each removed Component.
      * @param {Boolean} everything If `true`, completely remove all items including
      * docked / centered and floating items.
-     * @return {Ext.Component} this
+     *
+     * @return {Ext.Component[]} Array of the removed Components
      */
     removeAll: function(destroy, everything) {
         var items = this.items,
+            removed = [],
             ln = items.length,
             i = 0,
             item;
@@ -819,12 +848,14 @@ Ext.define('Ext.Container', {
                 i--;
                 ln--;
             }
+            
+            removed.push(item);
         }
         this.setActiveItem(null);
 
         this.removingAll = false;
 
-        return this;
+        return removed;
     },
 
     /**
@@ -846,6 +877,8 @@ Ext.define('Ext.Container', {
      *     myContainer.removeAt(0); // removes the first item
      *
      * @param {Number} index The index of the Component to remove.
+     *
+     * @return {Ext.Component} The removed Component
      */
     removeAt: function(index) {
         var item = this.getAt(index);
@@ -854,7 +887,7 @@ Ext.define('Ext.Container', {
             this.remove(item);
         }
 
-        return this;
+        return item;
     },
 
     /**
@@ -871,7 +904,7 @@ Ext.define('Ext.Container', {
             this.remove(item);
         }
 
-        return this;
+        return item;
     },
 
     /**
@@ -1014,10 +1047,6 @@ Ext.define('Ext.Container', {
         currentIndex = me.indexOf(item);
 
         if (currentIndex !== -1) {
-            if (currentIndex < index) {
-                index -= 1;
-            }
-
             items.removeAt(currentIndex);
         }
 
@@ -1389,6 +1418,10 @@ Ext.define('Ext.Container', {
      * @return {Ext.Component} The component (if found).
      */
     getComponent: function(component) {
+        if (typeof component === 'number') {
+            return this.getItems().getAt(component);
+        }
+        
         if (Ext.isObject(component)) {
             component = component.getItemId();
         }
@@ -1434,9 +1467,12 @@ Ext.define('Ext.Container', {
         }
 
         me.removeAll(true, true);
-        Ext.destroy(me.items);
 
         me.callParent();
+        
+        Ext.destroy(me.items);
+        
+        me.items = null;
     },
 
     privates: {

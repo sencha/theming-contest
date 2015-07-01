@@ -489,13 +489,18 @@ Ext.define('Ext.slider.Multi', {
             thumbClicked = thumbClicked || e.target === thumbs[i].el.dom;
         }
 
+        // Focus ourselves before setting the value. This allows other
+        // fields that have blur handlers (for example, date/number field)
+        // to take care of themselves first. This is important for
+        // databinding.
+        me.focus();
+
         if (me.clickToChange && !thumbClicked) {
             trackPoint = me.getTrackpoint(e.getXY());
             if (trackPoint !== undefined) {
                 me.onClickChange(trackPoint);
             }
         }
-        me.focus();
     },
 
     /**

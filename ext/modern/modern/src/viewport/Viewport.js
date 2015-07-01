@@ -10,13 +10,11 @@ Ext.define('Ext.viewport.Viewport', {
         'Ext.viewport.Android',
         'Ext.viewport.WindowsPhone'
     ],
+    singleton: true,
 
-    /**
-     * @private
-     */
-    constructor: function(config) {
+    setup: function (config) {
         var osName = Ext.os.name,
-            viewportName, viewport;
+            viewportName;
 
         switch (osName) {
             case 'Android':
@@ -40,9 +38,7 @@ Ext.define('Ext.viewport.Viewport', {
                 break;
         }
 
-        viewport = Ext.create('Ext.viewport.' + viewportName, config);
-
-        return viewport;
+        Ext.Viewport = Ext.create('Ext.viewport.' + viewportName, config);
     }
 });
 

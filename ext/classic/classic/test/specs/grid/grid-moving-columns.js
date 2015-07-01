@@ -134,7 +134,8 @@ describe('grid-moving-columns', function () {
         visibleColumns = headerCt.gridVisibleColumns || headerCt.visibleColumnManager.getColumns();
 
         // TODO: add comment here!
-        if ((typeof groupHeader !== 'number') && (!groupHeader || groupHeader.items.length)) {
+        if ((typeof groupHeader !== 'number') && 
+            (!groupHeader || (groupHeader.items && groupHeader.items.length))) {
             groupHeader = deepGroupHeader;
         }
     }

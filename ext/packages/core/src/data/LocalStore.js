@@ -183,31 +183,32 @@ Ext.define('Ext.data.LocalStore', {
         var data = this.getData(),
             keyCfg;
 
-        // Defer the creation until we need it
-        if (!this.hasInternalKeys) {
-            keyCfg = {
-                byInternalId: {
-                    property: 'internalId',
-                    rootProperty: ''
-                }
-            };
-            this.hasInternalKeys = true;
-        }
-        
         if (data.filtered) {
-            if (keyCfg) {
+            if (!data.$hasExtraKeys) {
+                keyCfg = this.makeInternalKeyCfg();
                 data.setExtraKeys(keyCfg);
+                data.$hasExtraKeys = true;
             }
             data = data.getSource();
         }
 
-        if (keyCfg) {
-            data.setExtraKeys(keyCfg);
+        if (!data.$hasExtraKeys) {
+            data.setExtraKeys(keyCfg || this.makeInternalKeyCfg());
+            data.$hasExtraKeys = true;
         }
-        
+
         return data.byInternalId.get(internalId) || null;
     },
-    
+
+    /**
+     * Returns the complete unfiltered collection.
+     * @private
+     */
+    getDataSource: function () {
+        var data = this.getData();
+        return data.getSource() || data;
+    },
+
     /**
      * Get the index of the record within the store.
      *
@@ -579,7 +580,16 @@ Ext.define('Ext.data.LocalStore', {
     privates: {
         isLast: function(record) {
             return record === this.last();
-        }
+        },
+
+        makeInternalKeyCfg: function() {
+            return {
+                byInternalId: {
+                    property: 'internalId',
+                    rootProperty: ''
+                }
+            };
+         }
     }
 
 });

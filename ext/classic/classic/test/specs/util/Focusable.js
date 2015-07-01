@@ -34,6 +34,14 @@ describe("Ext.util.Focusable", function() {
         }, config));
     }
     
+    function expectAria(attr, value) {
+        return jasmine.expectAriaAttr(c, attr, value);
+    }
+    
+    function expectNoAria(attr) {
+        return jasmine.expectNoAriaAttr(c, attr);
+    }
+    
     afterEach(function() {
         if (container) {
             container.destroy();
@@ -44,6 +52,48 @@ describe("Ext.util.Focusable", function() {
         }
         
         c = container = null;
+    });
+    
+    describe("tabIndex handling", function() {
+        describe("component not focusable", function() {
+            it("should not render tabindex attribute when tabIndex property is undefined", function() {
+                makeComponent({
+                    focusable: undefined,
+                    tabIndex: undefined
+                });
+                
+                expectNoAria('tabIndex');
+            });
+            
+            it("should not render tabindex attribute when tabIndex property is defined", function() {
+                makeComponent({
+                    focusable: undefined,
+                    tabIndex: 0
+                });
+                
+                expectNoAria('tabIndex');
+            });
+        });
+        
+        describe("component is focusable", function() {
+            it("should not render tabindex attribute when tabIndex property is undefined", function() {
+                makeComponent({
+                    focusable: true,
+                    tabIndex: undefined
+                });
+                
+                expectNoAria('tabIndex');
+            });
+            
+            it("should render tabindex attribute when tabIndex property is defined", function() {
+                makeComponent({
+                    focusable: true,
+                    tabIndex: 0
+                });
+                
+                expectAria('tabIndex', '0');
+            });
+        });
     });
     
     describe("isFocusable", function() {
@@ -144,7 +194,8 @@ describe("Ext.util.Focusable", function() {
                             })
                         ],
                         
-                        focusable: true
+                        focusable: true,
+                        tabIndex: 0
                     });
                     
                     fooCmp = container.down('#foo');
@@ -161,7 +212,17 @@ describe("Ext.util.Focusable", function() {
                         });
                     });
                     
-                    describe("focusable === true", function() {
+                    describe("focusable === true, no tabIndex", function() {
+                        beforeEach(function() {
+                            container.setTabIndex(undefined);
+                        });
+                        
+                        it("should return false", function() {
+                            expect(container.isFocusable()).toBe(false);
+                        });
+                    });
+                    
+                    describe("focusable === true, tabIndex === 0", function() {
                         it("should return true when container is visible", function() {
                             expect(container.isFocusable()).toBe(true);
                         });
@@ -279,7 +340,7 @@ describe("Ext.util.Focusable", function() {
         
         it("should return actual tabIndex when component is rendered", function() {
             c.render(Ext.getBody());
-            c.el.set({ tabindex: 1 });
+            c.el.set({ tabIndex: 1 });
             
             expect(c.rendered).toBe(true);
             expect(c.getTabIndex()).toBe(1);
@@ -321,7 +382,7 @@ describe("Ext.util.Focusable", function() {
             
             c.setTabIndex(-1);
             
-            var index = c.el.getAttribute(Ext.isIE8 ? 'tabIndex' : 'tabindex') - 0;
+            var index = c.el.getAttribute('tabIndex') - 0;
             
             expect(index).toBe(-1);
         });
@@ -350,7 +411,7 @@ describe("Ext.util.Focusable", function() {
         it("should set child's tabIndex", function() {
             container.setTabIndex(88);
             
-            var index = c.el.getAttribute(Ext.isIE8 ? 'tabIndex' : 'tabindex') - 0;
+            var index = c.el.getAttribute('tabIndex') - 0;
             
             expect(index).toBe(88);
         });
@@ -802,6 +863,7 @@ describe("Ext.util.Focusable", function() {
             });
         });
     });
+    
     describe('Wrapping a Component which contains focus', function() {
         var container,
             cmp,
@@ -846,5 +908,4 @@ describe("Ext.util.Focusable", function() {
             });
         });
     });
-    
 });

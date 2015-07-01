@@ -86,7 +86,6 @@ Ext.env.OS = function(userAgent, platform, browserScope) {
         // Ext.browser.version.shortVersion == 501 is for debugging off device
         if (this.is.Android2 || this.is.Android3 || browserScope.version.shortVersion === 501) {
             browserScope.setFlag("AndroidStock");
-            browserScope.setFlag("AndroidStock2");
         }
         if (this.is.Android4) {
             browserScope.setFlag("AndroidStock");
@@ -165,6 +164,7 @@ Ext.env.OS.prototype = {
      * - Windows
      * - Linux
      * - Other
+     * @member Ext.os
      * @param {String} name The OS name to check.
      * @return {Boolean}
      */
@@ -175,6 +175,7 @@ Ext.env.OS.prototype = {
     /**
      * @property {String} [name=null]
      * @readonly
+     * @member Ext.os
      * The full name of the current operating system. Possible values are:
      *
      * - iOS
@@ -191,6 +192,7 @@ Ext.env.OS.prototype = {
     /**
      * @property {Ext.Version} [version=null]
      * Refer to {@link Ext.Version}
+     * @member Ext.os
      * @readonly
      */
     version: null,
@@ -294,6 +296,7 @@ Ext.env.OS.prototype = {
      *
      *     http://localhost/mypage.html?deviceType=Tablet
      *
+     * @member Ext.os
      */
     osEnv.setFlag(deviceType, true);
     osEnv.deviceType = deviceType;

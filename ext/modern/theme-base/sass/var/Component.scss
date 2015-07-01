@@ -1,28 +1,32 @@
 $touch-theme-base: true;
 
 /**
+ * @var {string}
+ * The font-family to use for font icons throughout the theme.
+ * @private
+ */
+$font-icon-font-family: dynamic(FontAwesome);
+
+/**
   Required by charts
 */
-$prefix: 'x-' !dynamic;
-$font-size: 15px !dynamic;
-$font-weight: 300 !dynamic;
-$font-family: 'Helvetica' !dynamic;
+$font-size: dynamic(15px);
+$font-weight: dynamic(normal);
+$font-family: dynamic('Helvetica');
 
-
-$default-text-contrast: 85% !dynamic;
-
+$default-text-contrast: dynamic(85%);
 
 /**
  * @var {color} $base-color
  * The primary color variable from which most elements derive their color scheme.
  */
-$base-color: #808080 !dynamic;
+$base-color: dynamic(#808080);
 
 /**
  * @var {string} $image-extension
  * default file extension to use for images (defaults to 'png').
  */
-$image-extension: 'png' !dynamic;
+$image-extension: dynamic('png');
 
 /**
  * Default search path for images
@@ -41,7 +45,7 @@ $relative-image-path-for-uis: false !default;
  * @var {boolean} $include-not-found-images
  * True to include files which are not found when compiling your SASS
  */
-$include-missing-images: true !dynamic;
+$include-missing-images: dynamic(true);
 
 /**
  * @var {string}
@@ -51,10 +55,16 @@ $include-missing-images: true !dynamic;
  * paths in the CSS output to be generated correctly. By default this is the same as the
  * CSS output directory.
  */
-$theme-resource-path: '' !dynamic;
+$theme-resource-path: dynamic('');
 
 /**
  * @var {number} $css-shadow-border-radius
  * The border radius for CSS shadows
  */
-$css-shadow-border-radius: 5px !dynamic;
+$css-shadow-border-radius: dynamic(5px);
+
+/**
+ * @var {boolean}
+ * True to add font-smoothing styles to all components
+ */
+$enable-font-smoothing: dynamic(true);

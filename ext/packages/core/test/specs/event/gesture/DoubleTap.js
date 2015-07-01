@@ -9,7 +9,7 @@
         recognizer = Ext.event.gesture.DoubleTap.instance,
         moveDistance = recognizer.getMoveDistance(),
         tapDistance = recognizer.getTapDistance(),
-        maxDuration = 60,
+        maxDuration = 130,
         originalMaxDuration, targetEl, singleTapHandler, doubleTapHandler, e;
 
     function start(cfg) {
@@ -66,7 +66,7 @@
         runs(function() {
             expect(doubleTapHandler).toHaveBeenCalled();
             expect(singleTapHandler).not.toHaveBeenCalled();
-            expect(e.type).toBe('doubletap');
+            expect(e && e.type).toBe('doubletap');
         });
     });
 
@@ -84,7 +84,7 @@
         runs(function() {
             expect(doubleTapHandler).not.toHaveBeenCalled();
             expect(singleTapHandler).toHaveBeenCalled();
-            expect(e.type).toBe('singletap');
+            expect(e && e.type).toBe('singletap');
         });
     });
 

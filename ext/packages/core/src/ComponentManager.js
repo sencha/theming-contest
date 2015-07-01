@@ -107,8 +107,11 @@ Ext.define('Ext.ComponentManager', {
         var id = component.getId();
 
         if (component.getReference && component.getReference()) {
+            this.references[id] = null;
             delete this.references[id];
         }
+        
+        this.all[id] = null;
         delete this.all[id];
 
         this.count--;
@@ -222,13 +225,8 @@ Ext.define('Ext.ComponentManager', {
             targetComponent;
 
         if (fromComponent && !(fromComponent.destroyed || fromComponent.destroying)) {
-            // Call the Blurred Component's blur event handler directly with a synthesized blur event.
-            if (fromComponent.focusable && fromElement === fromComponent.getFocusEl().dom) {
-                event = new Ext.event.Event(e.event);
-                event.type = 'blur';
-                event.target = fromElement;
-                event.relatedTarget = toElement;
-                fromComponent.onBlur(event);
+            if (fromComponent.handleBlurEvent) {
+                fromComponent.handleBlurEvent(e);
             }
 
             // Call onFocusLeave on the component axis from which focus is exiting
@@ -246,15 +244,10 @@ Ext.define('Ext.ComponentManager', {
             }
         }
         if (toComponent && !toComponent.destroyed) {
-            // Call the Focused Component's focus event handler directly with a synthesized focus event.
-            if (toComponent.focusable && toElement === toComponent.getFocusEl().dom) {
-                event = new Ext.event.Event(e.event);
-                event.type = 'focus';
-                event.relatedTarget = fromElement;
-                event.target = toElement;
-                toComponent.onFocus(event);
+            if (toComponent.handleFocusEvent) {
+                toComponent.handleFocusEvent(e);
             }
-
+            
             // Call onFocusEnter on the component axis to which focus is entering
             for (targetComponent = toComponent; targetComponent && targetComponent !== commonAncestor; targetComponent = targetComponent.getRefOwner()) {
                 targetComponent.onFocusEnter({
@@ -277,6 +270,14 @@ Ext.define('Ext.ComponentManager', {
             compA = compA.getRefOwner();
         }
         return compA;
+    },
+    
+    privates: {
+        clearAll: function() {
+            this.all = {};
+            this.references = {};
+            this.onAvailableCallbacks = {};
+        }
     },
 
     deprecated: {

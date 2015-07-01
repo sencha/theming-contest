@@ -69,11 +69,11 @@ Ext.define('Ext.view.NavigationModel', {
         var me = this;
 
         return {
-            // We must process removes after the view has been updated so we can
-            // refocus in either Navigable or Actionable mode.
+            // We must process removes before the view has been updated so we can
+            // check if we contain focus, and arrange for refocus in either Navigable or Actionable mode.
             remove: {
                 fn: me.onStoreRemove,
-                priority: -1000
+                priority: 1000
             },
             scope: me
         };
@@ -193,12 +193,40 @@ Ext.define('Ext.view.NavigationModel', {
         }
     },
 
-    // On record remove, it might have bumped the selection upwards.
-    // Pass the "preventSelection" flag.
-    onStoreRemove: function(store, records, index, isMove) {
-        if (this.recordIndex && index + records.length - 1 < this.recordIndex) {
-            this.setPosition(this.recordIndex - 1, null, null, true);
+    onStoreRemove: function(store) {
+        // On record remove, if we contain focus, then arrange to re-establish focus after the remove.
+        var me = this;
+
+        if (me.record && me.view.el.contains(Ext.Element.getActiveElement())) {
+
+            // focusExit is ignored during refresh
+            me.view.refreshing = true;
+
+            Ext.on({
+                idle: me.afterStoreRemove,
+                scope: me,
+                single: true,
+                args: [me.record, me.recordIndex, store]
+            });
         }
+    },
+    
+    afterStoreRemove: function(lastFocusedRec, lastFocusedIndex, store) {
+        var me = this,
+            view = me.view;
+
+        view.refreshing = false;
+
+        // Store is empty - try to go back to what was focused before our View was focused
+        if (!store.getCount()) {
+            me.setPosition();
+            view.revertFocus();
+        }
+
+        // If we lost focus during the delete, re-establish it
+        if (!view.el.contains(Ext.Element.getActiveElement())) {
+            me.setPosition(store.contains(lastFocusedRec) ? lastFocusedRec : lastFocusedIndex, null, null, true);
+        } 
     },
 
     setPosition: function(recordIndex, keyEvent, suppressEvent, preventNavigation) {
@@ -423,8 +451,11 @@ Ext.define('Ext.view.NavigationModel', {
 
     destroy: function() {
         var me = this;
+        
         me.setStore(null);
-        me.keyNav = me.viewListeners = me.dataSource = Ext.destroy(me.viewListeners, me.keyNav);
+        Ext.destroy(me.viewListeners, me.keyNav);
+        me.keyNav = me.viewListeners = me.dataSource = me.lastFocused = null;
+        
         me.callParent();
     }
 });

@@ -250,15 +250,10 @@ Ext.define('Ext.grid.plugin.RowExpander', {
      * If we are expanding the normal side of a lockable grid, poke the column into the locked side if the locked side has columns
      */
     addExpander: function(expanderGrid) {
-        var me = this,
-            expanderHeader = me.getHeaderConfig();
+        var me = this;
 
-        // If this is the locked side of a lockable grid which is shrinkwrapping the locked width, increment its width.
-        if (expanderGrid.isLocked && expanderGrid.ownerLockable.shrinkWrapLocked) {
-            expanderGrid.width += expanderHeader.width;
-            me.grid = expanderGrid;
-        }
-        me.expanderColumn = expanderGrid.headerCt.insert(0, expanderHeader);
+        me.grid = expanderGrid;
+        me.expanderColumn = expanderGrid.headerCt.insert(0, me.getHeaderConfig());
 
         // If a CheckboxModel, it must now put its checkbox in at position one because this
         // cell always gets in at position zero, and spans 2 columns.
@@ -452,6 +447,7 @@ Ext.define('Ext.grid.plugin.RowExpander', {
 
         return {
             width: me.headerWidth,
+            ignoreExport: true,
             lockable: false,
             autoLock: true,
             sortable: false,

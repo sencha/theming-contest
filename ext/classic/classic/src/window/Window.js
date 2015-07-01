@@ -235,10 +235,8 @@ Ext.define('Ext.window.Window', {
      */
     maximizable: false,
 
-    // inherit docs
     minHeight: 50,
 
-    // inherit docs
     minWidth: 50,
 
     /**
@@ -248,7 +246,6 @@ Ext.define('Ext.window.Window', {
      */
     expandOnShow: true,
 
-    // inherited docs, same default
     collapsible: false,
 
     /**
@@ -391,12 +388,7 @@ Ext.define('Ext.window.Window', {
      * @return {Ext.dom.Element/Ext.Component} the focus holding element or Component.
      */
     getFocusEl: function() {
-        var me = this;
-
-        // If the legacy FocusManager is enabled, then we must not focus
-        // the defaultFocus child. We must focus the Window instead, to
-        // let FocusManager do its thing.
-        return Ext.enableFocusManager ? me.el : (me.getDefaultFocus() || me.el);
+        return this.getDefaultFocus() || this.el;
     },
 
     // State Management
@@ -509,14 +501,8 @@ Ext.define('Ext.window.Window', {
      * @private
      */
     onEsc: function(k, e) {
-        // hide the dependency from Cmd
-        var mgr = Ext['FocusManager']; // jshint ignore:line
-
-        // Only process ESC if the FocusManager is not doing it
-        if (!Ext.enableFocusManager || mgr.focusedCmp === this) {
-            e.stopEvent();
-            this.close();
-        }
+        e.stopEvent();
+        this.close();
     },
 
     /**
@@ -882,7 +868,7 @@ Ext.define('Ext.window.Window', {
     getDefaultFocus: function() {
         var me = this,
             result,
-            defaultComp = me.defaultButton || me.defaultFocus,
+            defaultComp = me.defaultFocus,
             selector;
 
         if (defaultComp !== undefined) {

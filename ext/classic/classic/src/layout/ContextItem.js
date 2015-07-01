@@ -835,11 +835,22 @@ Ext.define('Ext.layout.ContextItem', {
                 anim.on({
                     afteranimate: function() {
                         delete target.$layoutAnim;
+                        
+                        // afteranimate can fire when the target is being destroyed
+                        // and the animation queue is being stopped.
+                        if (target.destroying || target.destroyed) {
+                            return;
+                        }
+                        
                         if (me.isCollapsingOrExpanding === 1) {
                             target.componentLayout.redoLayout(me);
                             target.afterCollapse(true);
                         } else if (me.isCollapsingOrExpanding === 2) {
                             target.afterExpand(true);
+                        }
+
+                        if (target.hasListeners.afterlayoutanimation) {
+                            target.fireEvent('afterlayoutanimation', target);
                         }
                     }
                 });

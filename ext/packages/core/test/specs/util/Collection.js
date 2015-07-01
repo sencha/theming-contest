@@ -951,6 +951,28 @@ describe("Ext.util.Collection", function() {
                         });
                     });
                 });
+
+                it("should not cause an exception when modifying the item in the source onCollectionAdd & the child is sorted", function() {
+                    var o = {
+                        observerPriority: -1000,
+                        onCollectionAdd: function(source, details) {
+                            var item = details.items[0];
+                            item.name = 'asdf';
+                            expect(function() {
+                                collection.itemChanged(item, ['name']);
+                            }).not.toThrow();
+                        }
+                    };
+
+                    child.getSorters().add('name');
+
+                    collection.addObserver(o);
+
+                    collection.add({
+                        id: 1000,
+                        name: 'q'
+                    });
+                });
             });
         });
 
@@ -2614,6 +2636,35 @@ describe("Ext.util.Collection", function() {
             });
 
             addItems(collection);
+        });
+
+        it('should respect the sorters upon insertion at any index', function() {
+            collection.sort('code');
+            expect(collection.sorted).toBe(true);
+            collection.insert(0, {id: 4, name: 'Nige', code: 'D', modifier: 75, firstInitial: 'N'});
+            expect(collection.items[0].code).toBe('A');
+            expect(collection.items[1].code).toBe('B');
+            expect(collection.items[2].code).toBe('C');
+            expect(collection.items[3].code).toBe('D');
+        });
+
+        it('should clear the sorted flag, and respect insertion point when sorters collection is cleared', function() {
+            collection.sort('code');
+            expect(collection.items[0].code).toBe('A');
+            expect(collection.items[1].code).toBe('B');
+            expect(collection.items[2].code).toBe('C');
+
+            collection.getSorters().clear();
+
+            // Should clear its sorted flag
+            expect(collection.sorted).toBe(false);
+
+            // Insertion at position zero should be respected now that there are no sorters
+            collection.insert(0, {id: 4, name: 'Nige', code: 'D', modifier: 75, firstInitial: 'N'});
+            expect(collection.items[0].code).toBe('D');
+            expect(collection.items[1].code).toBe('A');
+            expect(collection.items[2].code).toBe('B');
+            expect(collection.items[3].code).toBe('C');
         });
 
         it("should sort ASC by default", function() {

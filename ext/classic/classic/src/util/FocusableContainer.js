@@ -25,7 +25,8 @@ Ext.define('Ext.util.FocusableContainer', {
         
         after: {
             afterRender: 'initFocusableContainer',
-            onFocusLeave: 'onFocusLeave'
+            onFocusLeave: 'onFocusLeave',
+            afterShow: 'activateFocusableContainerEl'
         }
     },
     
@@ -56,23 +57,39 @@ Ext.define('Ext.util.FocusableContainer', {
     
     privates: {
         initFocusableContainer: function(clearChildren) {
+            var items, i, len;
+            
             // Allow nested containers to optionally disable
             // children containers' behavior
             if (this.enableFocusableContainer) {
+                clearChildren = clearChildren != null ? clearChildren : true;
                 this.doInitFocusableContainer(clearChildren);
+            }
+            
+            // A FocusableContainer instance such as a toolbar could have decided
+            // to opt out of FC behavior for some reason; it could have happened
+            // after all or almost all child items have been initialized with
+            // focusableContainer reference. We need to clean this up if we're not
+            // going to behave like a FocusableContainer after all.
+            else {
+                items = this.getFocusables();
+                
+                for (i = 0, len = items.length; i < len; i++) {
+                    items[i].focusableContainer = null;
+                }
             }
         },
         
         doInitFocusableContainer: function(clearChildren) {
             var me = this,
                 el;
-        
+            
             el = me.getFocusableContainerEl();
-        
+            
             // We set tabIndex on the focusable container el so that the user
             // could tab into it; we catch its focus event and focus a child instead
             me.activateFocusableContainerEl(el);
-
+            
             // This flag allows post factum initialization of the focusable container,
             // i.e. when container was empty initially and then some tabbable children
             // were added and we need to clear their tabIndices after priming our own
@@ -82,9 +99,13 @@ Ext.define('Ext.util.FocusableContainer', {
             if (clearChildren) {
                 me.clearFocusables();
             }
-        
-            me.mon(el, 'mousedown', me.onFocusableContainerMousedown, me);
-        
+            
+            // Unsightly long names help to avoid possible clashing with class
+            // or instance properties. We have to be extra careful in a mixin!
+            me.focusableContainerMouseListener = me.mon(
+                el, 'mousedown', me.onFocusableContainerMousedown, me
+            );
+            
             me.focusableKeyNav = me.createFocusableContainerKeyNav(el);
         },
         
@@ -92,6 +113,7 @@ Ext.define('Ext.util.FocusableContainer', {
             var me = this;
             
             return new Ext.util.KeyNav(el, {
+                eventName: 'keydown',
                 ignoreInputFields: true,
                 scope: me,
 
@@ -112,12 +134,17 @@ Ext.define('Ext.util.FocusableContainer', {
         },
     
         doDestroyFocusableContainer: function() {
-            var keyNav = this.focusableKeyNav;
+            var me = this;
         
-            if (keyNav) {
-                keyNav.destroy();
-                delete this.focusableKeyNav;
+            if (me.keyNav) {
+                me.keyNav.destroy();
             }
+            
+            if (me.focusableContainerMouseListener) {
+                me.focusableContainerMouseListener.destroy();
+            }
+            
+            me.focusableKeyNav = me.focusableContainerMouseListener = null;
         },
         
         // Default FocusableContainer implies a flat list of focusable children
@@ -332,19 +359,18 @@ Ext.define('Ext.util.FocusableContainer', {
         activateFocusableContainerEl: function(el) {
             el = el || this.getFocusableContainerEl();
         
-            el.set({ tabindex: this.activeChildTabIndex });
+            el.set({ tabIndex: this.activeChildTabIndex });
         },
         
         deactivateFocusableContainerEl: function(el) {
             el = el || this.getFocusableContainerEl();
         
-            el.set({ tabindex: this.inactiveChildTabIndex });
+            el.set({ tabIndex: this.inactiveChildTabIndex });
         },
         
         doFocusableChildAdd: function(child) {
             if (child.focusable) {
                 child.focusableContainer = this;
-                this.deactivateFocusable(child);
             }
         },
         
@@ -352,6 +378,8 @@ Ext.define('Ext.util.FocusableContainer', {
             if (this.enableFocusableContainer) {
                 return this.doFocusableChildRemove(child);
             }
+            
+            child.focusableContainer = null;
         },
     
         doFocusableChildRemove: function(child) {
@@ -363,8 +391,6 @@ Ext.define('Ext.util.FocusableContainer', {
                 this.lastFocusedChild = null;
                 this.activateFocusableContainerEl();
             }
-            
-            delete child.focusableContainer;
         },
         
         onFocusableContainerMousedown: function(e, target) {
@@ -377,6 +403,14 @@ Ext.define('Ext.util.FocusableContainer', {
             // the focus to be triggered, so if the timestamp falls within some small epsilon,
             // the focus enter has been caused via the mouse and we can react accordingly.
             this.mousedownTimestamp = targetCmp === this ? Ext.Date.now() : 0;
+            
+            // Prevent focusing the container itself. DO NOT remove this clause, it is
+            // untestable by our unit tests: injecting mousedown events will not cause
+            // default action in the browser, the element never gets focus and tests
+            // never fail. See http://www.w3.org/TR/DOM-Level-3-Events/#trusted-events
+            if (targetCmp === this) {
+                e.preventDefault();
+            }
         },
 
         onFocusEnter: function(e) {
@@ -391,6 +425,7 @@ Ext.define('Ext.util.FocusableContainer', {
             }
             
             me.mousedownTimestamp = 0;
+            
             if (target === me) {
                 if (!mousedownTimestamp || Ext.Date.now() - mousedownTimestamp > epsilon) {
                     child = me.initDefaultFocusable();
@@ -400,7 +435,8 @@ Ext.define('Ext.util.FocusableContainer', {
                         child.focus();
                     }
                 }
-            } else {
+            }
+            else {
                 me.deactivateFocusableContainerEl();
             }
             
@@ -415,7 +451,7 @@ Ext.define('Ext.util.FocusableContainer', {
                 return;
             }
 
-            if (!me.destroyed) {
+            if (!me.destroyed && !me.destroying) {
                 me.clearFocusables();
 
                 if (lastFocused) {
@@ -432,6 +468,10 @@ Ext.define('Ext.util.FocusableContainer', {
     
         beforeFocusableChildFocus: function(child) {
             var me = this;
+            
+            if (!me.enableFocusableContainer) {
+                return;
+            }
             
             me.clearFocusables();
             me.activateFocusable(child);
@@ -460,6 +500,10 @@ Ext.define('Ext.util.FocusableContainer', {
         },
     
         afterFocusableChildFocus: function(child) {
+            if (!this.enableFocusableContainer) {
+                return;
+            }
+            
             this.lastFocusedChild = child;
         },
         

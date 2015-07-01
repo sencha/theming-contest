@@ -306,7 +306,7 @@ Ext.define('Ext.util.Event', function() {
 
     fireDelegated: function(firingObservable, args) {
         this.firingObservable = firingObservable;
-        this.fire.apply(this, args);
+        return this.fire.apply(this, args);
     },
 
     fire: function() {
@@ -318,7 +318,7 @@ Ext.define('Ext.util.Event', function() {
             isComponent = observable.isComponent,
             firingObservable = me.firingObservable,
             options, delegate, fireInfo, i, args, listener, len, delegateEl, currentTarget,
-            type, chained, firingArgs, e;
+            type, chained, firingArgs, e, fireFn, fireScope;
 
         if (!me.suspended && count > 0) {
             me.firing = true;
@@ -404,7 +404,15 @@ Ext.define('Ext.util.Event', function() {
                 }
 
                 fireInfo = me.getFireInfo(listener);
-                if (fireInfo.fn.apply(fireInfo.scope, firingArgs) === false) {
+                fireFn = fireInfo.fn;
+                fireScope = fireInfo.scope;
+                
+                // We don't want to keep closure and scope on the Event prototype!
+                fireInfo.fn = fireInfo.scope = null;
+                
+                if (fireFn.apply(fireScope, firingArgs) === false) {
+                    Ext.EventObject = null;
+                    
                     return (me.firing = false);
                 }
 
@@ -415,9 +423,15 @@ Ext.define('Ext.util.Event', function() {
                     e = args[0] = chained;
                     chained = null;
                 }
+                
+                // We don't guarantee Ext.EventObject existence outside of the immediate
+                // event propagation scope
+                Ext.EventObject = null;
             }
         }
+        
         me.firing = false;
+        
         return true;
     },
 
@@ -498,6 +512,9 @@ Ext.define('Ext.util.Event', function() {
                     fireInfo = listener.ev.getFireInfo(listener, true);
                     handler = fireInfo.fn;
                     scope = fireInfo.scope;
+                    
+                    // We don't want to keep closure and scope references on the Event prototype!
+                    fireInfo.fn = fireInfo.scope = null;
                 }
 
                 return handler.apply(scope, arguments);
@@ -514,6 +531,9 @@ Ext.define('Ext.util.Event', function() {
                 fireInfo = listener.ev.getFireInfo(listener, true);
                 handler = fireInfo.fn;
                 scope = fireInfo.scope;
+                
+                // We don't want to keep closure and scope references on the Event prototype!
+                fireInfo.fn = fireInfo.scope = null;
             }
 
             listener.task.delay(o.buffer, handler, scope, toArray(arguments));
@@ -529,6 +549,9 @@ Ext.define('Ext.util.Event', function() {
                 fireInfo = listener.ev.getFireInfo(listener, true);
                 handler = fireInfo.fn;
                 scope = fireInfo.scope;
+                
+                // We don't want to keep closure and scope references on the Event prototype!
+                fireInfo.fn = fireInfo.scope = null;
             }
                 
             if (!listener.tasks) {
@@ -555,7 +578,11 @@ Ext.define('Ext.util.Event', function() {
                 fireInfo = event.getFireInfo(listener, true);
                 handler = fireInfo.fn;
                 scope = fireInfo.scope;
+                
+                // We don't want to keep closure and scope references on the Event prototype!
+                fireInfo.fn = fireInfo.scope = null;
             }
+            
             return handler.apply(scope, arguments);
         };
     }

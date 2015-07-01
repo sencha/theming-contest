@@ -1,6 +1,4 @@
 /**
- * @class Ext.grid.plugin.MultiSelection
- *
  * The MultiSelection plugin injects a multiselector for Modern Toolkit's Grid. Users may
  * activate MultiSelection by tapping the "Select" button in the top right corner of the header bar.
  *
@@ -100,7 +98,9 @@ Ext.define('Ext.grid.plugin.MultiSelection', {
             width: 60,
             xtype: 'column',
             cls: Ext.baseCSSPrefix + 'grid-multiselection-column',
-            cellCls: Ext.baseCSSPrefix + 'grid-multiselection-cell',
+            cell: {
+                cls: Ext.baseCSSPrefix + 'grid-multiselection-cell'
+            },
             ignore: true,
             hidden: true
         },

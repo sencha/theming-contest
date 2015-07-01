@@ -1,6 +1,6 @@
-$placeholderlabel-opacity-time        : .1s !dynamic;
-$placeholderlabel-opacity-easing      : ease-in-out !dynamic;
-$placeholderlabel-transition-time     : $placeholderlabel-opacity-time !dynamic;
-$placeholderlabel-transition-easing   : $placeholderlabel-opacity-easing !dynamic;
-$placeholderlabel-transition-distance : 2em !dynamic;
-$placeholderlabel-label-padding       : 0.3em !dynamic;
+$placeholderlabel-opacity-time: dynamic(.1s);
+$placeholderlabel-opacity-easing: dynamic(ease-in-out);
+$placeholderlabel-transition-time: dynamic($placeholderlabel-opacity-time);
+$placeholderlabel-transition-easing: dynamic($placeholderlabel-opacity-easing);
+$placeholderlabel-transition-distance: dynamic(2em);
+$placeholderlabel-label-padding: dynamic(0.3em);

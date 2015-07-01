@@ -180,7 +180,7 @@ Ext.define('Ext.container.DockingContainer', {
         return items;
     },
 
-    destroyDockedItems: function(){
+    destroyDockedItems: function() {
         var dockedItems = this.dockedItems,
             c;
 

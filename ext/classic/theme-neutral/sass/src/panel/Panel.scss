@@ -102,16 +102,16 @@
  * @param {color} [$ui-tool-glyph-color=$tool-glyph-color]
  * The color to use for tool icons when {@link Global_CSS#$enable-font-icons} is `true`.
  *
- * @var {color} [$ui-tool-focus-outline-color=$panel-tool-focus-outline-color]
+ * @param {color} [$ui-tool-focus-outline-color=$panel-tool-focus-outline-color]
  * The color of the outline around Panel {@link Ext.panel.Tool Tools} when focused
  *
- * @var {string} [$ui-tool-focus-outline-style=$panel-tool-focus-outline-style]
+ * @param {string} [$ui-tool-focus-outline-style=$panel-tool-focus-outline-style]
  * The outline-style of Panel {@link Ext.panel.Tool Tools} when focused
  *
- * @var {number} [$ui-tool-focus-outline-width=$panel-tool-focus-outline-width]
+ * @param {number} [$ui-tool-focus-outline-width=$panel-tool-focus-outline-width]
  * The outline-width of Panel {@link Ext.panel.Tool Tools} when focused
  *
- * @var {number} [$ui-tool-focus-outline-offset=$panel-tool-focus-outline-offset]
+ * @param {number} [$ui-tool-focus-outline-offset=$panel-tool-focus-outline-offset]
  * The outline-offset of Panel {@link Ext.panel.Tool Tools} when focused
  *
  * @param {color} [$ui-body-color=$panel-body-color]

@@ -3,7 +3,38 @@
  */
 
 /**
- * @var {measurement} $form-spinner-button-width
- * The width of the buttons on the spinner field component.
+ * @var {number}
+ * Spinner button font-size
  */
-$form-spinner-button-width: 3em !dynamic;
+$spinnerfield-button-font-size: dynamic(1.23em);
+
+/**
+ * @var {number}
+ * Spinner button font-size in the {@link Ext.Component#$enable-big big} sizing scheme
+ */
+$spinnerfield-button-font-size-big: dynamic(1.2em);
+
+/**
+ * @var {number}
+ * Spinner button size. If specified in terms of `em` units, the button will be sized
+ * relative to {@link #$spinnerfield-button-font-size}.
+ */
+$spinnerfield-button-size: dynamic(1em);
+
+/**
+ * @var {string/list}
+ * Icon for the "up" spinner button
+ */
+$spinnerfield-button-up-icon: dynamic($fa-var-plus $spinnerfield-button-font-size FontAwesome);
+
+/**
+ * @var {string/list}
+ * Icon for the "down" spinner button
+ */
+$spinnerfield-button-down-icon: dynamic($fa-var-minus $spinnerfield-button-font-size FontAwesome);
+
+/**
+ * @var {number}
+ * Spinner button icon color
+ */
+$spinnerfield-button-color: dynamic($neutral-dark-color);

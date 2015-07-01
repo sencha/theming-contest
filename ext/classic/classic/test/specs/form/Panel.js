@@ -27,6 +27,7 @@ describe("Ext.form.Panel", function() {
             var component = Ext.create("Ext.form.Panel", {name: 'test'});
             expect(component instanceof Ext.form.Panel).toBe(true);
             expect(Ext.getClass(component).xtype).toBe("form");
+            component.destroy();
         });
     });
 

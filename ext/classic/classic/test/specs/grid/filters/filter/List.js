@@ -106,6 +106,12 @@ describe('Ext.grid.filters.filter.List', function () {
 
             expect(listFilter.filter.getValue()).toEqual(value);
         });
+
+        it('should not bind listeners to the grid store on construction (if inferring its list items from the grid store)', function () {
+            createGrid();
+
+            expect(listFilter.gridStoreListeners).toBeUndefined();
+        });
     });
 
     describe('filter configs', function () {
@@ -1078,16 +1084,12 @@ describe('Ext.grid.filters.filter.List', function () {
                             expect(data.filtered).toBe(true);
                         });
 
-                        it('should create a list store', function () {
-                            expect(listFilter.store).toBeDefined();
-                        });
-
                         it('should not be the grid store', function () {
                             expect(listFilter.store).not.toBe(store);
                         });
 
-                        it('should create a list store with the same number of records as there are unique elements in the grid store', function () {
-                            expect(listFilter.store.data.length).toEqual(store.collect('text', true, true).length);
+                        it('should not create a list store before list is initially shown', function () {
+                            expect(listFilter.store).toBe(undefined);
                         });
                     });
 
@@ -1131,16 +1133,12 @@ describe('Ext.grid.filters.filter.List', function () {
                             expect(data.filtered).toBe(true);
                         });
 
-                        it('should create a list store', function () {
-                            expect(listFilter.store).toBeDefined();
-                        });
-
                         it('should not be the grid store', function () {
                             expect(listFilter.store).not.toBe(store);
                         });
 
-                        it('should create a list store with the same number of records as there are unique elements in the grid store', function () {
-                            expect(listFilter.store.data.length).toEqual(store.collect('text', true, true).length);
+                        it('should not create a list store', function () {
+                            expect(listFilter.store).toBe(undefined);
                         });
                     });
 
@@ -1183,16 +1181,12 @@ describe('Ext.grid.filters.filter.List', function () {
                             expect(data.filtered).toBe(true);
                         });
 
-                        it('should create a list store', function () {
-                            expect(listFilter.store).toBeDefined();
-                        });
-
                         it('should not be the grid store', function () {
                             expect(listFilter.store).not.toBe(store);
                         });
 
-                        it('should create a list store with the same number of records as there are unique elements in the grid store', function () {
-                            expect(listFilter.store.data.length).toEqual(store.collect('text', true, true).length);
+                        it('should not create a list store', function () {
+                            expect(listFilter.store).toBe(undefined);
                         });
                     });
                 });
@@ -1354,33 +1348,6 @@ describe('Ext.grid.filters.filter.List', function () {
             spyOn(listFilter, 'createMenuItems').andCallThrough();
         });
 
-        describe('should', function () {
-            it('should recreate when changing a model value', function () {
-                store.getAt(0).set('type', 'Molly Big Bears');
-
-                expect(listFilter.createListStore.callCount).toBe(1);
-                expect(listFilter.createMenuItems.callCount).toBe(1);
-            });
-
-            it('should recreate when adding a record to the grid store', function () {
-                store.add({
-                    id: 500,
-                    name: 'Item 5',
-                    type: 't200'
-                });
-
-                expect(listFilter.createListStore.callCount).toBe(1);
-                expect(listFilter.createMenuItems.callCount).toBe(1);
-            });
-
-            it('should recreate when removing a record from the grid store', function () {
-                store.removeAt(1);
-
-                expect(listFilter.createListStore.callCount).toBe(1);
-                expect(listFilter.createMenuItems.callCount).toBe(1);
-            });
-        });
-
         describe('should not', function () {
             it('should not recreate when sorting the grid store', function () {
                 grid.store.sort();
@@ -1424,7 +1391,6 @@ describe('Ext.grid.filters.filter.List', function () {
             });
         });
     });
-
 
     describe('initializing the UI', function () {
         var responseData =  [{
@@ -1758,22 +1724,111 @@ describe('Ext.grid.filters.filter.List', function () {
     });
 
     describe('showing the menu', function () {
-        function setActive(state) {
-            it('should not add a filter to the store when shown', function () {
+        describe('the active state', function () {
+            var len;
+
+            afterEach(function () {
+                len = null;
+            });
+
+            function setActive(state) {
+                it('should not add a possible additional filter to the store when shown, active state = ' + state, function () {
+                    createGrid({
+                        active: state,
+                        value: ['Item 1', 'Item 4']
+                    });
+
+                    len = store.getFilters().getCount();
+                    showMenu();
+
+                    expect(len).toBe(store.getFilters().getCount());
+                });
+            }
+
+            setActive(true);
+            setActive(false);
+        });
+
+        describe('the list store', function () {
+            beforeEach(function () {
                 createGrid({
-                    active: state,
-                    value: ['Item 1', 'Item 4']
+                    value: ['Item 2', 'Item 3']
                 });
 
-                spyOn(listFilter, 'addStoreFilter');
+                clickItem(1);
+            });
 
-                showMenu();
-                expect(listFilter.addStoreFilter).not.toHaveBeenCalled();
+            it('should create the list store', function () {
+                expect(listFilter.store).toBeDefined();
+            });
+
+            it('should create a list store with the same number of records as there are unique elements in the grid store', function () {
+                expect(listFilter.store.data.length).toEqual(store.collect('text', true, true).length);
+            });
+        });
+    });
+
+    describe('the grid store listeners (when inferring list items from the grid store)', function () {
+        var gridCfg = {
+            viewModel: {
+                stores: {
+                    quux: {
+                        fields: ['id'],
+                        data: []
+                    }
+                }
+            },
+            bind: {
+                store: '{quux}'
+            }
+        };
+
+        Ext.grid.filters.filter.List.prototype.getGridStoreListeners =  function () {
+            var me = this;
+
+            return me.gridStoreListeners = {
+                scope: me,
+                add: me.onDataChanged,
+                refresh: me.onDataChanged,
+                remove: me.onDataChanged,
+                update: me.onDataChanged,
+                'extjs-18225': Ext.emptyFn,
+            };
+        };
+
+        function doTest(str, useVM) {
+            describe('when the grid store is ' + str, function () {
+                it('should not bind listeners to the grid store on construction', function () {
+                    createGrid(null, null, useVM ? gridCfg : null);
+
+                    expect(listFilter.gridStoreListeners).toBeUndefined();
+                });
+
+                it('should only bind the listeners on menu show', function () {
+                    createGrid();
+                    clickItem(1);
+
+                    expect(listFilter.gridStoreListeners).toBeDefined();
+                });
+
+                it('should not have bound the listeners to the empty store', function () {
+                    createGrid();
+                    clickItem(1);
+
+                    expect(Ext.StoreMgr.get('ext-empty-store').events['extjs-18225']).toBeUndefined();
+                });
+
+                it('should have bound the listeners to the correct store', function () {
+                    createGrid();
+                    clickItem(1);
+
+                    expect(grid.store.events['extjs-18225']).toBeDefined();
+                });
             });
         }
 
-        setActive(true);
-        setActive(false);
+        doTest('configured', false);
+        doTest('bound', true);
     });
 
     describe('statefulness', function () {

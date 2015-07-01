@@ -187,6 +187,22 @@ Ext.define('Ext.dom.Element', function(Element) {
             return a.charAt(1).toUpperCase();
         },
 
+        clearData = function(node, deep) {
+            var childNodes, i, len;
+
+            // Only Element nodes may have _extData and child nodes to clear.
+            // IE8 throws an error attempting to set expandos on non-Element nodes.
+            if (node.nodeType === 1) {
+                node._extData = null;
+                if (deep) {
+                    childNodes = node.childNodes;
+                    for (i = 0, len = childNodes.length; i < len; ++i) {
+                        clearData(childNodes[i], deep);
+                    }
+                }
+            }
+        },
+
         visibilityCls = Ext.baseCSSPrefix + 'hidden-visibility',
         displayCls = Ext.baseCSSPrefix + 'hidden-display',
         offsetsCls = Ext.baseCSSPrefix + 'hidden-offsets',
@@ -204,7 +220,12 @@ Ext.define('Ext.dom.Element', function(Element) {
             hidden: 'hidden',
             html: 'html',
             children: 'children'
-        }, visFly, scrollFly, caFly;
+        },
+        lastFocusChange = 0,
+        lastKeyboardClose = 0,
+        editableHasFocus = false,
+        isVirtualKeyboardOpen = false,
+        visFly, scrollFly, caFly;
 
     return {
         alternateClassName: [ 'Ext.Element' ],
@@ -236,6 +257,8 @@ Ext.define('Ext.dom.Element', function(Element) {
         isElement: true,
 
         skipGarbageCollection: true,
+        
+        $applyConfigs: true,
 
         identifiablePrefix: 'ext-element-',
 
@@ -601,6 +624,13 @@ Ext.define('Ext.dom.Element', function(Element) {
             cache: Ext.cache = {},
 
             /**
+             * @property
+             * @static
+             * @private
+             */
+            editableSelector: 'input,textarea,[contenteditable="true"]',
+
+            /**
              * @property {Number}
              * Visibility mode constant for use with {@link Ext.dom.Element#setVisibilityMode}.
              * Use the CSS 'visibility' property to hide the element.
@@ -637,6 +667,21 @@ Ext.define('Ext.dom.Element', function(Element) {
              * @static
              */
             CLIP: 4,
+
+            /**
+             * @property
+             * @static
+             * @private
+             * This property indicates a minimum threshold of vertical resize movement for
+             * virtual keyboard detection.
+             *
+             * On some mobile browsers the framework needs to keep track of whether window
+             * resize events were triggered by the opening or closing of a virtual keyboard
+             * so that it can prevent unnecessary re-layout of the viewport.  It does this
+             * by detecting resize events in the horizontal direction that occur immediately
+             * after an editable element is focused or blurred.
+             */
+            minKeyboardHeight: 100,
 
             unitRe: unitRe,
 
@@ -1046,7 +1091,15 @@ Ext.define('Ext.dom.Element', function(Element) {
              * @return {Number} viewportHeight
              */
             getViewportHeight: function() {
-                return WIN.innerHeight;
+                var viewportHeight = Element._viewportHeight;
+
+                //<feature legacyBrowser>
+                if (Ext.isIE9m) {
+                    return DOC.documentElement.clientHeight;
+                }
+                //</feature>
+
+                return (viewportHeight != null) ? viewportHeight : WIN.innerHeight;
             },
 
             /**
@@ -1055,7 +1108,15 @@ Ext.define('Ext.dom.Element', function(Element) {
              * @return {Number} viewportWidth
              */
             getViewportWidth: function() {
-                return WIN.innerWidth;
+                var viewportWidth = Element._viewportWidth;
+
+                //<feature legacyBrowser>
+                if (Ext.isIE9m) {
+                    return DOC.documentElement.clientWidth;
+                }
+                //</feature>
+
+                return (viewportWidth != null) ? viewportWidth : WIN.innerWidth;
             },
 
             /**
@@ -1083,6 +1144,71 @@ Ext.define('Ext.dom.Element', function(Element) {
              */
             normalize: function(prop) {
                 return propertyCache[prop] || (propertyCache[prop] = prop.replace(camelRe, camelReplaceFn));
+            },
+
+
+            /**
+             * @private
+             */
+            _onWindowFocusChange: function(e) {
+                // Tracks the timestamp of focus entering or leaving an editable element
+                // so that we can compare this timestamp to the time of the next window
+                // resize for the purpose of determining if the virtual keyboard is displayed
+                // see _onWindowResize for more details
+                if (Ext.fly(e.target).is(Element.editableSelector)) {
+                    lastFocusChange = new Date();
+                    editableHasFocus = (e.type === 'focusin' || e.type === 'pointerup');
+                }
+            },
+
+            /**
+             * @private
+             */
+            _onWindowResize: function() {
+                var windowWidth = window.innerWidth,
+                    windowHeight = window.innerHeight,
+                    now = new Date(),
+                    threshold = 1000,
+                    deltaX, deltaY;
+
+                deltaX = windowWidth - Element._windowWidth;
+                deltaY = windowHeight - Element._windowHeight;
+
+                Element._windowWidth = windowWidth;
+                Element._windowHeight = windowHeight;
+
+                // If the focus entered or left an editable element within a brief threshold
+                // of time, then this resize event MAY be due to a virtual keyboard being
+                // shown or hidden.  Let's do some additional checking to find out.
+                if (((now - lastFocusChange) < threshold) || ((now - lastKeyboardClose) < threshold)) {
+                    // If the resize is ONLY in the vertical direction, and an editable
+                    // element has the focus, and the vertical movement was significant,
+                    // we can be reasonably certain that the resize event was due to
+                    // a virtual keyboard being opened.
+                    if (deltaX === 0 && (editableHasFocus && (deltaY <= -Element.minKeyboardHeight))) {
+                        isVirtualKeyboardOpen = true;
+                        return;
+                    }
+                }
+
+                if (isVirtualKeyboardOpen && (deltaX === 0) && (deltaY >= Element.minKeyboardHeight)) {
+                    isVirtualKeyboardOpen = false;
+                    // when windows tablets are rotated while keyboard is open, the keyboard closes
+                    // and then immediately reopens.  Track the timestamp of the last keyboard
+                    // close so that we can detect a succeessive resize event that might indicate
+                    // reopening
+                    lastKeyboardClose = new Date();
+                }
+
+                if (isVirtualKeyboardOpen) {
+                    return;
+                }
+
+                // These cached variables are used by getViewportWidth and getViewportHeight
+                // They do not get updated if we returned early due to detecting  that the
+                // resize event was triggered by virtual keyboard.
+                Element._viewportWidth = windowWidth;
+                Element._viewportHeight = windowHeight;
             },
 
             /**
@@ -1414,6 +1540,7 @@ Ext.define('Ext.dom.Element', function(Element) {
                 animationend: this._onAnimationEnd
             });
             Ext.Animator.run(animation);
+            return animation;
         },
 
         _onAnimationEnd: function() {
@@ -1584,6 +1711,20 @@ Ext.define('Ext.dom.Element', function(Element) {
                 id = Ext.get(me).id;
 
             return me.selectNode(Ext.makeIdSelector(id) + " > " + selector, !!returnDom);
+        },
+
+        /**
+         * Clone this element.
+         * @param {Boolean} [deep=false] `true` if the children of the node should also be cloned.
+         * @param {Boolean} [returnDom=false] `true` to return the DOM node instead of Ext.dom.Element.
+         * @return {HTMLElement/Ext.dom.Element} The newly cloned Ext.dom.Element (or DOM node if `returnDom` is `true`).
+         */
+        clone: function(deep, returnDom) {
+            var clone = this.dom.cloneNode(deep);
+            if (Ext.supports.CloneNodeCopiesExpando) {
+                clearData(clone, deep);
+            }
+            return returnDom ? clone : Ext.get(clone);
         },
 
         constrainScrollLeft: function(left) {
@@ -1920,7 +2061,7 @@ Ext.define('Ext.dom.Element', function(Element) {
          * @param {String} selector The simple selector to test. See {@link Ext.dom.Query} for information about simple selectors.
          * @param {Number/String/HTMLElement/Ext.dom.Element} [limit]
          * The max depth to search as a number or an element which causes the upward traversal to stop
-         * and is not</b> considered for inclusion as the result. (defaults to 50 || document.documentElement)
+         * and is **not** considered for inclusion as the result. (defaults to 50 || document.documentElement)
          * @param {Boolean} [returnEl=false] True to return a Ext.dom.Element object instead of DOM node
          * @return {HTMLElement/Ext.dom.Element} The matching DOM node (or 
          * Ext.dom.Element if _returnEl_ is _true_).  Or null if no match was found.
@@ -2961,6 +3102,11 @@ Ext.define('Ext.dom.Element', function(Element) {
             return this.matchNode('previousSibling', 'lastChild', selector, returnDom);
         },
 
+        /**
+         * @cfg listeners
+         * @hide
+         */
+
         matchNode: function(dir, start, selector, returnDom) {
             var dom = this.dom,
                 n;
@@ -3687,22 +3833,6 @@ Ext.define('Ext.dom.Element', function(Element) {
         setBottom: function(bottom) {
             this.dom.style[BOTTOM] = Element.addUnits(bottom);
             return this;
-        },
-
-        setBorder: function(border) {
-            var me = this,
-                domStyle = me.dom.style;
-
-            if (border || border === 0) {
-                border = me.self.unitizeBox((border === true) ? 1 : border);
-                domStyle.setProperty('border-width', border, 'important');
-            }
-            else {
-                domStyle.removeProperty('border-top-width');
-                domStyle.removeProperty('border-right-width');
-                domStyle.removeProperty('border-bottom-width');
-                domStyle.removeProperty('border-left-width');
-            }
         },
 
         /**
@@ -4463,9 +4593,20 @@ Ext.define('Ext.dom.Element', function(Element) {
                 parentNode = dom.parentNode,
                 grandparentNode,
                 activeElement = Ext.fly(Ext.Element.getActiveElement()),
-                resumeFocus;
+                cached, resumeFocus;
+
+            cached = Ext.cache[activeElement.id];
+            // If the element is in the cache, we need to get the instance so
+            // we can suspend events on it. If it's not in the cache, it can't
+            // have any events so we don't need to suspend on it.
+            if (cached) {
+                activeElement = cached;
+            }
 
             if (this.contains(activeElement)) {
+                if (cached) {
+                    activeElement.suspendEvent('focus', 'blur');
+                }
                 Ext.suspendFocus();
                 resumeFocus = true;
             }
@@ -4479,7 +4620,12 @@ Ext.define('Ext.dom.Element', function(Element) {
                 grandparentNode.appendChild(dom);
             }
             if (resumeFocus) {
-                activeElement.focus();
+                if (cached) {
+                    activeElement.focus();
+                    activeElement.resumeEvent('focus', 'blur');
+                } else {
+                    Ext.fly(activeElement).focus();
+                }
                 Ext.resumeFocus();
             }
 
@@ -4522,8 +4668,16 @@ Ext.define('Ext.dom.Element', function(Element) {
                 dom = me.dom,
                 newEl = Ext.DomHelper.insertBefore(dom, config || {tag: "div"}, !returnDom),
                 target = newEl,
-                activeElement = Ext.fly(Ext.Element.getActiveElement()),
-                resumeFocus;
+                activeElement = Ext.Element.getActiveElement(),
+                cached, resumeFocus;
+
+            cached = Ext.cache[activeElement.id];
+            // If the element is in the cache, we need to get the instance so
+            // we can suspend events on it. If it's not in the cache, it can't
+            // have any events so we don't need to suspend on it.
+            if (cached) {
+                activeElement = cached;
+            }
 
             if (selector) {
                 target = newEl.selectNode(selector, returnDom);
@@ -4531,11 +4685,19 @@ Ext.define('Ext.dom.Element', function(Element) {
 
             if (me.contains(activeElement)) {
                 Ext.suspendFocus();
+                if (cached) {
+                    activeElement.suspendEvent('focus', 'blur');
+                }
                 resumeFocus = true;
             }
             target.appendChild(dom);
             if (resumeFocus) {
-                activeElement.focus();
+                if (cached) {
+                    activeElement.focus();
+                    activeElement.resumeEvent('focus', 'blur');
+                } else {
+                    Ext.fly(activeElement).focus();
+                }
                 Ext.resumeFocus();
             }
             return newEl;
@@ -4847,6 +5009,7 @@ Ext.define('Ext.dom.Element', function(Element) {
 
     /**
      * Generates unique ids. If the element already has an id, it is unchanged
+     * @member Ext
      * @param {Object/HTMLElement/Ext.dom.Element} [obj] The element to generate an id for
      * @param {String} prefix (optional) Id prefix (defaults "ext-gen")
      * @return {String} The generated Id.
@@ -5184,4 +5347,48 @@ Ext.define('Ext.dom.Element', function(Element) {
                 // the detachedBody element
                 !(Ext.detachedBodyEl && Ext.detachedBodyEl.isAncestor(dom))));
     };
+
+    if (Ext.os.is.Android || (Ext.os.is.Windows && Ext.supports.Touch)) {
+        Ext.onReady(function() {
+            // Some mobile devices (android and windows) fire window resize events
+            // When the virtual keyboard is displayed. This causes unexpected visual
+            // results due to extra layouts of the viewport.  Here we attach a couple
+            // of event listeners that will help us detect if the virtual keyboard
+            // is open so tha getViewportWidth/getViewportHeight can report the
+            // original size as the viewport size while the keyboard is open
+            var win = Ext.getWin();
+
+            Element._windowWidth = Element._viewportWidth = window.innerWidth;
+            Element._windowHeight = Element._viewportHeight = window.innerHeight;
+
+            win.on({
+                // Focus in/out listeners track the last focus change so we can detect
+                // the proximity of the last focus change relative to window resize events
+                // alowing us to guess with reasonable certainty that a virtual keyboard
+                // is being shown.
+                focusin: '_onWindowFocusChange',
+                focusout: '_onWindowFocusChange',
+                // This pointerup listener is needed because in windowsthe virtual keyboard
+                // can be hidden manually while the editable element retains focus by tapping
+                // a hide button on the virtual keyboard itself. The virtual keyboard can then
+                // be re-shown by tapping on the editable element.  In this case the editable
+                // element does not fire a focusin event since it already has the focus, but
+                // we still need to track that an event occurred which will cause the virtual
+                // keyboard to show momentarily.
+                pointerup: '_onWindowFocusChange',
+                capture: true,
+                delegated: false,
+                delay: 1,
+                scope: Element
+            });
+
+            win.on({
+                // Resize listener for tracking virtual keyboard state.
+                resize: '_onWindowResize',
+                priority: 2000,
+                scope: Element
+            });
+
+        });
+    }
 });

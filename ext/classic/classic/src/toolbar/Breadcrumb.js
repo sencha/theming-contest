@@ -163,6 +163,11 @@ Ext.define('Ext.toolbar.Breadcrumb', {
         me.callParent();
     },
 
+    onRemove: function(component, destroying) {
+        this.callParent([component, destroying]);
+        delete component._breadcrumbNodeId;
+    },
+
     afterComponentLayout: function() {
         var me = this,
             overflowHandler = me.layout.overflowHandler;

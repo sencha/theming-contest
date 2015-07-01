@@ -59,7 +59,8 @@ Ext.define("Ext.form.Labelable", {
              */
             'errorEl',
 
-            'errorWrapEl'
+            'errorWrapEl',
+            'ariaErrorEl'
         ]
     },
 
@@ -93,13 +94,17 @@ Ext.define("Ext.form.Labelable", {
             '{[values.$comp.getSubTplMarkup(values)]}',
             '{afterSubTpl}',
             '{afterBodyEl}',
+            // Unlike errorEl below ariaErrorEl is always rendered but is clipped out of existence
+            '<div id="{id}-ariaErrorEl" data-ref="ariaErrorEl" role="alert" aria-live="polite"',
+                ' class="' + Ext.baseCSSPrefix + 'hidden-clip">',
+            '</div>',
         '</div>',
         '<tpl if="renderError">',
             '<div id="{id}-errorWrapEl" data-ref="errorWrapEl" class="{errorWrapCls} {errorWrapCls}-{ui}',
                 ' {errorWrapExtraCls}" style="{errorWrapStyle}">',
-                '<div role="alert" aria-live="polite" id="{id}-errorEl" data-ref="errorEl" ',
+                '<div role="presentation" id="{id}-errorEl" data-ref="errorEl" ',
                     'class="{errorMsgCls} {invalidMsgCls} {invalidMsgCls}-{ui}" ',
-                    'data-anchorTarget="{id}-inputEl">',
+                    'data-anchorTarget="{tipAnchorTarget}">',
                 '</div>',
             '</div>',
         '</tpl>',
@@ -687,6 +692,7 @@ Ext.define("Ext.form.Labelable", {
             invalidMsgCls: sideError ? me.invalidIconCls : underError ? me.invalidUnderCls : '',
             errorMsgCls: errorMsgCls,
             growCls: me.grow ? me.growCls : '',
+            tipAnchorTarget: me.id + '-inputEl',
             errorWrapStyle: (sideError && !autoFitErrors) ?
                     'visibility:hidden' : 'display:none',
             fieldLabel: me.getFieldLabel(),
@@ -821,7 +827,7 @@ Ext.define("Ext.form.Labelable", {
             msgTarget = me.msgTarget,
             isSide = msgTarget === 'side',
             isQtip = msgTarget === 'qtip',
-            activeError, tpl, targetEl;
+            actionEl, activeError, tpl, targetEl;
 
         errors = Ext.Array.from(errors);
         tpl = me.getTpl('activeErrorsTpl');
@@ -836,14 +842,24 @@ Ext.define("Ext.form.Labelable", {
         me.renderActiveError();
 
         if (me.rendered) {
+            actionEl = me.getActionEl();
+            
             if (isSide) {
                 me.errorEl.dom.setAttribute('data-errorqtip', activeError);
-            } else if (isQtip) {
-                me.getActionEl().dom.setAttribute('data-errorqtip', activeError);
-            } else if (msgTarget === 'title') {
-                me.getActionEl().dom.setAttribute('title', activeError);
+            }
+            else if (isQtip) {
+                actionEl.dom.setAttribute('data-errorqtip', activeError);
+            }
+            else if (msgTarget === 'title') {
+                actionEl.dom.setAttribute('title', activeError);
             }
 
+            // If msgTarget is title, setting an alert is redundant for ARIA purposes
+            if (msgTarget !== 'title') {
+                me.ariaErrorEl.dom.innerHTML = errors.join('. ');
+                actionEl.dom.setAttribute('aria-describedby', me.ariaErrorEl.id);
+            }
+            
             if (isSide || isQtip) {
                 Ext.form.Labelable.initTip();
             }
@@ -875,8 +891,8 @@ Ext.define("Ext.form.Labelable", {
         var me = this,
             errorWrapEl = me.errorWrapEl,
             msgTarget = me.msgTarget,
-            targetEl,
-            restoreDisplay = me.restoreDisplay;
+            restoreDisplay = me.restoreDisplay,
+            actionEl, targetEl;
 
         if (me.hasActiveError()) {
             delete me.activeError;
@@ -884,10 +900,18 @@ Ext.define("Ext.form.Labelable", {
             me.renderActiveError();
 
             if (me.rendered) {
+                actionEl = me.getActionEl();
+                
                 if (msgTarget === 'qtip') {
-                    me.getActionEl().dom.removeAttribute('data-errorqtip');
-                } else if (msgTarget === 'title') {
-                    me.getActionEl().dom.removeAttribute('title');
+                    actionEl.dom.removeAttribute('data-errorqtip');
+                }
+                else if (msgTarget === 'title') {
+                    actionEl.dom.removeAttribute('title');
+                }
+                
+                if (msgTarget !== 'title') {
+                    me.ariaErrorEl.dom.innerHTML = '';
+                    actionEl.dom.removeAttribute('aria-describedby');
                 }
 
                 if (!me.msgTargets[msgTarget]) {

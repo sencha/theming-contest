@@ -9,7 +9,7 @@
  *         data: [
  *             {
  *                 name: 'rdougan',
- *                 img: 'http://a0.twimg.com/profile_images/1261180556/171265_10150129602722922_727937921_7778997_8387690_o_reasonably_small.jpg',
+ *                 img: 'https://www.sencha.com/forum/images/statusicon/forum_new-48.png',
  *                 text: 'JavaScript development'
  *             }
  *         ]
@@ -196,7 +196,7 @@ Ext.define('Ext.plugin.PullRefresh', {
             list = me.getList(),
             scroller = list.getScrollable();
 
-        if (!scroller) {
+        if (!scroller || !scroller.isTouchScroller) {
             return;
         }
 

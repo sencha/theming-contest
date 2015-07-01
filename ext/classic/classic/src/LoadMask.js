@@ -120,6 +120,11 @@ Ext.define('Ext.LoadMask', {
             '</div>',
         '</div>'
     ],
+    
+    /**
+     * @private
+     */
+    skipLayout: true,
 
     /**
      * Creates new LoadMask.
@@ -380,12 +385,13 @@ Ext.define('Ext.LoadMask', {
     bindStore : function(store, initial) {
         var me = this;
 
-        me.mixins.storeholder.bindStore.apply(me, arguments);
-        store = me.store;
-
         // If the server returns a failure, and the proxy fires an exception instead of
         // loading the store, the mask must clear.
         Ext.destroy(me.proxyListeners);
+
+        me.mixins.storeholder.bindStore.apply(me, arguments);
+        store = me.store;
+
         if (store) {
             // Skip ChainedStores to the store that does the loading
             while (store.getSource) {
@@ -497,8 +503,11 @@ Ext.define('Ext.LoadMask', {
             return;
         }
         
-        ownerCt.enableTabbing();
-        ownerCt.setMasked(false);
+        // Could be already nulled while destroying
+        if (ownerCt) {
+            ownerCt.enableTabbing();
+            ownerCt.setMasked(false);
+        }
         
         delete me.showNext;
         
@@ -519,47 +528,62 @@ Ext.define('Ext.LoadMask', {
         return me.callParent(arguments);
     },
 
-    afterShow: function() {
+    afterShow: function() {        
         var me = this,
-            ownerCt = me.ownerCt,
-            el = me.el;
+            ownerCt = me.ownerCt;
 
         me.loading = true;
         me.callParent(arguments);
-
-        // Allow dynamic setting of msgWrapCls
-        if (me.hasOwnProperty('msgWrapCls')) {
-            el.dom.className = me.msgWrapCls;
-        }
-
-        if (me.useMsg) {
-            me.msgTextEl.setHtml(me.msg);
-        } else {
-            // Only the mask is visible if useMsg is false
-            me.msgEl.hide();
-        }
-
-        if (me.shim || Ext.useShims) {
-            el.enableShim(null, true);
-        } else {
-            // Just in case me.shim was changed since last time we were shown (by
-            // Component#setLoading())
-            el.disableShim();
-        }
 
         ownerCt.disableTabbing();
         ownerCt.setMasked(true);
         
         // Owner's disabled tabbing will also make the mask
         // untabbable since it is rendered within the target
-        el.restoreTabbableState();
+        me.el.restoreTabbableState();
 
-        // If owner contains focus, focus this.
-        // Component level onHide processing takes care of focus reversion on hide.
-        if (ownerCt.containsFocus) {
-            me.focus();
+        me.syncMaskState();
+    },
+
+    /**
+     * Synchronizes the visible state of the mask with the configuration settings such
+     * as {@link #msgWrapCls}, {@link #msg}, sizes the mask to occlude the target element or Component
+     * and focuses the mask.
+     */
+    syncMaskState: function() {
+        var me = this,
+            ownerCt = me.ownerCt,
+            el = me.el;
+
+        if (me.isVisible()) {
+
+            // Allow dynamic setting of msgWrapCls
+            if (me.hasOwnProperty('msgWrapCls')) {
+                el.dom.className = me.msgWrapCls;
+            }
+
+            if (me.useMsg) {
+                me.msgTextEl.setHtml(me.msg);
+            } else {
+                // Only the mask is visible if useMsg is false
+                me.msgEl.hide();
+            }
+
+            if (me.shim || Ext.useShims) {
+                el.enableShim(null, true);
+            } else {
+                // Just in case me.shim was changed since last time we were shown (by
+                // Component#setLoading())
+                el.disableShim();
+            }
+
+            // If owner contains focus, focus this.
+            // Component level onHide processing takes care of focus reversion on hide.
+            if (ownerCt.containsFocus) {
+                me.focus();
+            }
+            me.sizeMask();
         }
-        me.sizeMask();
     },
 
     /**

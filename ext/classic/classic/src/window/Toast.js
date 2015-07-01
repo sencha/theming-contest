@@ -143,6 +143,13 @@ Ext.define('Ext.window.Toast', {
     initComponent: function() {
         var me = this;
 
+        // Close tool is not really helpful to sight impaired users
+        // when Toast window is set to auto-close on timeout; however
+        // if it's forced, respect that.
+        if (me.autoClose && !me.hasOwnProperty('closable')) {
+            me.closable = false;
+        }
+        
         me.updateAlignment(me.align);
         me.setAnchor(me.anchor);
         me.callParent();

@@ -282,12 +282,14 @@ Ext.define('Ext.util.Draggable', {
     },
 
     onDragStart: function(e) {
-        if (this.getDisabled()) {
+        var me = this,
+            offset = me.offset;
+
+        if (me.getDisabled()) {
             return false;
         }
-        var offset = this.offset;
 
-        this.fireAction('dragstart', [this, e, offset.x, offset.y], this.initDragStart);
+        me.fireEventedAction('dragstart', [me, e, offset.x, offset.y], me.initDragStart, me);
     },
 
     initDragStart: function(me, e, offsetX, offsetY) {

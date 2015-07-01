@@ -17,7 +17,7 @@ Ext.define('Ext.form.field.FileButton', {
     
     // Button element *looks* focused but it should never really receive focus itself,
     // and with it being a <div></div> we don't need to render tabindex attribute at all
-    tabIndex: null,
+    tabIndex: undefined,
 
     autoEl: {
         tag: 'div',
@@ -37,6 +37,9 @@ Ext.define('Ext.form.field.FileButton', {
             '<tpl if="tabIndex != null">tabindex="{tabIndex}"</tpl>',
         '>'
     ],
+    
+    keyHandlers: null,
+    ariaEl: 'fileInputEl',
 
     /**
      * @private

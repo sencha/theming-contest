@@ -10,13 +10,9 @@
 .x-panel.x-floating,
 .x-msgbox,
 .x-form.x-floating {
-    padding: 6px;
-    background-color: #ccc;
-
     .x-panel-inner,
     > .x-body {
         z-index: 1;
-        background-color: #fff;
     }
 }
 

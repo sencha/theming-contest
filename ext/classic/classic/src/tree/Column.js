@@ -47,6 +47,7 @@ Ext.define('Ext.tree.Column', {
     initComponent: function() {
         var me = this;
 
+        me.rendererScope = me.scope;
         me.setupRenderer();
 
         // This always uses its own renderer.
@@ -54,9 +55,10 @@ Ext.define('Ext.tree.Column', {
         me.innerRenderer = me.renderer;
 
         me.renderer = me.treeRenderer;
-        me.scope = me;
 
         me.callParent();
+
+        me.scope = me;
         
         me.hasCustomRenderer = me.innerRenderer && me.innerRenderer.length > 1;
     },

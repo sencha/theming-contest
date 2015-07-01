@@ -21,12 +21,15 @@ describe("Ext.view.View", function() {
     function makeStore(data) {
         if (typeof data === 'number') {
             data = makeData(data);
+        } else if (!data && data !== null) {
+            data = [{
+                name: 'Item1'
+            }];
         }
+
         return new Ext.data.Store({
             model: TestModel,
-            data: data || [{
-                name: 'Item1'
-            }]
+            data: data
         });
     }
 
@@ -127,19 +130,19 @@ describe("Ext.view.View", function() {
     describe("selection", function() {
         var sm;
 
-        beforeEach(function() {
-            createView({
-                renderTo: Ext.getBody(),
-                itemTpl: '{name}'
-            });
-            sm = view.getSelectionModel();
-        });
-
-        afterEach(function() {
-            sm = null;
-        });
-
         describe("classes", function() {
+            beforeEach(function() {
+                createView({
+                    renderTo: Ext.getBody(),
+                    itemTpl: '{name}'
+                });
+
+                sm = view.getSelectionModel();
+            });
+
+            afterEach(function() {
+                sm = null;
+            });
 
             it("should add the selectedItemCls when selecting", function() {
                 sm.select(0);
@@ -177,9 +180,48 @@ describe("Ext.view.View", function() {
 
         describe("cleanup", function() {
             it("should unbind the store form the selection model", function() {
+                createView({
+                    renderTo: Ext.getBody(),
+                    itemTpl: '{name}'
+                });
+
+                sm = view.getSelectionModel();
+
                 view.destroy();
                 expect(sm.getStore()).toBeNull();
             });
+        });
+
+        describe('disableSelection', function () {
+            function doDisableSelectionTest(disableSelection, createInstance) {
+                var rowModel = createInstance ?
+                    new Ext.selection.Model() :
+                    'rowmodel';
+
+                afterEach(function () {
+                    rowModel = null;
+                });
+
+                it('when disableSelection = ' + disableSelection + ', config.selModel.isSelectionModel = ' + !!createInstance, function () {
+                    createView({
+                        renderTo: Ext.getBody(),
+                        disableSelection: disableSelection,
+                        selModel: rowModel,
+                        itemSelector: '.foo',
+                        tpl: '{name}'
+                    });
+
+                    sm = view.getSelectionModel();
+                    sm.select(0);
+
+                    expect(!!sm.getSelection().length).toBe(!disableSelection);
+                });
+            }
+
+            doDisableSelectionTest(false, false);
+            doDisableSelectionTest(true, false);
+            doDisableSelectionTest(true, true);
+            doDisableSelectionTest(false, true);
         });
     });
 
@@ -1350,9 +1392,10 @@ describe("Ext.view.View", function() {
                 emptyText: 'Foo'
             }, data);
         }
+        
         describe("with deferEmptyText: false", function() {
             it("should show the empty text immediately when the store is empty", function() {
-                createSimpleView(false, []);
+                createSimpleView(false, null);
                 expect(view.getEl().dom).hasHTML('Foo');
             });
             
@@ -1364,12 +1407,12 @@ describe("Ext.view.View", function() {
         
         describe("with deferEmptyText: true", function() {
             it("should not show the empty text immediately when the store is empty", function() {
-                createSimpleView(true, []);
+                createSimpleView(true, null);
                 expect(view.getEl().dom).hasHTML('');
             });
             
             it("should show the empty text after a second refresh if the store is empty", function() {
-                createSimpleView(true, []);
+                createSimpleView(true, null);
                 view.refresh();
                 expect(view.getEl().dom).hasHTML('Foo');
             });
@@ -1377,6 +1420,27 @@ describe("Ext.view.View", function() {
             it("should not contain the empty text if there are nodes", function() {
                 createSimpleView(true);
                 expect(view.getEl().dom).not.hasHTML('Foo');
+            });
+
+            it("should show the empty text if the store had loaded before render", function() {
+                store = new Ext.data.Store({
+                    model: TestModel,
+                    proxy: {
+                        type: 'ajax',
+                        url: 'foo'
+                    }
+                });
+
+                createView({
+                    deferEmptyText: true,
+                    itemTpl: '{name}',
+                    emptyText: 'Foo',
+                    store: store
+                });
+                store.load();
+                completeRequest([]);
+                view.render(Ext.getBody());
+                expect(view.getEl().dom).hasHTML('Foo');
             });
         });
         

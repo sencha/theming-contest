@@ -142,7 +142,8 @@ Ext.define('Ext.slider.Slider', {
      * @private
      */
     initialize: function() {
-        var element = this.element;
+        var element = this.element,
+            thumb;
 
         this.callParent();
 
@@ -156,13 +157,14 @@ Ext.define('Ext.slider.Slider', {
             scope: this,
             delegate: '> thumb',
             tap: 'onTap',
+            beforedragstart: 'onThumbBeforeDragStart',
             dragstart: 'onThumbDragStart',
             drag: 'onThumbDrag',
             dragend: 'onThumbDragEnd'
         });
 
-        var thumb = this.getThumb(0);
-        if(thumb) {
+        thumb = this.getThumb(0);
+        if (thumb) {
             thumb.on('resize', 'onThumbResize', this);
         }
     },
@@ -196,10 +198,11 @@ Ext.define('Ext.slider.Slider', {
     },
 
     refreshOffsetValueRatio: function() {
-        var valueRange = this.getMaxValue() - this.getMinValue(),
-            trackWidth = this.elementWidth - this.thumbWidth;
+        var me = this,
+            valueRange = me.getMaxValue() - me.getMinValue(),
+            trackWidth = me.elementWidth - me.thumbWidth;
 
-        this.offsetValueRatio = trackWidth / valueRange;
+        me.offsetValueRatio = valueRange === 0 ? 0 : trackWidth / valueRange;
     },
 
     onThumbResize: function(){
@@ -216,7 +219,9 @@ Ext.define('Ext.slider.Slider', {
     },
 
     refresh: function() {
+        this.refreshing = true;
         this.refreshValue();
+        this.refreshing = false;
     },
 
     setActiveThumb: function(thumb) {
@@ -232,42 +237,49 @@ Ext.define('Ext.slider.Slider', {
         return this;
     },
 
-    onThumbDragStart: function(thumb, e) {
-        if (e.absDeltaX <= e.absDeltaY || this.getReadOnly()) {
+    onThumbBeforeDragStart: function(thumb, e) {
+        if (this.offsetValueRatio === 0 || e.absDeltaX <= e.absDeltaY || this.getReadOnly()) {
             return false;
         }
-        else {
-            e.stopPropagation();
-        }
-
-        if (this.getAllowThumbsOverlapping()) {
-            this.setActiveThumb(thumb);
-        }
-
-        this.dragStartValue = this.getValue()[this.getThumbIndex(thumb)];
-        this.fireEvent('dragstart', this, thumb, this.dragStartValue, e);
     },
 
-    onThumbDrag: function(thumb, e, offsetX) {
-        var index = this.getThumbIndex(thumb),
-            offsetValueRatio = this.offsetValueRatio,
-            constrainedValue = this.constrainValue(this.getMinValue() + offsetX / offsetValueRatio);
+    onThumbDragStart: function(thumb, e) {
+        var me = this;
+
+        me.refreshAllThumbConstraints();
 
         e.stopPropagation();
 
-        this.setIndexValue(index, constrainedValue);
+        if (me.getAllowThumbsOverlapping()) {
+            me.setActiveThumb(thumb);
+        }
 
-        this.fireEvent('drag', this, thumb, this.getValue(), e);
+        me.dragStartValue = me.getValue()[me.getThumbIndex(thumb)];
+        me.fireEvent('dragstart', me, thumb, me.dragStartValue, e);
+    },
+
+    onThumbDrag: function(thumb, e, offsetX) {
+        var me = this,
+            index = me.getThumbIndex(thumb),
+            offsetValueRatio = me.offsetValueRatio,
+            constrainedValue = me.constrainValue(me.getMinValue() + offsetX / offsetValueRatio);
+
+        e.stopPropagation();
+
+        me.setIndexValue(index, constrainedValue);
+
+        me.fireEvent('drag', me, thumb, me.getValue(), e);
 
         return false;
     },
 
     setIndexValue: function(index, value, animation) {
-        var thumb = this.getThumb(index),
-            values = this.getValue(),
-            minValue = this.getMinValue(),
-            offsetValueRatio = this.offsetValueRatio,
-            increment = this.getIncrement(),
+        var me = this,
+            thumb = me.getThumb(index),
+            values = me.getValue(),
+            minValue = me.getMinValue(),
+            offsetValueRatio = me.offsetValueRatio,
+            increment = me.getIncrement(),
             draggable = thumb.getDraggable();
 
         draggable.setOffset((value - minValue) * offsetValueRatio, null, animation);
@@ -276,14 +288,15 @@ Ext.define('Ext.slider.Slider', {
     },
 
     onThumbDragEnd: function(thumb, e) {
-        this.refreshThumbConstraints(thumb);
-        var index = this.getThumbIndex(thumb),
-            newValue = this.getValue()[index],
-            oldValue = this.dragStartValue;
+        var me = this,
+            index = me.getThumbIndex(thumb),
+            newValue = me.getValue()[index],
+            oldValue = me.dragStartValue;
 
-        this.fireEvent('dragend', this, thumb, this.getValue(), e);
+        me.snapThumbPosition(thumb, newValue);
+        me.fireEvent('dragend', me, thumb, me.getValue(), e);
         if (oldValue !== newValue) {
-            this.fireEvent('change', this, thumb, newValue, oldValue);
+            me.fireEvent('change', me, thumb, newValue, oldValue);
         }
     },
 
@@ -321,30 +334,32 @@ Ext.define('Ext.slider.Slider', {
      * @private
      */
     onTap: function(e) {
-        if (this.isDisabled() || this.getReadOnly()) {
+        var me = this,
+            element = me.element,
+            minDistance = Infinity,
+            i, absDistance, testValue, closestIndex, oldValue, thumb,
+            ln, values, value, offset, elementX, targetElement, touchPointX;
+
+        if (me.offsetValueRatio === 0 || me.isDisabled() || me.getReadOnly()) {
             return;
         }
 
-        var targetElement = Ext.get(e.target);
+        targetElement = Ext.get(e.target);
 
         if (!targetElement || (Ext.browser.engineName == 'WebKit' && targetElement.hasCls('x-thumb'))) {
             return;
         }
 
-        var touchPointX = e.touch.point.x,
-            element = this.element,
-            elementX = element.getX(),
-            offset = touchPointX - elementX - (this.thumbWidth / 2),
-            value = this.constrainValue(this.getMinValue() + offset / this.offsetValueRatio),
-            values = this.getValue(),
-            minDistance = Infinity,
-            ln = values.length,
-            i, absDistance, testValue, closestIndex, oldValue, thumb;
+        touchPointX = e.touch.point.x;
+        elementX = element.getX();
+        offset = touchPointX - elementX - (me.thumbWidth / 2);
+        value = me.constrainValue(me.getMinValue() + offset / me.offsetValueRatio);
+        values = me.getValue();
+        ln = values.length;
 
         if (ln === 1) {
             closestIndex = 0;
-        }
-        else {
+        } else {
             for (i = 0; i < ln; i++) {
                 testValue = values[i];
                 absDistance = Math.abs(testValue - value);
@@ -357,13 +372,13 @@ Ext.define('Ext.slider.Slider', {
         }
 
         oldValue = values[closestIndex];
-        thumb = this.getThumb(closestIndex);
+        thumb = me.getThumb(closestIndex);
 
-        this.setIndexValue(closestIndex, value, this.getAnimation());
-        this.refreshThumbConstraints(thumb);
+        me.setIndexValue(closestIndex, value, me.getAnimation());
+        me.refreshThumbConstraints(thumb);
 
         if (oldValue !== value) {
-            this.fireEvent('change', this, thumb, value, oldValue);
+            me.fireEvent('change', me, thumb, value, oldValue);
         }
     },
 
@@ -374,7 +389,7 @@ Ext.define('Ext.slider.Slider', {
         this.add(newThumbs);
     },
 
-    applyValue: function(value) {
+    applyValue: function(value, oldValue) {
         var values = Ext.Array.from(value || 0),
             filteredValues = [],
             previousFilteredValue = this.getMinValue(),
@@ -396,6 +411,12 @@ Ext.define('Ext.slider.Slider', {
             previousFilteredValue = filteredValue;
         }
 
+        if (!this.refreshing && oldValue) {
+            if (Ext.Array.equals(value, oldValue)) {
+                filteredValues = undefined;
+            }
+        }
+
         return filteredValues;
     },
 
@@ -403,20 +424,15 @@ Ext.define('Ext.slider.Slider', {
      * Updates the sliders thumbs with their new value(s)
      */
     updateValue: function(newValue, oldValue) {
-        var thumbs = this.getThumbs(),
-            ln = newValue.length,
-            minValue = this.getMinValue(),
-            offset = this.offsetValueRatio,
+        var me = this,
+            thumbs = me.getThumbs(),
+            len = newValue.length,
             i;
 
-        this.setThumbsCount(ln);
+        me.setThumbsCount(len);
 
-        for (i = 0; i < ln; i++) {
-            thumbs[i].getDraggable().setExtraConstraint(null).setOffset((newValue[i] - minValue) * offset);
-        }
-
-        for (i = 0; i < ln; i++) {
-            this.refreshThumbConstraints(thumbs[i]);
+        for (i = 0; i < len; i++) {
+            me.snapThumbPosition(thumbs[i], newValue[i]);
         }
     },
 
@@ -556,6 +572,28 @@ Ext.define('Ext.slider.Slider', {
 
         for (i = 0; i < ln; i++) {
             items[i].setDisabled(disabled);
+        }
+    },
+
+    privates: {
+        refreshAllThumbConstraints: function() {
+            var thumbs = this.getThumbs(),
+                len = thumbs.length,
+                i;
+
+            for (i = 0; i < len; i++) {
+                this.refreshThumbConstraints(thumbs[i]);
+            }
+        },
+
+        snapThumbPosition: function(thumb, value) {
+            var ratio = this.offsetValueRatio,
+                offset;
+
+            if (isFinite(ratio)) {
+                offset = Ext.Number.correctFloat((value - this.getMinValue()) * ratio)
+                thumb.getDraggable().setExtraConstraint(null).setOffset(offset);
+            }
         }
     }
 });

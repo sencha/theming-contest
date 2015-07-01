@@ -204,7 +204,7 @@ Ext.define('Ext.fx.runner.CssTransition', {
             // for dom cleanup
             iframe.setAttribute('data-sticky', true);
             //</debug>
-            iframe.setAttribute('tabindex', -1);
+            iframe.setAttribute('tabIndex', -1);
             iframeStyle = iframe.style;
             iframeStyle.setProperty('visibility', 'hidden', 'important');
             iframeStyle.setProperty('width', '0px', 'important');

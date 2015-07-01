@@ -1,126 +1,122 @@
 /**
  * @private
  */
-Ext.define('Ext.event.publisher.Focus', function() {
-    var Element = Ext.dom.Element,
-        cache = Element.cache;
-    
-    return {
-        extend: 'Ext.event.publisher.Dom',
-        requires: [
-            'Ext.dom.Element',
-            'Ext.GlobalEvents'
-        ],
+Ext.define('Ext.event.publisher.Focus', {
+    extend: 'Ext.event.publisher.Dom',
+    requires: [
+        'Ext.dom.Element',
+        'Ext.GlobalEvents'
+    ],
 
-        type: 'focus',
+    type: 'focus',
 
-        handledEvents: ['focusenter', 'focusleave', 'focusmove'],
+    handledEvents: ['focusenter', 'focusleave', 'focusmove'],
 
-        // At this point only Firefox does not support focusin/focusout, see this bug:
-        // https://bugzilla.mozilla.org/show_bug.cgi?id=687787
-        handledDomEvents: ['focusin', 'focusout'],
+    // At this point only Firefox does not support focusin/focusout, see this bug:
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=687787
+    handledDomEvents: ['focusin', 'focusout'],
 
-        doDelegatedEvent: function(e, invokeAfter) {
-            var me = this,
-                relatedTarget;
+    doDelegatedEvent: function(e, invokeAfter) {
+        var me = this,
+            relatedTarget;
 
-            e = me.callParent([e, false]);
+        e = me.callParent([e, false]);
 
-            if (e) {
-                if (e.type === 'focusout') {
-                    // If focus is departing to the document, there will be no forthcoming focusin event
-                    // to trigger a focusleave, to fire a focusleave now.
-                    if (e.relatedTarget == null) {
-                        me.processFocusIn(e, e.target, document.body, invokeAfter);
-                    }
-                }
-                else {
-                    relatedTarget = e.relatedTarget;
-
-                    // IE reports relatedTarget as either an inaccessible object which coercively equates to null, or just a blank object in the case of focusing from nowhere.
-                    // So we can't use a truth test ternary expression to substitute in document.body.
-                    me.processFocusIn(e, (relatedTarget == null || !relatedTarget.tagName) ? document.body : relatedTarget, e.target, invokeAfter);
+        if (e) {
+            if (e.type === 'focusout') {
+                // If focus is departing to the document, there will be no forthcoming focusin event
+                // to trigger a focusleave, to fire a focusleave now.
+                if (e.relatedTarget == null) {
+                    me.processFocusIn(e, e.target, document.body, invokeAfter);
                 }
             }
-        },
+            else {
+                relatedTarget = e.relatedTarget;
 
-        processFocusIn: function(e, fromElement, toElement, invokeAfter) {
-            var me = this,
-                commonAncestor,
-                node, targets = [],
-                event, focusEnterEvent;
+                // IE reports relatedTarget as either an inaccessible object which coercively equates to null, or just a blank object in the case of focusing from nowhere.
+                // So we can't use a truth test ternary expression to substitute in document.body.
+                me.processFocusIn(e, (relatedTarget == null || !relatedTarget.tagName) ? document.body : relatedTarget, e.target, invokeAfter);
+            }
+        }
+    },
 
-            // If we have suspended focus/blur processing due to framework needing to silently manipulate
-            // focus position, then return early.
-            if (this.suspendCount) {
+    processFocusIn: function(e, fromElement, toElement, invokeAfter) {
+        var me = this,
+            commonAncestor,
+            node, targets = [],
+            event, focusEnterEvent;
+
+        // If we have suspended focus/blur processing due to framework needing to silently manipulate
+        // focus position, then return early.
+        if (this.suspendCount) {
+            return;
+        }
+
+        // Gather targets for focusleave event from the fromElement to the parentNode (not inclusive)
+        for (node = fromElement, commonAncestor = Ext.dom.Element.getCommonAncestor(toElement, fromElement, true);
+             node && node !== commonAncestor; node = node.parentNode) {
+                targets.push(node);
+        }
+
+        // Publish the focusleave event for the bubble hierarchy
+        if (targets.length) {
+            event = me.createSyntheticEvent('focusleave', e, fromElement, toElement);
+            me.publish('focusleave', targets, event);
+            if (event.isStopped) {
                 return;
             }
-
-            // Gather targets for focusleave event from the fromElement to the parentNode (not inclusive)
-            for (node = fromElement, commonAncestor = Element.getCommonAncestor(toElement, fromElement, true); node && node !== commonAncestor; node = node.parentNode) {
-                targets.push(node);
-            }
-
-            // Publish the focusleave event for the bubble hierarchy
-            if (targets.length) {
-                event = me.createSyntheticEvent('focusleave', e, fromElement, toElement);
-                me.publish('focusleave', targets, event);
-                if (event.isStopped) {
-                    return;
-                }
-            }
-
-            // Gather targets for focusenter event from the focus targetElement to the parentNode (not inclusive)
-            targets.length = 0;
-            for (node = toElement; node !== commonAncestor; node = node.parentNode) {
-                targets.push(node);
-            }
-
-            // We always need this event; this is what we pass to the global focus event
-            focusEnterEvent = me.createSyntheticEvent('focusenter', e, toElement, fromElement);
-
-            // Publish the focusleave event for the bubble hierarchy
-            if (targets.length) {
-                me.publish('focusenter', targets, focusEnterEvent);
-                if (focusEnterEvent.isStopped) {
-                    return;
-                }
-            }
-
-            // When focus moves within an element, fire a bubbling focusmove event
-            targets = me.getPropagatingTargets(commonAncestor);
-
-            // Publish the focusleave event for the bubble hierarchy
-            if (targets.length) {
-                event = me.createSyntheticEvent('focusmove', e, toElement, fromElement);
-                me.publish('focusmove', targets, event);
-                if (event.isStopped) {
-                    return;
-                }
-            }
-
-            if (invokeAfter) {
-                me.afterEvent(e);
-            }
-
-            Ext.GlobalEvents.fireEvent('focus', {
-                event: focusEnterEvent,
-                toElement: toElement,
-                fromElement: fromElement
-            });
-        },
-
-        createSyntheticEvent: function(eventName, browserEvent, target, relatedTarget) {
-            var event = new Ext.event.Event(browserEvent);
-
-            event.type = eventName;
-
-            event.relatedTarget = relatedTarget;
-            event.target = target;
-
-            return event;
         }
-    };
+
+        // Gather targets for focusenter event from the focus targetElement to the parentNode (not inclusive)
+        targets.length = 0;
+        for (node = toElement; node !== commonAncestor; node = node.parentNode) {
+            targets.push(node);
+        }
+
+        // We always need this event; this is what we pass to the global focus event
+        focusEnterEvent = me.createSyntheticEvent('focusenter', e, toElement, fromElement);
+
+        // Publish the focusleave event for the bubble hierarchy
+        if (targets.length) {
+            me.publish('focusenter', targets, focusEnterEvent);
+            if (focusEnterEvent.isStopped) {
+                return;
+            }
+        }
+
+        // When focus moves within an element, fire a bubbling focusmove event
+        targets = me.getPropagatingTargets(commonAncestor);
+
+        // Publish the focusleave event for the bubble hierarchy
+        if (targets.length) {
+            event = me.createSyntheticEvent('focusmove', e, toElement, fromElement);
+            me.publish('focusmove', targets, event);
+            if (event.isStopped) {
+                return;
+            }
+        }
+
+        if (invokeAfter) {
+            me.afterEvent(e);
+        }
+
+        Ext.GlobalEvents.fireEvent('focus', {
+            event: focusEnterEvent,
+            toElement: toElement,
+            fromElement: fromElement
+        });
+    },
+
+    createSyntheticEvent: function(eventName, browserEvent, target, relatedTarget) {
+        var event = new Ext.event.Event(browserEvent);
+
+        event.type = eventName;
+
+        event.relatedTarget = relatedTarget;
+        event.target = target;
+
+        return event;
+    }
 },
 
 function(Focus) {

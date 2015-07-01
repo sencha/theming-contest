@@ -564,6 +564,8 @@ Ext.define('Ext.view.View', {
                 e.preventDefault();
             }
         }
+        
+        e.view = null;
     },
 
     /**

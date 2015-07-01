@@ -2,7 +2,7 @@ describe('Ext.grid.plugin.CellEditing', function () {
     var store, plugin, grid, view, record, column, field,
         TAB = 9;
 
-    function makeGrid(pluginCfg, gridCfg, storeCfg) {
+    function makeGrid(pluginCfg, gridCfg, storeCfg, locked) {
         store = new Ext.data.Store(Ext.apply({
             fields: ['name', 'email', 'phone'],
             data: [
@@ -18,7 +18,7 @@ describe('Ext.grid.plugin.CellEditing', function () {
 
         grid = new Ext.grid.Panel(Ext.apply({
             columns: [
-                {header: 'Name',  dataIndex: 'name', editor: 'textfield'},
+                {header: 'Name',  dataIndex: 'name', editor: 'textfield', locked: locked},
                 {header: 'Email', dataIndex: 'email', flex:1,
                     editor: {
                         xtype: 'textareafield',
@@ -63,6 +63,19 @@ describe('Ext.grid.plugin.CellEditing', function () {
     function tearDown() {
         store = plugin = grid = view = record = column = field = Ext.destroy(grid);
     }
+
+    describe('finding the cell editing plugin in a locking grid', function() {
+        beforeEach(function() {
+            makeGrid({pluginId:'test-cell-editing'}, null, null, true);
+        });
+
+        it('should find it by id', function() {
+            expect(grid.getPlugin('test-cell-editing')).toBe(plugin);
+        });
+        it('should find it by ptype', function() {
+            expect(grid.findPlugin('cellediting')).toBe(plugin);
+        });
+    });
 
     describe('effect of hiding columns on cell editing selection', function () {
         // These specs show that hiding columns pre- or post- cell edit will not place the x-grid-cell-selected class on the wrong

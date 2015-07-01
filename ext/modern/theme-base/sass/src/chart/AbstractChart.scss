@@ -118,6 +118,3 @@ $marker-size: .8em !default;
     @include box-orient(horizontal);
   }
 }
-
-@include icon('list');
-@include icon('expand');

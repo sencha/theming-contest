@@ -446,7 +446,6 @@ Ext.define('Ext.tab.Panel', {
      * @param {Ext.Component} oldCard The previously active item
      */
 
-    //inherit docs
     initComponent: function() {
         var me = this,
             // Default to 0 if undefined and not null!
@@ -488,16 +487,16 @@ Ext.define('Ext.tab.Panel', {
             tabBar.setActiveTab(activeTab.tab, true);
         }
     },
-    
+
     /**
      * @method getTabBar
      * Returns the {@link Ext.tab.Bar} associated with this tabPanel.
      * @return {Ext.tab.Bar} The tabBar for this tabPanel
      */
-    
+
     /**
      * @method setTabBar
-     * @hide
+     * @ignore
      */
 
     onRender: function() {
@@ -810,6 +809,7 @@ Ext.define('Ext.tab.Panel', {
             glyphchange: me.onItemGlyphChange,
             titlechange: me.onItemTitleChange
         });
+
         if (item.tab && !me.destroying && item.tab.ownerCt === me.tabBar) {
             me.tabBar.remove(item.tab);
         }

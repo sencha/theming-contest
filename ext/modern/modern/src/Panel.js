@@ -46,30 +46,30 @@ Ext.define('Ext.Panel', {
     config: {
         baseCls: Ext.baseCSSPrefix + 'panel',
 
+        border: false,
+
         /**
          * @cfg {Number/Boolean/String} bodyPadding
          * A shortcut for setting a padding style on the body element. The value can either be
          * a number to be applied to all sides, or a normal CSS string describing padding.
-         * @deprecated 2.0.0
          */
         bodyPadding: null,
 
         /**
-         * @cfg {Number/Boolean/String} bodyMargin
-         * A shortcut for setting a margin style on the body element. The value can either be
-         * a number to be applied to all sides, or a normal CSS string describing margins.
-         * @deprecated 2.0.0
-         */
-        bodyMargin: null,
-
-        /**
-         * @cfg {Number/Boolean/String} bodyBorder
-         * A shortcut for setting a border style on the body element. The value can either be
-         * a number to be applied to all sides, or a normal CSS string describing borders.
-         * @deprecated 2.0.0
+         * @cfg {Boolean} bodyBorder
+         * - `true` to enable the border around the panel body (as defined by the theme)
+         * Note that even when enabled, the bodyBorder is only visible when there are docked
+         * items around the edges of the panel.  Where the bodyBorder touches the panel's outer
+         * border it is automatically collapsed into a single border.
+         *
+         * - `false` to disable the body border
+         *
+         * - `null` - use the value of {@link #border} as the value for bodyBorder
          */
         bodyBorder: null
     },
+
+    manageBorders: true,
 
     getElementConfig: function() {
         return {
@@ -89,6 +89,27 @@ Ext.define('Ext.Panel', {
         };
     },
 
+    /**
+     * Adds a CSS class to the body element. If not rendered, the class will
+     * be added when the panel is rendered.
+     * @param {String} cls The class to add
+     * @return {Ext.panel.Panel} this
+     */
+    addBodyCls: function(cls) {
+        this.innerElement.addCls(cls);
+        return this;
+    },
+
+    /**
+     * Removes a CSS class from the body element.
+     * @param {String} cls The class to remove
+     * @return {Ext.panel.Panel} this
+     */
+    removeBodyCls: function(cls) {
+        this.innerElement.removeCls(cls);
+        return this;
+    },
+
     applyBodyPadding: function(bodyPadding) {
         if (bodyPadding === true) {
             bodyPadding = 5;
@@ -101,40 +122,36 @@ Ext.define('Ext.Panel', {
         return bodyPadding;
     },
 
+    updateBorder: function(border, oldBorder) {
+        this.callParent([border, oldBorder]);
+        if (this.getBodyBorder() === null) {
+            this.setBodyBorderEnabled(border !== false);
+        }
+    },
+
     updateBodyPadding: function(newBodyPadding) {
-        this.element.setStyle('padding', newBodyPadding);
+        this.innerElement.setStyle('padding', newBodyPadding);
     },
 
-    applyBodyMargin: function(bodyMargin) {
-        if (bodyMargin === true) {
-            bodyMargin = 5;
-        }
+    updateBodyBorder: function(bodyBorder) {
+        var border = (bodyBorder === null) ? this.getBorder() : bodyBorder;
 
-        if (bodyMargin) {
-            bodyMargin = Ext.dom.Element.unitizeBox(bodyMargin);
-        }
-
-        return bodyMargin;
+        this.setBodyBorderEnabled(bodyBorder !== false);
     },
 
-    updateBodyMargin: function(newBodyMargin) {
-        this.element.setStyle('margin', newBodyMargin);
-    },
+    updateUi: function(ui, oldUi) {
+        var suffix = 'x-panel-inner-',
+            innerElement = this.innerElement;
 
-    applyBodyBorder: function(bodyBorder) {
-        if (bodyBorder === true) {
-            bodyBorder = 1;
+        if (oldUi) {
+            innerElement.removeCls(suffix + oldUi);
         }
 
-        if (bodyBorder) {
-            bodyBorder = Ext.dom.Element.unitizeBox(bodyBorder);
+        if (ui) {
+            innerElement.addCls(suffix + ui);
         }
 
-        return bodyBorder;
-    },
-
-    updateBodyBorder: function(newBodyBorder) {
-        this.element.setStyle('border-width', newBodyBorder);
+        this.callParent([ui, oldUi]);
     },
 
     alignTo: function(component, alignment) {
@@ -214,6 +231,12 @@ Ext.define('Ext.Panel', {
 
             this.setLeft(this.getLeft() + offsetLeft);
             this.setTop(this.getTop() + offsetTop);
+        }
+    },
+
+    privates: {
+        setBodyBorderEnabled: function(enabled) {
+            this.innerElement.setStyle('border-width', enabled ? '' : '0');
         }
     }
 });

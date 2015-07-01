@@ -138,21 +138,29 @@ describe('Ext.grid.NavigationModel', function() {
     describe('Re-entering grid after sorting', function() {
         it('should scroll last focused row into view on sort', function() {
             makeGrid(null, 500);
-            
+            var startPos = new Ext.grid.CellContext(view).setPosition(9, 4);
+
             navModel.setPosition(9, 4);
-            colRef[4].el.dom.focus();
 
-            // Sort ascending
-            jasmine.fireKeyEvent(colRef[4].el, 'keydown', Ext.EventObject.SPACE);
+            waitsFor(function() {
+                return navModel.lastFocused  && navModel.lastFocused.isEqual(startPos);
+            });
 
-            // View's element Region MUST contain the focused cell.
-            expect(view.getEl().getRegion().contains(view.getCellByPosition(navModel.lastFocused).getRegion())).toBe(true);
+            runs(function() {
+                colRef[4].el.dom.focus();
 
-            // Sort descending
-            jasmine.fireKeyEvent(colRef[4].el, 'keydown', Ext.EventObject.SPACE);
+                // Sort ascending
+                jasmine.fireKeyEvent(colRef[4].el, 'keydown', Ext.event.Event.SPACE);
 
-            // View's element Region MUST still contain the focused cell.
-            expect(view.getEl().getRegion().contains(view.getCellByPosition(navModel.lastFocused).getRegion())).toBe(true);
+                // View's element Region MUST contain the focused cell.
+                expect(view.getEl().getRegion().contains(view.getCellByPosition(navModel.lastFocused).getRegion())).toBe(true);
+
+                // Sort descending
+                jasmine.fireKeyEvent(colRef[4].el, 'keydown', Ext.event.Event.SPACE);
+
+                // View's element Region MUST still contain the focused cell.
+                expect(view.getEl().getRegion().contains(view.getCellByPosition(navModel.lastFocused).getRegion())).toBe(true);
+            });
         });
     });
 
@@ -193,71 +201,71 @@ describe('Ext.grid.NavigationModel', function() {
             navModel.setPosition(new Ext.grid.CellContext(grid.lockedGrid.view).setPosition(0, 0));
             expectPosition(0, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(0, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(0, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(0, 3);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(1, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(1, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(1, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(1, 3);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(2, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(2, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(2, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(2, 3);
 
             // Now do left arrow until we get back to 0, 0
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(2, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(2, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(2, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(1, 3);
 
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(1, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(1, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(1, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(0, 3);
 
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(0, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(0, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(0, 0);
         });
     });
@@ -269,71 +277,71 @@ describe('Ext.grid.NavigationModel', function() {
             navModel.setPosition(new Ext.grid.CellContext(grid.view).setPosition(0, 0));
             expectPosition(0, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(0, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(0, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(0, 3);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(1, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(1, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(1, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(1, 3);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(2, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(2, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(2, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.RIGHT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.RIGHT);
             expectPosition(2, 3);
 
             // Now do left arrow until we get back to 0, 0
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(2, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(2, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(2, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(1, 3);
 
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(1, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(1, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(1, 0);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(0, 3);
 
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(0, 2);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(0, 1);
             
-            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.EventObject.LEFT);
+            jasmine.fireKeyEvent(navModel.cell, 'keydown', Ext.event.Event.LEFT);
             expectPosition(0, 0);
         });
     });

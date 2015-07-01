@@ -256,7 +256,6 @@ Ext.define('Ext.form.field.Radio', {
         return o;
     },
 
-    // inherit docs
     onChange: function(newVal, oldVal) {
         var me = this,
             r, rLen, radio, radios;
@@ -277,7 +276,6 @@ Ext.define('Ext.form.field.Radio', {
         }
     },
 
-    // inherit docs
     getManager: function() {
         return Ext.form.RadioManager;
     }

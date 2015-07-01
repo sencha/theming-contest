@@ -13,14 +13,18 @@
  *     });
  *
  * Theme provided values will not override the values provided in an instance config.
- * Except if a theme provided value is an object, in that case it will be merged with
- * the value from the instance config, unless the theme provided value (object)
- * has a '$default' key set to 'true'.
+ * However, if a theme provided value is an object, it will be merged with the value
+ * from the instance config, unless the theme provided object has a '$default' key
+ * set to 'true'.
  *
  * Certain chart theme configs (e.g. 'fontSize') may use the 'default' value to indicate
  * that they should inherit a value from the corresponding CSS style provided by
  * a framework theme. Additionally, one can use basic binary operators like multiplication,
  * addition and subtraction to derive from the default value, e.g. fontSize: 'default*1.3'.
+ *
+ * Important: the theme should not use the 'font' shorthand to specify the font of labels
+ * and other text elements of a chart. Instead, individual font properties should be used:
+ * 'fontStyle', 'fontVariant', 'fontWeight', 'fontSize' and 'fontFamily'.
  */
 Ext.define('Ext.chart.theme.Base', {
 

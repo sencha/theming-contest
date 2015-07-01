@@ -15,7 +15,13 @@
             "../../../../packages/core/test/specs",
             ".",
             "../../../../packages/charts/test/specs",
-            "../../../../packages/charts/test/specs-classic"
+            "../../../../packages/charts/test/specs-classic",
+            "../../../../packages/ux/test/specs",
+            "../../../../packages/ux/test/classic/specs",
+            "../../../../../packages/pivot/test/specs",
+            "../../../../../packages/pivot/test/classic/specs",
+            "../../../../../packages/exporter/test/specs",
+            "../../../../../packages/exporter/test/classic/specs"
         ]
     } 
 }

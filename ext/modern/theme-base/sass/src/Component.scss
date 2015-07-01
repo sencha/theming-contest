@@ -123,13 +123,6 @@ input, textarea {
     -webkit-touch-callout: inherit;
     -ms-user-select: auto;
 
-    @include blueprint-typography;
-
-    line-height: 1.5;
-    color: #333;
-    font-size: .8em;
-    padding: 1.2em;
-
     ul li {
         list-style-type: circle;
     }
@@ -212,10 +205,6 @@ input, textarea {
 
     91.66%{ -ms-transform: rotate(330deg); }
     100%{   -ms-transform: rotate(330deg); }
-}
-
-@if $include-pictos-font {
-    @include icon-font('Pictos', 'pictos/pictos-web');
 }
 
 .#{$prefix}shim {

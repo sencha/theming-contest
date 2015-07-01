@@ -236,6 +236,9 @@ Ext.define('Ext.grid.header.DropZone', {
     },
 
     onNodeDrop: function(node, dragZone, e, data) {
+        // Do not process the upcoming click after this mouseup. It's not a click gesture
+        this.headerCt.blockNextEvent();
+
         // Note that dropLocation.pos refers to whether the header is dropped before or after the target node!
         if (!this.valid) {
             return;
@@ -339,7 +342,13 @@ Ext.define('Ext.grid.header.DropZone', {
             // to refresh the view as the headers and the corrresponding data columns will already be correctly
             // aligned (think of the group header sitting directly atop the last header in the group).
             // Also, it's not necessary to refresh the view if the indices are the same.
-            if (visibleToIdx >= 0 && !(targetHeader.isGroupHeader && !targetHeader.items.length) && visibleFromIdx !== visibleToIdx) {
+            // NOTE that targetHeader can be destroyed by this point if it was a group header
+            // and we just dragged the last column out of it; in that case header's items collection
+            // will be nulled.
+            if (visibleToIdx >= 0 && 
+                !(targetHeader.isGroupHeader && (!targetHeader.items || !targetHeader.items.length)) &&
+                visibleFromIdx !== visibleToIdx)
+            {
                 colsToMove = dragHeader.isGroupHeader ?
                     dragHeader.query(':not([hidden]):not([isGroupHeader])').length :
                     1;

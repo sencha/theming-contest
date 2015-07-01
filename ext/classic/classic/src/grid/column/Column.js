@@ -63,6 +63,22 @@
  *  - {@link #dataIndex}: The dataIndex is the field in the underlying {@link Ext.data.Store} to use as the value for the column.
  *  - {@link Ext.grid.column.Column#renderer}: Allows the underlying store
  *  value to be transformed before being displayed in the grid
+ * 
+ * ## State saving
+ *
+ * When the owning {@link Ext.grid.Panel Grid} is configured 
+ * {@link Ext.grid.Panel#cfg-stateful}, it will save its column state (order and width)
+ * encapsulated within the default Panel state of changed width and height and
+ * collapsed/expanded state.
+ *
+ * On a `stateful` grid, not only should the Grid have a 
+ * {@link Ext.grid.Panel#cfg-stateId}, each column of the grid should also be configured 
+ * with a {@link #stateId} which identifies that column locally within the grid.
+ * 
+ * Omitting the `stateId` config from the columns results in columns with generated 
+ * internal ID's.  The generated ID's are subject to change on each page load 
+ * making it impossible for the state manager to restore the previous state of the 
+ * columns.
  */
 Ext.define('Ext.grid.column.Column', {
     extend: 'Ext.grid.header.Container',
@@ -636,6 +652,18 @@ Ext.define('Ext.grid.column.Column', {
     producesHTML: true,
 
     /**
+     * @cfg {Boolean} ignoreExport
+     * This flag indicates that this column will be ignored when grid data is exported.
+     *
+     * When grid data is exported you may want to export only some columns that are important
+     * and not everything. Widget, check and action columns are not relevant when data is
+     * exported. You can set this flag on any column that you want to be ignored during export.
+     *
+     * This is used by {@link Ext.grid.plugin.Clipboard clipboard plugin} and {@link Ext.grid.plugin.Exporter exporter plugin}.
+     */
+    ignoreExport: false,
+
+    /**
      * @property {Ext.dom.Element} triggerEl
      * Element that acts as button for column header dropdown menu.
      */
@@ -698,7 +726,9 @@ Ext.define('Ext.grid.column.Column', {
 
         // Preserve the scope to resolve a custom renderer.
         // Subclasses (TreeColumn) may insist on scope being this.
-        me.rendererScope = me.initialConfig.scope;
+        if (!me.rendererScope) {
+            me.rendererScope = me.scope;
+        }
 
         if (me.header != null) {
             me.text = me.header;
@@ -920,7 +950,7 @@ Ext.define('Ext.grid.column.Column', {
         me.callParent([child]);
     },
 
-    onRemove: function(child) {
+    onRemove: function(child, isDestroying) {
         var me = this;
 
         if (child.isSubHeader) {
@@ -928,7 +958,7 @@ Ext.define('Ext.grid.column.Column', {
             child.removeCls(me.groupSubHeaderCls);
         }
 
-        me.callParent([child]);
+        me.callParent([child, isDestroying]);
 
         // By this point, the component will be removed from the items collection.
         //
@@ -1246,7 +1276,7 @@ Ext.define('Ext.grid.column.Column', {
             prevSibling;
 
         // Tap on the resize zone triggers the menu
-        if (Ext.supports.Touch) {
+        if (e.pointerType === 'touch') {
             prevSibling = me.previousSibling(':not([hidden])');
 
             // Tap on right edge, activate this header

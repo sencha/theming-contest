@@ -224,6 +224,16 @@ Ext.define('Ext.layout.Layout', {
     redoLayout: Ext.emptyFn,
     undoLayout: Ext.emptyFn,
 
+    /**
+     * @cfg {Object} animatePolicy
+     * An object that contains as keys the names of the properties that can be animated
+     * by child items as a consequence of a layout. This config is used internally by the
+     * {@link Ext.layout.container.Accordion accordion} layout to cause the child panels
+     * to animate to their proper size and position after a collapse/expand event.
+     * @protected
+     * @since 4.1.0
+     */
+
     getAnimatePolicy: function() {
         return this.animatePolicy;
     },

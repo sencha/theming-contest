@@ -58,7 +58,7 @@
  *
  * These configurations will be picked up by the native browser, which will enable the options at the OS level.
  *
- * Text field inherits from {@link Ext.field.Field}, which is the base class for all fields in Sencha Touch and provides
+ * Text field inherits from {@link Ext.field.Field}, which is the base class for all fields and provides
  * a lot of shared functionality for all fields, including setting values, clearing and basic validation. See the
  * {@link Ext.field.Field} documentation to see how to leverage its capabilities.
  */
@@ -108,15 +108,16 @@ Ext.define('Ext.field.Text', {
      * @preventable doClearIconTap
      * Fires when the clear icon is tapped
      * @param {Ext.field.Text} this This field
+     * @param {Ext.field.Input} input The field's input component.
      * @param {Ext.event.Event} e
      */
 
     /**
      * @event change
-     * Fires just before the field blurs if the field value has changed
+     * Fires when the value has changed.
      * @param {Ext.field.Text} this This field
-     * @param {Mixed} newValue The new value
-     * @param {Mixed} oldValue The original value
+     * @param {String} newValue The new value
+     * @param {String} oldValue The original value
      */
 
     /**
@@ -195,6 +196,19 @@ Ext.define('Ext.field.Text', {
         bubbleEvents: ['action']
     },
 
+    defaultBindProperty: 'value',
+    twoWayBindable: {
+        value: 1
+    },
+    
+    publishes: {
+        value: 1
+    },
+
+    focusedCls: Ext.baseCSSPrefix + 'field-focused',
+    clearableCls: Ext.baseCSSPrefix + 'field-clearable',
+    emptyCls: Ext.baseCSSPrefix + 'empty',
+
     /**
      * @private
      */
@@ -207,7 +221,7 @@ Ext.define('Ext.field.Text', {
             scope: this,
 
             keyup       : 'onKeyUp',
-            change      : 'onChange',
+            input       : 'onInput',
             focus       : 'onFocus',
             blur        : 'onBlur',
             paste       : 'onPaste',
@@ -223,41 +237,36 @@ Ext.define('Ext.field.Text', {
     },
 
     syncEmptyCls: function() {
-        var empty = (this._value) ? this._value.length : false,
-            cls = Ext.baseCSSPrefix + 'empty';
+        var val = this._value,
+            empty = val ? val.length : false;
 
-        if (empty) {
-            this.removeCls(cls);
-        } else {
-            this.addCls(cls);
-        }
+        this.toggleCls(this.emptyCls, empty);
+    },
+
+    applyValue: function(value) {
+        return Ext.isEmpty(value) ? '' : value;
     },
 
     /**
      * @private
      */
-    updateValue: function(newValue) {
-        var component  = this.getComponent(),
-            // allows newValue to be zero but not undefined or null (other falsey values)
-            valueValid = newValue !== undefined && newValue !== null && newValue !== "";
+    updateValue: function(value, oldValue) {
+        var me = this,
+            component  = me.getComponent(),
+            // allows value to be zero but not undefined or null (other falsey values)
+            valueValid = value !== undefined && value !== null && value !== '';
 
         if (component) {
-            component.setValue(newValue);
+            component.setValue(value);
         }
 
-        this[valueValid && this.isDirty() ? 'showClearIcon' : 'hideClearIcon']();
-
-        this.syncEmptyCls();
-    },
-
-    getValue: function() {
-        var me = this;
-
-        me._value = me.getComponent().getValue();
+        me.toggleClearIcon(valueValid && me.isDirty())
 
         me.syncEmptyCls();
 
-        return me._value;
+        if (me.initialized) {
+            me.fireEvent('change', me, value, oldValue);
+        }
     },
 
     /**
@@ -299,12 +308,7 @@ Ext.define('Ext.field.Text', {
      * @private
      */
     updateReadOnly: function(newReadOnly) {
-        if (newReadOnly) {
-            this.hideClearIcon();
-        } else {
-            this.showClearIcon();
-        }
-
+        this.toggleClearIcon(!newReadOnly);
         this.getComponent().setReadOnly(newReadOnly);
     },
 
@@ -349,21 +353,15 @@ Ext.define('Ext.field.Text', {
         }
     },
 
-    updateDisabled: function(disabled) {
-        var me = this;
+    updateDisabled: function(disabled, oldDisabled) {
+        this.callParent([disabled, oldDisabled]);
 
-        me.callParent(arguments);
-
-        var component = me.getComponent();
+        var component = this.getComponent();
         if (component) {
             component.setDisabled(disabled);
         }
 
-        if (disabled) {
-            me.hideClearIcon();
-        } else {
-            me.showClearIcon();
-        }
+        this.toggleClearIcon(!disabled);
     },
 
     /**
@@ -376,7 +374,7 @@ Ext.define('Ext.field.Text', {
             valueValid = value !== undefined && value !== null && value !== "";
 
         if (me.getClearIcon() && !me.getDisabled() && !me.getReadOnly() && valueValid) {
-            me.element.addCls(Ext.baseCSSPrefix + 'field-clearable');
+            me.element.addCls(me.clearableCls);
         }
 
         return me;
@@ -387,7 +385,7 @@ Ext.define('Ext.field.Text', {
      */
     hideClearIcon: function() {
         if (this.getClearIcon()) {
-            this.element.removeCls(Ext.baseCSSPrefix + 'field-clearable');
+            this.element.removeCls(this.clearableCls);
         }
     },
 
@@ -403,9 +401,9 @@ Ext.define('Ext.field.Text', {
         // getValue to ensure that we are in sync with the dom
         var value      = me.getValue(),
             // allows value to be zero but not undefined or null (other falsey values)
-            valueValid = value !== undefined && value !== null && value !== "";
+            valueValid = value !== undefined && value !== null && value !== '';
 
-        this[valueValid ? 'showClearIcon' : 'hideClearIcon']();
+        me.toggleClearIcon(valueValid);
 
         if (e.browserEvent.keyCode === 13) {
             me.fireAction('action', [me, e], 'doAction');
@@ -416,8 +414,8 @@ Ext.define('Ext.field.Text', {
         this.blur();
     },
 
-    onClearIconTap: function(e) {
-        this.fireAction('clearicontap', [this, e], 'doClearIconTap');
+    onClearIconTap: function(input, e) {
+        this.fireAction('clearicontap', [this, input, e], 'doClearIconTap');
     },
 
     /**
@@ -425,26 +423,25 @@ Ext.define('Ext.field.Text', {
      */
     doClearIconTap: function(me, e) {
         me.setValue('');
-
-        //sync with the input
-        me.getValue();
     },
 
-    onChange: function(me, value, startValue) {
-        me.fireEvent('change', this, value, startValue);
+    onInput: function(component, value) {
+        this.setValue(value);
     },
 
     onFocus: function(e) {
-        this.addCls(Ext.baseCSSPrefix + 'field-focused');
-        this.isFocused = true;
-        this.fireEvent('focus', this, e);
+        var me = this;
+
+        me.addCls(me.focusedCls);
+        me.isFocused = true;
+        me.fireEvent('focus', me, e);
     },
 
     onBlur: function(e) {
         var me = this;
 
-        this.removeCls(Ext.baseCSSPrefix + 'field-focused');
-        this.isFocused = false;
+        me.removeCls(me.focusedCls);
+        me.isFocused = false;
 
         me.fireEvent('blur', me, e);
 
@@ -489,21 +486,25 @@ Ext.define('Ext.field.Text', {
     },
 
     resetOriginalValue: function() {
-        this.callParent();
-        var component = this.getComponent();
+        var me = this,
+            comp;
+
+        me.callParent();
+        component = me.getComponent();
         if(component && component.hasOwnProperty("originalValue")) {
-            this.getComponent().originalValue = this.originalValue;
+            me.getComponent().originalValue = me.originalValue;
         }
-        this.reset();
+        me.reset();
     },
 
     reset: function() {
-        this.getComponent().reset();
+        var me = this;
+        me.getComponent().reset();
 
         //we need to call this to sync the input with this field
-        this.getValue();
+        me.getValue();
 
-        this[this.isDirty() ? 'showClearIcon' : 'hideClearIcon']();
+        me.toggleClearIcon(me.isDirty());
     },
 
     isDirty: function() {
@@ -512,6 +513,16 @@ Ext.define('Ext.field.Text', {
             return component.isDirty();
         }
         return false;
+    },
+
+    privates: {
+        toggleClearIcon: function(state) {
+            if (state) {
+                this.showClearIcon();
+            } else {
+                this.hideClearIcon();
+            }
+        }
     }
 });
 

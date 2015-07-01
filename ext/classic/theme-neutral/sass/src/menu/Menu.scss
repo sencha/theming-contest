@@ -219,13 +219,13 @@
  * @param {number} [$ui-scroller-opacity-disabled=$menu-scroller-opacity-disabled]
  * The opacity of disabled Menu scroller buttons.
  *
- * @var {color} [$ui-scroller-glyph-color=$menu-scroller-glyph-color]
+ * @param {color} [$ui-scroller-glyph-color=$menu-scroller-glyph-color]
  * The color to use for Menu scroller icons when {@link Global_CSS#$enable-font-icons} is `true`.
  *
- * @var {string/list} [$ui-scroller-top-glyph=$menu-scroller-top-glyph]
+ * @param {string/list} [$ui-scroller-top-glyph=$menu-scroller-top-glyph]
  * Glyph for the "top" scroller icon when {@link Global_CSS#$enable-font-icons} is `true`.
  *
- * @var {string/list} [$ui-scroller-bottom-glyph=$menu-scroller-bottom-glyph]
+ * @param {string/list} [$ui-scroller-bottom-glyph=$menu-scroller-bottom-glyph]
  * Glyph for the "bottom" scroller icon when {@link Global_CSS#$enable-font-icons} is `true`.
  *
  * @param {boolean} [$ui-classic-scrollers=$menu-classic-scrollers]
@@ -495,6 +495,14 @@
         @if $ui-item-active-glyph-color != $ui-glyph-color {
             .#{$prefix}menu-item-active & {
                 color: $ui-item-active-glyph-color;
+                
+                @if $include-ie {
+                    // In IE8 the text color is not applied due to some bug
+                    // so we have to force it
+                    .#{$prefix}ie8 & {
+                        color: $ui-item-active-glyph-color !important;
+                    }
+                }
             }
         }
         background-position: $ui-item-icon-background-position;

@@ -1,9 +1,25 @@
 .x-menu {
 	padding: $sheet-padding;
-	@include background-gradient($sheet-bg-color, $sheet-bg-gradient);
+	background-color: $sheet-background-color;
+
+	&.x-top {
+		border-bottom: 1px solid $sheet-border-color;
+	}
+
+	&.x-right {
+		border-left: 1px solid $sheet-border-color;
+	}
+
+	&.x-bottom {
+		border-top: 1px solid $sheet-border-color;
+	}
+
+	&.x-left {
+		border-right: 1px solid $sheet-border-color;
+	}
 
 	.x-button {
-		margin-bottom: $sheet-padding;
+		margin-bottom: $sheet-button-spacing;
 
 		&:last-child {
 			margin-bottom: 0;

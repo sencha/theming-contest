@@ -86,6 +86,8 @@ Ext.define('Ext.TitleBar', {
         'Ext.Spacer'
     ],
 
+    defaultBindProperty: 'title',
+
     /**
      * @private
      */

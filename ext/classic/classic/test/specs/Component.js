@@ -16,6 +16,17 @@ describe("Ext.Component", function(){
         return c;
     }
 
+    function makeText() {
+        var text = [],
+            i;
+
+        for (i = 0; i < 100; i++) {
+            text.push('RIP Lucy the cat');
+        }
+
+        return text.join(' ');
+    }
+
     beforeEach(function() {
         // Suppress console warnings about elements already destroyed
         spyOn(Ext.Logger, 'warn');
@@ -783,6 +794,7 @@ describe("Ext.Component", function(){
                     }
                 });
                 expect(ct.items.first().lookupSession()).toBe(session);
+                ct.destroy();
             });
 
             it("should spawn a session from the parent if specifying session: true", function() {
@@ -798,6 +810,8 @@ describe("Ext.Component", function(){
 
                 var child = ct.items.first().getSession();
                 expect(child.getParent()).toBe(session);
+                
+                ct.destroy();
             });
         });
     });
@@ -6393,17 +6407,6 @@ describe("Ext.Component", function(){
         });
 
         describe('scroll position', function () {
-            function makeText() {
-                var text = [],
-                    i;
-
-                for (i = 0; i < 100; i++) {
-                    text.push('RIP Lucy the cat');
-                }
-
-                return text.join(' ');
-            }
-
             it('should preserve vertical scroll position when toggling hide/show', function () {
                 makeComponent({
                     renderTo: document.body,
@@ -6422,56 +6425,79 @@ describe("Ext.Component", function(){
             });
 
             describe('in a container', function () {
-                var ct;
+                var ct, ctScrollable;
 
                 beforeEach(function () {
                     makeComponent({
-                        scrollable: true,
                         width: 500,
-                        html: makeText()
+                        height: 500,
+                        html: makeText(),
+                        scrollable: true
                     });
 
                     ct = Ext.widget({
                         xtype: 'container',
                         renderTo: document.body,
-                        height: 100,
-                        width: 100,
-                        scrollable: true,
-                        items: c
+                        height: 200,
+                        width: 200,
+                        items: c,
+                        scrollable: true
                     });
+
+                    ctScrollable = ct.scrollable;
                 });
 
                 afterEach(function () {
-                    ct = Ext.destroy(ct);
+                    ct = ctScrollable = Ext.destroy(ct);
                 });
 
                 it('should preserve vertical scroll position when toggling hide/show', function () {
-                    ct.el.dom.scrollTop = 150;
+                    var cmpScrollable;
+
+                    // Here we want a child component with different dimensions than the one created in beforeEach.
+                    ct.add({
+                        width: 100,
+                        height: 100,
+                        html: makeText(),
+                        scrollable: true
+                    });
+
+                    cmpScrollable = ct.items.getAt(1).scrollable;
+                    cmpScrollable.scrollTo(0, 150);
 
                     ct.hide();
                     ct.show();
 
-                    expect(ct.el.dom.scrollTop).toBe(150);
+                    expect(cmpScrollable.getPosition()).toEqual({x: 0, y: 150});
                 });
 
-                it('should preserve horizontal scroll position when toggling hide/show', function () {
-                    ct.el.dom.scrollLeft = 375;
+                describe('scroll position of container', function () {
+                    it('should preserve vertical scroll position when toggling hide/show', function () {
+                        ctScrollable.scrollTo(0, 150);
 
-                    ct.hide();
-                    ct.show();
+                        ct.hide();
+                        ct.show();
 
-                    expect(ct.el.dom.scrollLeft).toBe(375);
-                });
+                        expect(ctScrollable.getPosition()).toEqual({x: 0, y: 150});
+                    });
 
-                it('should preserve both scroll positions when toggling hide/show', function () {
-                    ct.el.dom.scrollTop = 150;
-                    ct.el.dom.scrollLeft = 375;
+                    it('should preserve horizontal scroll position when toggling hide/show', function () {
+                        ctScrollable.scrollTo(300, 0);
 
-                    ct.hide();
-                    ct.show();
+                        ct.hide();
+                        ct.show();
 
-                    expect(ct.el.dom.scrollTop).toBe(150);
-                    expect(ct.el.dom.scrollLeft).toBe(375);
+                        expect(ctScrollable.getPosition()).toEqual({x: 300, y: 0});
+                    });
+
+                    it('should preserve both scroll positions when toggling hide/show', function () {
+                        ctScrollable.scrollTo(300, 150);
+
+                        ct.hide();
+                        ct.show();
+
+                        expect(ctScrollable.getPosition()).toEqual({x: 300, y: 150});
+                    });
                 });
             });
         });
@@ -9217,3 +9243,4 @@ describe("Ext.Component", function(){
         });
     });
 });
+

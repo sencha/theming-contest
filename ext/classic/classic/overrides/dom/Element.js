@@ -1,5 +1,6 @@
 /**
  * @class Ext.dom.Element
+ * @override Ext.dom.Element
  */
 Ext.define('Ext.overrides.dom.Element', (function() {
     var Element, // we cannot do this yet "= Ext.dom.Element"
@@ -132,17 +133,6 @@ Ext.define('Ext.overrides.dom.Element', (function() {
             selectableCls: Ext.baseCSSPrefix + 'selectable',
             unselectableCls: Ext.baseCSSPrefix + 'unselectable',
             
-            /**
-             * tabIndex attribute name for DOM lookups; needed in IE8 because
-             * it has a bug: dom.getAttribute('tabindex') will return null
-             * while dom.getAttribute('tabIndex') will return the actual value.
-             * IE9+ and all other browsers normalize attribute names to lowercase.
-             *
-             * @static
-             * @private
-             */
-            tabIndexAttributeName: Ext.isIE8 ? 'tabIndex' : 'tabindex',
-            
             // This selector will be modified at runtime in the _init() method above
             // to include the elements with saved tabindex in the returned set
             tabbableSelector: Ext.supports.CSS3NegationSelector
@@ -182,15 +172,6 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                 }
                 // For '-ms-foo' we need msFoo
                 return propertyCache[prop] || (propertyCache[prop] = prop.replace(msRe, 'ms-').replace(camelRe, camelReplaceFn));
-            },
-
-            getViewportHeight: function(){
-                return Ext.isIE9m ? DOC.documentElement.clientHeight : WIN.innerHeight;
-            },
-
-            getViewportWidth: function() {
-                return (!Ext.isStrict && !Ext.isOpera) ? document.body.clientWidth :
-                       Ext.isIE9m ? DOC.documentElement.clientWidth : WIN.innerWidth;
             }
         },
 
@@ -381,7 +362,8 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                 paused: true,
                 keyframes: config.keyframes,
                 from: config.from || {},
-                to: Ext.apply({}, config)
+                to: Ext.apply({}, config),
+                userConfig: config
             };
             Ext.apply(animConfig.to, config.to);
 
@@ -407,44 +389,47 @@ Ext.define('Ext.overrides.dom.Element', (function() {
         },
 
         /**
-         * Performs custom animation on this Element.
-         *
-         * The following properties may be specified in `from`, `to`, and `keyframe` objects:
-         *
-         *   - `x` - The page X position in pixels.
-         *
-         *   - `y` - The page Y position in pixels
-         *
-         *   - `left` - The element's CSS `left` value. Units must be supplied.
-         *
-         *   - `top` - The element's CSS `top` value. Units must be supplied.
-         *
-         *   - `width` - The element's CSS `width` value. Units must be supplied.
-         *
-         *   - `height` - The element's CSS `height` value. Units must be supplied.
-         *
-         *   - `scrollLeft` - The element's `scrollLeft` value.
-         *
-         *   - `scrollTop` - The element's `scrollTop` value.
-         *
-         *   - `opacity` - The element's `opacity` value. This must be a value between `0` and `1`.
-         *
-         * **Be aware** that animating an Element which is being used by an Ext Component without in some way informing the
-         * Component about the changed element state will result in incorrect Component behaviour. This is because the
-         * Component will be using the old state of the element. To avoid this problem, it is now possible to directly
-         * animate certain properties of Components.
+         * Calls `{@link #addAnimation}` and returns this Element (for call chaining). For
+         * details, see `{@link #addAnimation}`.
          *
          * @param {Object} config  Configuration for {@link Ext.fx.Anim}.
          * Note that the {@link Ext.fx.Anim#to to} config is required.
          * @return {Ext.dom.Element} this
          */
-        animate: function(config) {
+        animate: function (config) {
+            this.addAnimation(config);
+            return this;
+        },
+
+        /**
+         * Starts a custom animation on this Element.
+         *
+         * The following properties may be specified in `from`, `to`, and `keyframe` objects:
+         *
+         *   - `x` - The page X position in pixels.
+         *   - `y` - The page Y position in pixels
+         *   - `left` - The element's CSS `left` value. Units must be supplied.
+         *   - `top` - The element's CSS `top` value. Units must be supplied.
+         *   - `width` - The element's CSS `width` value. Units must be supplied.
+         *   - `height` - The element's CSS `height` value. Units must be supplied.
+         *   - `scrollLeft` - The element's `scrollLeft` value.
+         *   - `scrollTop` - The element's `scrollTop` value.
+         *   - `opacity` - The element's `opacity` value (between `0` and `1`).
+         *
+         * **Be aware** that animating an Element which is being used by an Ext Component
+         * without in some way informing the Component about the changed element state will
+         * result in incorrect Component behaviour. This is because the Component will be
+         * using the old state of the element. To avoid this problem, it is now possible
+         * to directly animate certain properties of Components.
+         *
+         * @param {Object} config  Configuration for {@link Ext.fx.Anim}.
+         * Note that the {@link Ext.fx.Anim#to to} config is required.
+         * @return {Ext.fx.Anim} The new animation.
+         */
+        addAnimation: function (config) {
             var me = this,
                 animId = me.dom.id || Ext.id(me.dom),
-                listeners,
-                anim,
-                end;
-                
+                listeners, anim, end;
 
             if (!Ext.fx.Manager.hasFxBlock(animId)) {
                 // Bit of gymnastics here to ensure our internal listeners get bound first
@@ -473,7 +458,8 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                     anim.jumpToEnd();
                 }
             }
-            return me;
+
+            return anim;
         },
 
         /**
@@ -1247,7 +1233,7 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                  */
                 focusable = !!Ext.Element.naturallyFocusableTags[nodeName]            ||
                             ((nodeName === 'A' || nodeName === 'LINK') && !!dom.href) ||
-                            dom.getAttribute('tabindex') != null                      ||
+                            dom.getAttribute('tabIndex') != null                      ||
                             dom.contentEditable === 'true';
                 
                 // In IE8, <input type="hidden"> does not have a corresponding style
@@ -1301,7 +1287,7 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                 // Can't use dom.tabIndex here because IE will return 0 for elements
                 // that have no tabindex attribute defined, regardless of whether they are
                 // naturally tabbable or not.
-                tabIndex = dom.getAttribute('tabindex');
+                tabIndex = dom.getAttribute('tabIndex');
                 hasIndex = tabIndex != null;
                 
                 tabIndex -= 0;
@@ -2727,32 +2713,6 @@ Ext.define('Ext.overrides.dom.Element', (function() {
         
         privates: {
             /**
-             * Returns true if this element needs an explicit tabIndex to make it focusable.
-             * Input fields, text areas, buttons, anchor elements **with an href** etc
-             * do not need a tabIndex, but structural elements do.
-             * See http://www.w3.org/TR/html5/editing.html#specially-focusable
-             * @private
-             */
-            needsTabIndex: function() {
-                var dom = this.dom,
-                    nodeName, isFocusable;
-                
-                if (dom) {
-                    nodeName = dom.nodeName;
-                    
-                    // Note that the code below is identical to isFocusable();
-                    // it is intentionally duplicated for performance reasons.
-                    isFocusable = !!Ext.Element.naturallyFocusableTags[nodeName]            ||
-                                  ((nodeName === 'A' || nodeName === 'LINK') && !!dom.href) ||
-                                  dom.getAttribute('tabindex') != null                      ||
-                                  dom.contentEditable === 'true';
-                    
-                    // The result we need is the opposite to what we got
-                    return !isFocusable;
-                }
-            },
-
-            /**
              * @private
              */
             findTabbableElements: function(options) {
@@ -2811,13 +2771,13 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                     // will return 0 for elements that have no tabindex
                     // attribute defined, regardless of whether they are
                     // tabbable or not.
-                    tabIndex = +node.getAttribute('tabindex'); // quicker than parseInt
+                    tabIndex = +node.getAttribute('tabIndex'); // quicker than parseInt
                     
                     // tabIndex value may be null for nodes with no tabIndex defined;
                     // most of those may be naturally tabbable. We don't want to
                     // check this here, that's isTabbable()'s job and it's not trivial.
                     // We explicitly check that tabIndex is not negative. The expression
-                    // below is purposeful if hairy; it is a very hot code path so care
+                    // below is purposeful if hairy; this is a very hot code path so care
                     // is taken to minimize the amount of DOM calls that could be avoided.
                     
                     // A node may have its tabindex saved by previous calls to
@@ -2837,8 +2797,7 @@ Ext.define('Ext.overrides.dom.Element', (function() {
              * @private
              */
             saveTabbableState: function(options) {
-                var tabIndexAttr = Ext.Element.tabIndexAttributeName,
-                    counterAttr = Ext.Element.tabbableSavedCounterAttribute,
+                var counterAttr = Ext.Element.tabbableSavedCounterAttribute,
                     savedAttr = Ext.Element.tabbableSavedValueAttribute,
                     counter, nodes, node, i, len;
                 
@@ -2866,8 +2825,8 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                     else {
                         // tabIndex could be set on both naturally tabbable and generic elements.
                         // Either way we need to save it to restore later.
-                        if (node.hasAttribute(tabIndexAttr)) {
-                            node.setAttribute(savedAttr, node.getAttribute(tabIndexAttr));
+                        if (node.hasAttribute('tabIndex')) {
+                            node.setAttribute(savedAttr, node.getAttribute('tabIndex'));
                         }
                 
                         // When no tabIndex is specified, that means a naturally tabbable element.
@@ -2877,7 +2836,7 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                 
                         // We disable the tabbable state by setting tabIndex to -1.
                         // The element can still be focused programmatically though.
-                        node.setAttribute(tabIndexAttr, '-1');
+                        node.setAttribute('tabIndex', '-1');
                         node.setAttribute(counterAttr, '1');
                     }
                 }
@@ -2890,7 +2849,6 @@ Ext.define('Ext.overrides.dom.Element', (function() {
              */
             restoreTabbableState: function(skipSelf, skipChildren) {
                 var dom = this.dom,
-                    tabIndexAttr = Ext.Element.tabIndexAttributeName,
                     counterAttr = Ext.Element.tabbableSavedCounterAttribute,
                     savedAttr = Ext.Element.tabbableSavedValueAttribute,
                     nodes = [],
@@ -2927,10 +2885,10 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                 
                     // That is a naturally tabbable element
                     if (idx === 'none') {
-                        node.removeAttribute(tabIndexAttr);
+                        node.removeAttribute('tabIndex');
                     }
                     else {
-                        node.setAttribute(tabIndexAttr, idx);
+                        node.setAttribute('tabIndex', idx);
                     }
                 
                     node.removeAttribute(savedAttr);
@@ -3439,6 +3397,26 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                 get: getBorderWidth
             };
         }
+        
+        // IE8 has an odd bug with handling font icons in pseudo elements;
+        // it will render the icon once and not update it when something
+        // like text color is changed via style addition or removal.
+        // We have to force icon repaint by adding a style with forced empty
+        // pseudo element content, (x-sync-repaint) and removing it back to work
+        // around this issue.
+        // See this: https://github.com/FortAwesome/Font-Awesome/issues/954
+        // and this: https://github.com/twbs/bootstrap/issues/13863
+        var syncRepaintCls = Ext.baseCSSPrefix + 'sync-repaint';
+        
+        proto.syncRepaint = function() {
+            this.addCls(syncRepaintCls);
+            
+            // Measuring element width will make the browser to repaint it
+            this.getWidth();
+            
+            // Removing empty content makes the icon to appear again and be redrawn
+            this.removeCls(syncRepaintCls);
+        };
     }
 
     Ext.apply(Ext, {
@@ -3712,7 +3690,7 @@ Ext.define('Ext.overrides.dom.Element', (function() {
                     var component = el.component,
                         frameInfo, frameBodyStyle;
 
-                    if (component && component._syncFrameHeight && this === component.el) {
+                    if (component && component._syncFrameHeight && el === component.el) {
                         frameBodyStyle = component.frameBody.dom.style;
                         if (pxRe.test(value)) {
                             frameInfo = component.getFrameInfo();
@@ -4002,7 +3980,11 @@ Ext.define('Ext.overrides.dom.Element', (function() {
         if (Ext.isIE10) {
             bodyCls.push(Ext.baseCSSPrefix + 'ie10');
         }
-        
+
+        if (Ext.isIE10p) {
+            bodyCls.push(Ext.baseCSSPrefix + 'ie10p');
+        }
+
         if (Ext.isIE11) {
             bodyCls.push(Ext.baseCSSPrefix + 'ie11');
         }

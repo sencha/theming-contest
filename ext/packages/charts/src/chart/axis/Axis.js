@@ -148,10 +148,13 @@ Ext.define('Ext.chart.axis.Axis', {
         limits: null,
 
         /**
-         * @cfg {Function} renderer Allows direct customization of rendered axis sprites.
-         * @param {String} label The label.
-         * @param {Object|Ext.chart.axis.layout.Layout} layout The layout configuration used by the axis.
-         * @param {String} lastLabel The last label.
+         * @cfg {Function} renderer Allows to change the text shown next the tick.
+         * @param {Ext.chart.axis.Axis} axis The axis.
+         * @param {Object} data The renderer data object:
+         * @param {String/Number} data.label The label.
+         * @param {String/Number/null} data.lastLabel The last label (if any).
+         * @param {Object} data.layoutContext The object that holds calculated positions
+         * of axis' ticks based on current layout, segmenter, axis length and configuration.
          * @return {String} The label to display.
          */
         renderer: null,
@@ -480,6 +483,7 @@ Ext.define('Ext.chart.axis.Axis', {
             config.style = config.style || {};
             config.style.estStepSize = 1;
         }
+
         if ('id' in config) {
             id = config.id;
         } else if ('id' in me.config) {
@@ -487,10 +491,9 @@ Ext.define('Ext.chart.axis.Axis', {
         } else {
             id = me.getId();
         }
-        me.id = id;
         me.setId(id);
+
         me.mixins.observable.constructor.apply(me, arguments);
-        Ext.ComponentManager.register(me);
     },
 
     /**
@@ -538,6 +541,7 @@ Ext.define('Ext.chart.axis.Axis', {
     getSurface: function () {
         var me = this,
             chart = me.getChart();
+
         if (chart && !me.surface) {
             var surface = me.surface = chart.getSurface(me.getId(), 'axis'),
                 gridSurface = me.gridSurface = chart.getSurface('main'),
@@ -706,7 +710,9 @@ Ext.define('Ext.chart.axis.Axis', {
     updateChart: function (newChart, oldChart) {
         var me = this, surface;
         if (oldChart) {
+            oldChart.unregister(me);
             oldChart.un('serieschange', me.onSeriesChange, me);
+            oldChart.un('redraw', me.renderLimits, me);
             me.linkAxis();
             me.fireEvent('chartdetached', oldChart, me);
         }
@@ -717,6 +723,7 @@ Ext.define('Ext.chart.axis.Axis', {
             me.getLabel().setSurface(surface);
             surface.add(me.getSprites());
             surface.add(me.getTitle());
+            newChart.register(me);
             me.fireEvent('chartattached', newChart, me);
         }
     },
@@ -749,6 +756,7 @@ Ext.define('Ext.chart.axis.Axis', {
     },
 
     applyVisibleRange: function (visibleRange, oldVisibleRange) {
+        this.getChart();
         // If it is in reversed order swap them
         if (visibleRange[0] > visibleRange[1]) {
             var temp = visibleRange[0];
@@ -816,7 +824,7 @@ Ext.define('Ext.chart.axis.Axis', {
         }
         if (masterAxis) {
             if (masterAxis.type !== this.type) {
-                throw "Linked axes must be of the same type.";
+                Ext.Error.raise("Linked axes must be of the same type.");
             }
             link('on', me, masterAxis);
             me.onDataChange(masterAxis.getLayout().labels);
@@ -852,11 +860,12 @@ Ext.define('Ext.chart.axis.Axis', {
      * @return {Array}
      */
     getRange: function () {
-        var me = this,
-            getRangeMethod = 'get' + me.getDirection() + 'Range';
+        var me = this;
 
         if (me.range) {
             return me.range;
+        } else if (me.masterAxis) {
+            return me.masterAxis.range;
         }
         if (Ext.isNumber(me.getMinimum() + me.getMaximum())) {
             return me.range = [me.getMinimum(), me.getMaximum()];
@@ -867,6 +876,7 @@ Ext.define('Ext.chart.axis.Axis', {
             layout = me.getLayout(),
             segmenter = me.getSegmenter(),
             visibleRange = me.getVisibleRange(),
+            getRangeMethod = 'get' + me.getDirection() + 'Range',
             context, attr, majorTicks,
             series, i, ln;
 
@@ -1089,7 +1099,7 @@ Ext.define('Ext.chart.axis.Axis', {
             return;
         }
         var me = this,
-            range = me.masterAxis ? me.masterAxis.range : me.getRange(),
+            range = me.getRange(),
             position = me.getPosition(),
             chart = me.getChart(),
             animation = chart.getAnimation(),
@@ -1281,14 +1291,11 @@ Ext.define('Ext.chart.axis.Axis', {
     },
 
     destroy: function () {
-        var me = this,
-            chart = me.getChart();
-            
-        if (chart) {
-            chart.un('redraw', me.renderLimits, me);
-        }
-        me.linkAxis();
-        Ext.ComponentManager.unregister(me);
+        var me = this;
+
+        me.setChart(null);
+        me.surface.destroy();
+        me.surface = null;
         me.callParent();
     }
 });

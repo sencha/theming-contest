@@ -7,21 +7,22 @@ Ext.define('FeedViewer.view.main.FeedListController', {
 
     onFeedListSelect: function (view, record) {
         var me = this,
-            viewport = me.getView().up('app-main'),
+            viewport = me.getView().up('app-main'), //TODO: NO reaching UP!  Use the Viewport Controller instead
             vm;
 
         record.load({
                 url : record.get('feedUrl'),
                 limit : 50,
                 callback: function(records, operation, success) {
+                    var list;
                     if(success){
-                        viewport.push({
+                        list = viewport.push({
                             xtype: 'feeditemlist',
                             title: record.get('title'),
                             reference: 'feeditempanel'
                         });
 
-                        vm = viewport.down('feeditemlist').getViewModel();
+                        vm = list.getViewModel();
                         vm.set('feed',record);
                         vm.notify(); // notify Feed model binders
 
@@ -30,7 +31,7 @@ Ext.define('FeedViewer.view.main.FeedListController', {
         );
     },
 
-    onNewFeedClick: function () {
+    onNewFeedClick: function () {   //TODO: NO reaching UP!  Use the Viewport Controller instead
         this.getView().up('app-main').push({
             xtype: 'feedform',
             reference: 'feedform'

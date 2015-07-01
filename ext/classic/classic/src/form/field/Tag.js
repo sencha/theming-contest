@@ -330,9 +330,14 @@ Ext.define('Ext.form.field.Tag', {
             inputEl.on('keydown', me.onKeyDown, me);
             inputEl.on('keyup',   me.onKeyUp, me);
         }
-        me.listWrapper.on('click', me.onItemListClick, me);
+
+        me.listWrapper.on({
+            scope: me,
+            click: me.onItemListClick,
+            mousedown: me.onItemMouseDown
+        });
     },
-    
+
     isValid: function() {
         var me = this,
             disabled = me.disabled,
@@ -478,10 +483,16 @@ Ext.define('Ext.form.field.Tag', {
 
     afterRender: function() {
         var me = this,
-            inputEl = me.inputEl;
+            inputEl = me.inputEl,
+            emptyText = me.emptyText;
 
-        if (Ext.supports.Placeholder && inputEl && me.emptyText) {
-            inputEl.dom.removeAttribute('placeholder');
+        if (emptyText) {
+            // We remove HTML5 placeholder here because we use the emptyEl instead.
+            if (Ext.supports.Placeholder && inputEl) {
+                inputEl.dom.removeAttribute('placeholder');
+            } else {
+                me.applyEmptyText();
+            }
         }
 
         me.applyMultiselectItemMarkup();
@@ -718,8 +729,13 @@ Ext.define('Ext.form.field.Tag', {
             if (me.triggerOnClick) {
                 me.onTriggerClick();
             }
-            
         }
+    },
+
+    // Prevent item from receiving focus.
+    // See EXTJS-17686.
+    onItemMouseDown: function(e) {
+        e.preventDefault();
     },
 
     /**
@@ -1108,6 +1124,7 @@ Ext.define('Ext.form.field.Tag', {
 
         if (me.rendered && emptyText) {
             isEmpty = Ext.isEmpty(me.value) && !me.hasFocus;
+
             if (isEmpty) {
                 inputEl.dom.value = '';
                 emptyEl.setHtml(emptyText);

@@ -83,16 +83,14 @@ Ext.define('Ext.field.TextArea', {
         this.getComponent().setMaxRows(newRows);
     },
 
-    updateHeight: function(newHeight) {
-        this.callParent(arguments);
-        var component = this.getComponent();
-        component.input.setHeight(newHeight);
+    updateHeight: function(height, oldHeight) {
+        this.callParent([height, oldHeight]);
+        this.getComponent().input.setHeight(newHeight);
     },
 
-    updateWidth: function(newWidth) {
-        this.callParent(arguments);
-        var component = this.getComponent();
-        component.input.setWidth(newWidth);
+    updateWidth: function(width, oldWidth) {
+        this.callParent([width, oldWidth]);
+        this.getComponent().input.setWidth(newWidth);
     },
 
     /**
@@ -101,9 +99,6 @@ Ext.define('Ext.field.TextArea', {
      */
     doKeyUp: function(me) {
         // getValue to ensure that we are in sync with the dom
-        var value = me.getValue();
-
-        // show the {@link #clearIcon} if it is being used
-        me[value ? 'showClearIcon' : 'hideClearIcon']();
+        this.toggleClearIcon(this.getValue());
     }
 });

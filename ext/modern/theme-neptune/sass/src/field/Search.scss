@@ -6,22 +6,19 @@
     .x-field-input {
         position: relative;
 
-        @include inline-icon('search');
+        @include font-icon($fa-var-search 1.2em FontAwesome);
 
         &:before {
-            color: #ccc;
-            top: .7em;
-            left: .5em;
-            font-size: 1.1em;
+            color: $neutral-dark-color;
+            position: absolute;
+            top: 50%;
+            margin-top: -.6em;
+            left: .4em;
             right: auto;
-
-            .x-toolbar & {
-                top: .3em;
-            }
         }
 
         .x-form-field {
-            margin-left: 1em;
+            padding-left: 1.5em;
         }
     }
 }

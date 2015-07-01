@@ -1,5 +1,4 @@
 describe("Ext.form.field.Tag", function() {
-
     var tagField, store, changeSpy,
         describeNotIE9_10 = Ext.isIE9 || Ext.isIE10 ? xdescribe : describe;
 
@@ -135,8 +134,7 @@ describe("Ext.form.field.Tag", function() {
     }
 
     afterEach(function() {
-        Ext.destroy(tagField, store);
-        tagField = store = null;
+        tagField = store = Ext.destroy(tagField, store);
     });
 
     describe("the store", function() {
@@ -841,13 +839,66 @@ describe("Ext.form.field.Tag", function() {
                 expectChange([6, 10, 13, 2], [6, 4, 10, 13, 2]);
             });
 
-            it("should remove an item when clicking the close icon", function() {
-                clickTag(4, true);
-                expectValue([6, 10, 13, 2]);
-                expectChange([6, 10, 13, 2], [6, 4, 10, 13, 2]);
-                clickTag(13, true);
-                expectValue([6, 10, 2]);
-                expectChange([6, 10, 2], [6, 10, 13, 2], 2);
+            describe('clicking the close icon', function () {
+                it('should remove an item', function () {
+                    clickTag(4, true);
+                    expectValue([6, 10, 13, 2]);
+                    expectChange([6, 10, 13, 2], [6, 4, 10, 13, 2]);
+                    clickTag(13, true);
+                    expectValue([6, 10, 2]);
+                    expectChange([6, 10, 2], [6, 10, 13, 2], 2);
+                });
+
+                it('should remove an item when used as an editor', function () {
+                    // See EXTJS-17686.
+                    var grid, tag;
+
+                    tagField = store = Ext.destroy(tagField, store);
+
+                    makeField({
+                        store: {
+                            model: Model,
+                            data: makeData(10)
+                        },
+                        displayField: 'display',
+                        valueField: 'display',
+                        queryMode: 'local'
+                    });
+
+                    store = new Ext.data.Store({
+                        model: Model,
+                        data: makeData(10)
+                    });
+
+                    grid = Ext.widget('grid', {
+                        title: 'Simpsons',
+                        store: store,
+                        columns: [{
+                            dataIndex: 'value'
+                        }, {
+                            dataIndex: 'display',
+                            width: 150,
+                            editor: tagField
+                        }],
+                        selModel: 'cellmodel',
+                        plugins: {
+                            ptype: 'cellediting',
+                            clicksToEdit: 1
+                        },
+                        height: 200,
+                        width: 500,
+                        renderTo: Ext.getBody()
+                    });
+
+                    grid.editingPlugin.startEdit(store.getAt(4), grid.columns[1]);
+                    tag = tagField.getEl().query(tagField.tagItemSelector)[0]
+                    tag = Ext.fly(tag).down(tagField.tagItemCloseSelector, true);
+                    jasmine.fireMouseEvent(tag, 'click');
+
+                    expectValue([]);
+
+                    grid = Ext.destroy(grid);
+                });
             });
         });
     });
@@ -1071,6 +1122,26 @@ describe("Ext.form.field.Tag", function() {
             expect(store.getCount()).toBe(18);
             expect(store.indexOf(rec0)).toBe(0);
         });
+
+        it('should preserve the scroll position of the bould list when selecting a value', function() {
+            var picker;
+
+            makeField({
+                filterPickList: true
+            });
+            tagField.expand();
+            picker = tagField.getPicker();
+            picker.scrollBy(0, 1000);
+
+            // For the test to work, there must be scroll available.
+            expect(picker.getScrollY()).not.toBe(0);
+
+            // Pick the last item
+            clickListItem(store.getAt(19));
+
+            // Picker MUST preserve scroll position
+            expect(picker.getScrollY()).not.toBe(0);
+        });
     });
 
     // These tests fails unreliably on IE9 and 10 on a VM
@@ -1081,7 +1152,7 @@ describe("Ext.form.field.Tag", function() {
                 value: [1, 4, 7]
             });
             tagField.inputEl.dom.value = '200';
-            jasmine.fireKeyEvent(tagField.inputEl.dom, 'keyup', Ext.EventObject.ENTER);
+            jasmine.fireKeyEvent(tagField.inputEl.dom, 'keyup', Ext.event.Event.ENTER);
             var v = tagField.getValue();
 
             // The new value should have been added to the value list.
@@ -1258,63 +1329,110 @@ describe("Ext.form.field.Tag", function() {
     describe('emptyText', function () {
         var emptyCls, emptyEl, emptyInputCls;
 
-        beforeEach(function () {
-            makeField({
-                emptyText: 'little Roo',
-                store: [
-                    [1, 'Foo'],
-                    [2, 'Bar']
-                ]
-            }, null);
+        describe('elements and classes', function () {
+            beforeEach(function () {
+                makeField({
+                    emptyText: 'little Roo',
+                    store: [
+                        [1, 'Foo'],
+                        [2, 'Bar']
+                    ]
+                }, null);
 
-            emptyCls = tagField.emptyCls;
-            emptyEl = tagField.emptyEl;
-            emptyInputCls = tagField.emptyInputCls;
-        });
-
-        afterEach(function () {
-            emptyCls = emptyEl = emptyInputCls = null;
-        });
-
-        it('should apply the emptyText when configured', function () {
-            expect(tagField.emptyEl.dom.innerHTML).toBe('little Roo');
-        });
-
-        it('should hide the emptyText when an item is selected', function () {
-            clickListItem(tagField.getStore().getAt(0));
-
-            expect(emptyEl.getStyle('display')).toBe('none');
-        });
-
-        it('should add the emptyText classes to the appropriate elements', function () {
-            expect(emptyEl.hasCls(emptyInputCls)).toBe(false);
-            expect(emptyEl.hasCls(emptyCls)).toBe(true);
-
-            expect(tagField.inputEl.hasCls(emptyInputCls)).toBe(true);
-            expect(tagField.listWrapper.hasCls(emptyCls)).toBe(true);
-        });
-
-        describe('on value selection/deselection', function () {
-            it('should remove the emptyText classes when selected', function () {
-                clickListItem(tagField.getStore().getAt(0));
-
-                expect(emptyEl.hasCls(emptyInputCls)).toBe(true);
-                expect(emptyEl.hasCls(emptyCls)).toBe(false);
-
-                expect(tagField.inputEl.hasCls(emptyInputCls)).toBe(false);
-                expect(tagField.listWrapper.hasCls(emptyCls)).toBe(false);
+                emptyCls = tagField.emptyCls;
+                emptyEl = tagField.emptyEl;
+                emptyInputCls = tagField.emptyInputCls;
             });
 
-            it('should add the emptyText classes when emptied of selections', function () {
-                // Add a selection and then immediately remove it.
-                clickListItem(tagField.getStore().getAt(0));
-                tagField.removeValue(1);
+            afterEach(function () {
+                emptyCls = emptyEl = emptyInputCls = null;
+            });
 
+            it('should apply the emptyText when configured', function () {
+                expect(tagField.emptyEl.dom.innerHTML).toBe('little Roo');
+            });
+
+            it('should hide the emptyText when an item is selected', function () {
+                clickListItem(tagField.getStore().getAt(0));
+
+                expect(emptyEl.getStyle('display')).toBe('none');
+            });
+
+            it('should add the emptyText classes to the appropriate elements', function () {
                 expect(emptyEl.hasCls(emptyInputCls)).toBe(false);
                 expect(emptyEl.hasCls(emptyCls)).toBe(true);
 
                 expect(tagField.inputEl.hasCls(emptyInputCls)).toBe(true);
                 expect(tagField.listWrapper.hasCls(emptyCls)).toBe(true);
+            });
+
+            describe('on value selection/deselection', function () {
+                it('should remove the emptyText classes when selected', function () {
+                    clickListItem(tagField.getStore().getAt(0));
+
+                    expect(emptyEl.hasCls(emptyInputCls)).toBe(true);
+                    expect(emptyEl.hasCls(emptyCls)).toBe(false);
+
+                    expect(tagField.inputEl.hasCls(emptyInputCls)).toBe(false);
+                    expect(tagField.listWrapper.hasCls(emptyCls)).toBe(false);
+                });
+
+                it('should add the emptyText classes when emptied of selections', function () {
+                    // Add a selection and then immediately remove it.
+                    clickListItem(tagField.getStore().getAt(0));
+                    tagField.removeValue(1);
+
+                    expect(emptyEl.hasCls(emptyInputCls)).toBe(false);
+                    expect(emptyEl.hasCls(emptyCls)).toBe(true);
+
+                    expect(tagField.inputEl.hasCls(emptyInputCls)).toBe(true);
+                    expect(tagField.listWrapper.hasCls(emptyCls)).toBe(true);
+                });
+            });
+        });
+
+        describe('placeholder', function () {
+            var emptyText = "The Owl's Nest Farm";
+
+            function checkPlaceholderText(text) {
+                var inputEl = tagField.inputEl,
+                    emptyEl = tagField.emptyEl,
+                    emptyInputCl = tagField.emptyInputCls,
+                    emptyCls = tagField.emptyCls;
+
+                if (!text) {
+                    expect(inputEl.hasCls(emptyInputCls)).toBe(false);
+                    expect(inputEl.dom.value).toBe('');
+                } else {
+                    expect(inputEl.hasCls(emptyCls)).toBe(false);
+                    expect(emptyEl.dom.innerHTML).toBe(text);
+                }
+            }
+
+            beforeEach(function () {
+                makeField({
+                    emptyText: emptyText
+                });
+            });
+
+            it('should work', function () {
+                checkPlaceholderText(emptyText);
+            });
+
+            it('should remove the emptyText when a selection is made', function () {
+                clickListItem(store.getAt(5));
+                checkPlaceholderText();
+            });
+
+            it('should reapply the emptyText when all selections are removed', function () {
+                clickListItem(store.getAt(5));
+                clickListItem(store.getAt(2));
+                checkPlaceholderText();
+
+                // Remove selected tags.
+                clickTag(6, true);
+                clickTag(3, true);
+                checkPlaceholderText(emptyText);
             });
         });
     });

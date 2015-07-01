@@ -420,7 +420,7 @@ Ext.define('Ext.app.Application', {
             History.init();
         }
         token = History.getToken();
-        if (token) {
+        if (token || token === defaultToken) {
             Ext.app.route.Router.onStateChange(token);
         } else if (defaultToken) {
             History.add(defaultToken);

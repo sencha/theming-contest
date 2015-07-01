@@ -306,17 +306,26 @@ Ext.define('Ext.form.field.Base', {
         // Init mixins
         me.initLabelable();
         me.initField();
+        me.initDefaultName();
 
-        // Default name to inputId
-        if (!me.name) {
-            me.name = me.getInputId();
-        }
         // Add to protoEl before render
         if (me.readOnly) {
             me.addCls(me.readOnlyCls);
         }
         
         me.addCls(Ext.baseCSSPrefix + 'form-type-' + me.inputType);
+    },
+    
+    /**
+     * @private
+     */
+    initDefaultName: function() {
+        var me = this;
+        
+        // Default name to inputId
+        if (!me.name) {
+            me.name = me.getInputId();
+        }
     },
 
     /**

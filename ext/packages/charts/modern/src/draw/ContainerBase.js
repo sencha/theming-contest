@@ -47,6 +47,9 @@ Ext.define('Ext.draw.ContainerBase', {
             items: {
                 xtype: 'image',
                 mode: 'img',
+                style: {
+                    overflow: 'hidden'
+                },
                 src: this.getImage().data
             },
             listeners: {

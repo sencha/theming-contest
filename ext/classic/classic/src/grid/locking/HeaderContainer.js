@@ -74,8 +74,17 @@ Ext.define('Ext.grid.locking.HeaderContainer', {
             me.columnManager = new Ext.grid.ColumnManager(false, lockedGrid.headerCt, normalGrid.headerCt);
 
         // Relay *all* events from the two HeaderContainers
-        me.relayEvents(lockedGrid.headerCt, me.headerCtRelayEvents);
-        me.relayEvents(normalGrid.headerCt, me.headerCtRelayEvents);
+        me.lockedEventRelayers = me.relayEvents(lockedGrid.headerCt, me.headerCtRelayEvents);
+        me.normalEventRelayers = me.relayEvents(normalGrid.headerCt, me.headerCtRelayEvents);
+    },
+    
+    destroy: function() {
+        var me = this;
+        
+        Ext.destroy(me.lockedEventRelayers, me.normalEventRelayers);
+        me.lockedEventRelayers = me.normalEventRelayers = null;
+        
+        me.callParent();
     },
 
     getRefItems: function() {

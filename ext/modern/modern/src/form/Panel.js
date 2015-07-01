@@ -187,7 +187,7 @@ Ext.define('Ext.form.Panel', {
         url: null,
 
         /**
-         * @cfg (String} enctype
+         * @cfg {String} enctype
          * The enctype attribute for the form, specifies how the form should be encoded when submitting
          */
         enctype: null,

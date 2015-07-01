@@ -8,8 +8,9 @@ describe('Ext.data.BufferedStore', function() {
 
         for (i = start; i < end; ++i) {
             recs.push({
-                id: i,
-                title: 'Title' + i
+                id: i + 1,
+                threadid: i + 1,
+                title: 'Title' + (i + 1)
             });
         }
         return recs;
@@ -17,6 +18,7 @@ describe('Ext.data.BufferedStore', function() {
 
     function satisfyRequests(total) {
         var requests = Ext.Ajax.mockGetAllRequests(),
+            empty = total === 0,
             request, params, data;
 
         while (requests.length) {
@@ -25,12 +27,12 @@ describe('Ext.data.BufferedStore', function() {
             captured.push(request.options.params);
 
             params = request.options.params;
-            data = getData(params.start, params.limit);
+            data = getData(empty ? 0 : params.start, empty ? 0 : params.limit);
 
             Ext.Ajax.mockComplete({
                 status: 200,
                 responseText: Ext.encode({
-                    total: total || 5000,
+                    total: (total || empty) ? total : 5000,
                     data: data
                 })
             });
@@ -106,8 +108,8 @@ describe('Ext.data.BufferedStore', function() {
         expect(page10.length).toBe(100);
 
         // Page 10 contains records 900 to 999.
-        expect(page10[0].get('title')).toBe('Title900');
-        expect(page10[99].get('title')).toBe('Title999');
+        expect(page10[0].get('title')).toBe('Title901');
+        expect(page10[99].get('title')).toBe('Title1000');
     });
 
     it('should be able to find records in a buffered store', function() {
@@ -118,11 +120,11 @@ describe('Ext.data.BufferedStore', function() {
 
         expect(bufferedStore.findBy(function(rec) {
             return rec.get('title') === 'Title10';
-        })).toBe(10);
+        })).toBe(9);
 
-        expect(bufferedStore.findExact('title', 'Title10')).toBe(10);
+        expect(bufferedStore.findExact('title', 'Title10')).toBe(9);
 
-        expect(bufferedStore.find('title', 'title10')).toBe(10);
+        expect(bufferedStore.find('title', 'title10')).toBe(9);
     });
 
     it("should clear the data when calling sort with parameters when remote sorting", function() {
@@ -284,6 +286,22 @@ describe('Ext.data.BufferedStore', function() {
     });
 
     describe('reload', function () {
+
+        describe("beforeload event", function() {
+            it("should not clear the total count or data if beforeload returns false", function() {
+                createStore();
+                bufferedStore.load();
+                satisfyRequests();
+
+                var spy = jasmine.createSpy().andReturn(false);
+                bufferedStore.on('beforeload', spy);
+                bufferedStore.reload();
+                expect(bufferedStore.getTotalCount()).toBe(5000);
+                expect(bufferedStore.getAt(0).id).toBe(1);
+                expect(bufferedStore.isLoading()).toBe(false);
+            });
+        });
+
         it('should not increase the number of pages when reloading', function () {
             var refreshed = 0,
                 count;
@@ -307,6 +325,29 @@ describe('Ext.data.BufferedStore', function() {
             satisfyRequests();
             
             expect(bufferedStore.getData().getCount()).toBe(count);
+        });
+
+        it("should fire the load & refresh event when the store reloads with no data", function() {
+            var loadSpy = jasmine.createSpy(),
+                refreshSpy = jasmine.createSpy();
+
+            createStore();
+            bufferedStore.load();
+            satisfyRequests();
+
+            bufferedStore.on('load', loadSpy);
+            bufferedStore.on('refresh', refreshSpy);
+
+            bufferedStore.reload();
+            satisfyRequests(0);
+
+            expect(loadSpy.callCount).toBe(1);
+            expect(loadSpy.mostRecentCall.args[0]).toBe(bufferedStore);
+            expect(loadSpy.mostRecentCall.args[1]).toEqual([]);
+            expect(loadSpy.mostRecentCall.args[2]).toBe(true);
+
+            expect(refreshSpy.callCount).toBe(1);
+            expect(refreshSpy.mostRecentCall.args[0]).toBe(bufferedStore);
         });
 
         it("should not request larger than the previous total, preserveScrollOnReload: true", function() {
@@ -340,6 +381,7 @@ describe('Ext.data.BufferedStore', function() {
                 limit: 100
             });
         });
+
         it("should not request larger than the previous total, preserveScrollOnReload: false", function() {
             var total = 6679,
                 viewSize = 50;
@@ -371,7 +413,7 @@ describe('Ext.data.BufferedStore', function() {
             });
         });
     });
-    
+
     describe('pruning', function() {
         it('should prune least recently used pages as new ones are added above the purgePageCount', function() {
             var keys;

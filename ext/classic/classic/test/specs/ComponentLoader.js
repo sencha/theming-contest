@@ -234,6 +234,8 @@ describe("Ext.ComponentLoader", function(){
             makeLoader();
             loader.setTarget(other);
             expect(loader.getTarget()).toEqual(other);
+            
+            other.destroy();
         });
         
         it("should assign a new target via id", function(){

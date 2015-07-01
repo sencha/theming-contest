@@ -32,7 +32,8 @@ Ext.define('Ext.chart.axis.layout.Continuous', {
             unit = out.unit,
             step = out.step,
             from = segmenter.align(min, step, unit),
-            steps = segmenter.diff(min, max, unit) + 1;
+            steps = (majorTickSteps || segmenter.diff(min, max, unit)) + 1;
+
         return {
             min: segmenter.from(min),
             max: segmenter.from(max),
@@ -61,6 +62,7 @@ Ext.define('Ext.chart.axis.layout.Continuous', {
             offset = Math.floor(fromMargin / scaledStep),
             extraSteps = offset + Math.floor((max - majorTicks.to) / scaledStep) + 1,
             steps = majorTicks.steps * minorTickSteps + extraSteps;
+
         return {
             min: min,
             max: max,

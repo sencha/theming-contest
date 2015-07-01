@@ -813,6 +813,49 @@ Ext.define('Ext.panel.Panel', {
      * The difference between `handler` and `callback` is the signature. For details on
      * the distinction, see {@link Ext.panel.Tool}.
      */
+    
+    /**
+     * @cfg {String} [defaultButton] Reference name of the component to act as the default
+     * button for this Panel. Default button is activated by pressing Enter key while focus
+     * is contained within the Panel's {@link #defaultButtonTarget}.
+     *
+     * The most obvious use for `defaultButton` is submitting a form:
+     *
+     *      var loginWindow = new Ext.window.Window({
+     *          autoShow: true,
+     *          width: 300,
+     *          layout: 'form',
+     *          title: 'Enter login information',
+     *          referenceHolder: true,
+     *          defaultFocus: 'textfield',
+     *          defaultButton: 'okButton',
+     *          
+     *          items: [{
+     *              xtype: 'textfield',
+     *              fieldLabel: 'User name'
+     *          }, {
+     *              xtype: 'textfield',
+     *              fieldLabel: 'Password'
+     *          }],
+     *          
+     *          buttons: [{
+     *              reference: 'okButton',
+     *              text: 'Login',
+     *              handler: function() {
+     *                  Ext.Msg.alert('Submit', 'Your login is being processed');
+     *              }
+     *          }]
+     *      });
+     */
+    
+    /**
+     * @cfg {String} [defaultButtonTarget] Name of the element that will be the target of
+     * {@link #defaultButton} keydown listener. The default element is Panel body, which
+     * means that pressing Enter key while focus is on docked items will not fire `defaultButton`
+     * action.
+     *
+     * If you want `defaultButton` action to fire in docked items, set this config to `"el"`.
+     */
 
     // ***********************************************************************************
     // End Config
@@ -1165,14 +1208,22 @@ Ext.define('Ext.panel.Panel', {
 
     beforeDestroy: function() {
         var me = this;
+        
         Ext.destroy(
             me.placeholder,
             me.ghostPanel,
             me.dd,
-            me.accordionKeyNav
+            me.accordionKeyNav,
+            me.defaultButtonKeyNav
         );
-        this.destroyDockedItems();
+        
+        me.destroyDockedItems();
         me.callParent();
+    },
+    
+    destroy: function() {
+        this.callParent();
+        this.dockedItems = null;
     },
 
     beforeRender: function() {
@@ -2508,7 +2559,8 @@ Ext.define('Ext.panel.Panel', {
     },
 
     onBoxReady: function() {
-        var me = this;
+        var me = this,
+            target;
         
         me.callParent(arguments);
         
@@ -2544,6 +2596,18 @@ Ext.define('Ext.panel.Panel', {
                     alt: true,
                     fn: me.maybeClose
                 }
+            });
+        }
+        
+        if (me.defaultButton) {
+            target = me.defaultButtonTarget ? me[me.defaultButtonTarget] : me.body;
+            
+            me.defaultButtonKeyNav = new Ext.util.KeyNav({
+                target: target,
+                scope: me,
+                defaultEventAction: 'stopEvent',
+                
+                enter: me.fireDefaultButton
             });
         }
     },
@@ -2621,6 +2685,7 @@ Ext.define('Ext.panel.Panel', {
             ownerCt = me.ownerCt,
             collapseDir = direction || me.collapseDirection,
             floatCls = Ext.panel.Panel.floatCls,
+            collapseTool = me.collapseTool,
             placeholder = me.getPlaceholder(collapseDir),
             slideInDirection;
 
@@ -2651,12 +2716,13 @@ Ext.define('Ext.panel.Panel', {
             // the case when the user *clicked* collapse tool while focus
             // was elsewhere; in that case we dare not touch focus
             // to avoid sudden jumps.
-            if (Ext.ComponentManager.getActiveComponent() === me.collapseTool) {
+            if (collapseTool && Ext.ComponentManager.getActiveComponent() === collapseTool) {
                 me.focusPlaceholderExpandTool = true;
             }
             
             // We MUST NOT hide using display because that resets all scroll information.
             me.el.setVisibilityMode(me.placeholderCollapseHideMode);
+            
             if (animate) {
                 me.el.addCls(floatCls);
                 placeholder.el.hide();
@@ -2708,12 +2774,12 @@ Ext.define('Ext.panel.Panel', {
     
     doPlaceholderCollapse: function() {
         var me = this,
-            placeholder = me.placeholder;
+            placeholder = me.placeholder,
+            expandTool = placeholder.expandTool;
     
         // See the comment in placeholderCollapse().
-        if (me.focusPlaceholderExpandTool) {
-            placeholder.expandTool.focus();
-            me.focusPlaceholderExpandTool = false;
+        if (me.focusPlaceholderExpandTool && expandTool) {
+            expandTool.focus();
         }
     
         // However when focus was *not* on the collapse tool,
@@ -2723,6 +2789,8 @@ Ext.define('Ext.panel.Panel', {
         else {
             placeholder.focus();
         }
+        
+        me.focusPlaceholderExpandTool = false;
     
         placeholder.setHiddenState(false);
     
@@ -2766,7 +2834,7 @@ Ext.define('Ext.panel.Panel', {
         // Note that it may not be the case when the user *clicked* expand tool
         // while focus was elsewhere; in that case we dare not touch focus to avoid
         // sudden jumps.
-        if (Ext.ComponentManager.getActiveComponent() === expandTool) {
+        if (expandTool && Ext.ComponentManager.getActiveComponent() === expandTool) {
             me.focusHeaderCollapseTool = true;
             
             // There is an odd issue with JAWS screen reader: when expanding a panel,
@@ -2860,6 +2928,7 @@ Ext.define('Ext.panel.Panel', {
     doPlaceholderExpand: function(nonAnimated) {
         var me = this,
             placeholder = me.placeholder,
+            collapseTool = me.collapseTool,
             expandTool = placeholder.expandTool;
         
         if (nonAnimated) {
@@ -2894,15 +2963,16 @@ Ext.define('Ext.panel.Panel', {
         // if panel expansion has been caused by keyboard action
         // on focused placeholder expand tool, then the logical focus transition
         // is to panel header's collapse tool.
-        if (me.focusHeaderCollapseTool) {
-            me.collapseTool.focus();
-            me.focusHeaderCollapseTool = false;
+        if (me.focusHeaderCollapseTool && collapseTool) {
+            collapseTool.focus();
         }
+        
+        me.focusHeaderCollapseTool = false;
         
         placeholder.ariaEl.dom.setAttribute('aria-expanded', true);
         me.ariaEl.dom.setAttribute('aria-expanded', true);
         
-        if (expandTool._ariaRole) {
+        if (expandTool && expandTool._ariaRole) {
             expandTool.ariaEl.dom.setAttribute('role', expandTool._ariaRole);
             expandTool.ariaEl.dom.setAttribute('aria-label', expandTool._ariaLabel);
             expandTool._ariaRole = expandTool._ariaLabel = null;
@@ -2913,9 +2983,13 @@ Ext.define('Ext.panel.Panel', {
     },
 
     remove: function(component, autoDestroy) {
-        if (this.dockedItems.contains(component)) {
+        var dockedItems = this.dockedItems;
+        
+        // When the panel is destroyed, dockedItems is nulled
+        if (dockedItems && dockedItems.contains(component)) {
             this.removeDocked(component, autoDestroy);
-        } else {
+        }
+        else {
             this.callParent([component, autoDestroy]);
         }
         return component;
@@ -3286,6 +3360,44 @@ Ext.define('Ext.panel.Panel', {
         if (sibling && sibling !== me) {
             sibling.header.titleCmp.focus();
         }
+    },
+    
+    fireDefaultButton: function(e) {
+        var me = this,
+            refHolder, btn;
+        
+        refHolder = me.lookupReferenceHolder() || me;
+        btn = refHolder.lookupReference(me.defaultButton);
+        
+        // We call it defaultButton but it can really be any object
+        // that implements `click` method
+        if (btn && btn.click) {
+            btn.click(e);
+            
+            // Stop event propagation through DOM publisher
+            e.stopEvent();
+            
+            // ... and in case we have other listeners,
+            // stop the loop in Ext.util.Event too
+            return false;
+        }
+        //<debug>
+        else if (!btn) {
+            Ext.raise({
+                msg: 'No component found for defaultButton reference "' +
+                      me.defaultButton + '" in ' + me.xtype + ' ' + me.id,
+                panel: me
+            });
+        }
+        else {
+            Ext.raise({
+                msg: 'Component referenced by defaultButton config "' +
+                      me.defaultButton + '" in ' + me.xtype + ' ' + me.id +
+                      ' does not have click() method',
+                component: btn
+            });
+        }
+        //</debug>
     },
     
     maybeClose: function(e) {

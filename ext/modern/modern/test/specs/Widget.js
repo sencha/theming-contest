@@ -449,6 +449,8 @@ describe("Ext.Widget", function() {
                     }
                 });
                 expect(ct.items.first().lookupSession()).toBe(session);
+                
+                ct.destroy();
             });
 
             it("should spawn a session from the parent if specifying session: true", function() {
@@ -464,6 +466,8 @@ describe("Ext.Widget", function() {
 
                 var child = ct.items.first().getSession();
                 expect(child.getParent()).toBe(session);
+                
+                ct.destroy();
             });
         });
     });
@@ -471,7 +475,6 @@ describe("Ext.Widget", function() {
     describe("bind", function() {
         it("should be able to bind to multiple properties", function() {
             makeWidget({
-                renderTo: Ext.getBody(),
                 viewModel: {
                     data: {
                         width: 200,
@@ -510,7 +513,6 @@ describe("Ext.Widget", function() {
 
             function makeCls(cfg) {
                 w = new Cls(Ext.apply({
-                    renderTo: Ext.getBody()
                 }, cfg));
                 viewModel = w.getViewModel();
             }

@@ -367,7 +367,9 @@ Ext.define('Ext.tree.View', {
 
     onRemove: function(ds, records, index) {
         var me = this,
-            empty, i;
+            empty, i,
+            fireRemoveEvent = me.hasListeners.remove,
+            oldItems;
 
         if (me.viewReady) {
             empty = me.store.getCount() === 0;
@@ -376,7 +378,9 @@ Ext.define('Ext.tree.View', {
             if (me.bufferedRenderer) {
                 return me.callParent([ds, records, index]);
             }
-
+            if (fireRemoveEvent) {
+                oldItems = this.all.slice(index, index + records.length);
+            }
             // Nothing left, just refresh the view.
             if (empty) {
                 me.refresh();
@@ -389,11 +393,9 @@ Ext.define('Ext.tree.View', {
                 me.refreshSizePending = true;
             }
 
-            // Only loop through firing the event if there's anyone listening
-            if (me.hasListeners.itemremove) {
-                for (i = records.length - 1, index += i; i >= 0; --i, --index) {
-                    me.fireEvent('itemremove', records[i], index, me);
-                }
+            // Only fire the event if there's anyone listening
+            if (fireRemoveEvent) {
+                me.fireEvent('itemremove', records, index, oldItems, me);
             }
         }
     },

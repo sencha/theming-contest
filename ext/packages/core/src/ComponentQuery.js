@@ -253,6 +253,7 @@
  * * `focusable` Filters out all except Components which are currently able to recieve
  * focus.
  * * `nth-child` Filters Components by ordinal position in the selection.
+ * * `scrollable` Filters out all except Components which are scrollable.
  *
  * These pseudo classes can be used with other matchers or without them:
  *
@@ -261,12 +262,15 @@
  *
  *      // Select last field in Profile form
  *      Ext.ComponentQuery.query('form[title=Profile] field:last');
- * 
+ *
  *      // Find first focusable Component in a panel and focus it
  *      panel.down(':focusable').focus();
- * 
+ *
  *      // Select any field that is not hidden in a form
  *      form.query('field:not(hiddenfield)');
+ *
+ *      // Find last scrollable Component and reset its scroll positions.
+ *      tabpanel.down(':scrollable[hideMode=display]:last').getScrollable().scrollTo(0, 0);
  *
  * Pseudo class `nth-child` can be used to find any child Component by its
  * position relative to its siblings. This class' handler takes one argument
@@ -361,7 +365,7 @@
  *
  *     // retrieve all grids or trees
  *     var gridsAndTrees = Ext.ComponentQuery.query('gridpanel, treepanel');
- *     
+ *
  *     // Focus first Component
  *     myFormPanel.child(':focusable').focus();
  *
@@ -370,6 +374,9 @@
  *
  *     // Retrieve every even field in a form, excluding hidden fields
  *     myFormPanel.query('field:not(hiddenfield):nth-child(even)');
+ *
+ *     // Retrieve every scrollable in a tabpanel
+ *     tabpanel.query(':scrollable');
  *
  * For easy access to queries based from a particular Container see the
  * {@link Ext.container.Container#query}, {@link Ext.container.Container#down} and
@@ -806,7 +813,7 @@ Ext.define('Ext.ComponentQuery', {
             }
             return components;
         },
-        
+
         isMultiMatch: function() {
             return this.operations.length > 1;
         }
@@ -833,7 +840,7 @@ Ext.define('Ext.ComponentQuery', {
                     results = [],
                     index = -1,
                     component;
-                
+
                 for(; i < length; ++i) {
                     component = components[i];
                     if (!cq.is(component, selector)) {
@@ -844,16 +851,16 @@ Ext.define('Ext.ComponentQuery', {
             },
             first: function(components) {
                 var ret = [];
-                    
+
                 if (components.length > 0) {
                     ret.push(components[0]);
                 }
-                return ret;       
+                return ret;
             },
             last: function(components) {
                 var len = components.length,
                     ret = [];
-                    
+
                 if (len > 0) {
                     ret.push(components[len - 1]);
                 }
@@ -867,7 +874,7 @@ Ext.define('Ext.ComponentQuery', {
 
                 for (; i < len; i++) {
                     c = cmps[i];
-                    
+
                     if (c.isFocusable && c.isFocusable()) {
                         results.push(c);
                     }
@@ -893,6 +900,23 @@ Ext.define('Ext.ComponentQuery', {
                 }
 
                 return result;
+            },
+            scrollable: function(cmps) {
+                var len = cmps.length,
+                    results = [],
+                    i = 0,
+                    c;
+
+                for (; i < len; i++) {
+                    c = cmps[i];
+
+                    // Note that modern toolkit prefixes with an underscore.
+                    if (c.scrollable || c._scrollable) {
+                        results.push(c);
+                    }
+                }
+
+                return results;
             }
         },
 
@@ -904,13 +928,13 @@ Ext.define('Ext.ComponentQuery', {
          *
          * See class summary for details.
          *
-         * @param {String} selector The selector string to filter returned Components
+         * @param {String} selector The selector string to filter returned Components.
          * @param {Ext.container.Container} [root] The Container within which to perform the query.
          * If omitted, all Components within the document are included in the search.
-         * 
+         *
          * This parameter may also be an array of Components to filter according to the selector.
          * @return {Ext.Component[]} The matched Components.
-         * 
+         *
          * @member Ext.ComponentQuery
          */
         query: function(selector, root) {
@@ -1205,6 +1229,12 @@ Ext.define('Ext.ComponentQuery', {
 
     /**
      * Same as {@link Ext.ComponentQuery#query}.
+     * @param {String} selector The selector string to filter returned Components.
+     * @param {Ext.container.Container} [root] The Container within which to perform the query.
+     * If omitted, all Components within the document are included in the search.
+     *
+     * This parameter may also be an array of Components to filter according to the selector.
+     * @return {Ext.Component[]} The matched Components.
      * @method all
      * @member Ext
      */
@@ -1212,7 +1242,20 @@ Ext.define('Ext.ComponentQuery', {
         return cq.query.apply(cq, arguments);
     };
 
+    /**
+     * Returns the first match to the given component query.
+     * See {@link Ext.ComponentQuery#query}.
+     * @param {String} selector The selector string to filter returned Component.
+     * @param {Ext.container.Container} [root] The Container within which to perform the query.
+     * If omitted, all Components within the document are included in the search.
+     *
+     * This parameter may also be an array of Components to filter according to the selector.
+     * @return {Ext.Component The first matched Component or `null`.
+     * @method first
+     * @member Ext
+     */
     Ext.first = function () {
-        return cq.query.apply(cq, arguments)[0];
+        var matches = cq.query.apply(cq, arguments);
+        return (matches && matches[0]) || null;
     }
 });

@@ -405,6 +405,16 @@ describe("Ext.direct.RemotingProvider", function() {
         
         describe("handles call mechanics", function() {
             describe("call batching", function() {
+                afterEach(function() {
+                    // Transactions in this suite have no chance of finishing,
+                    // so we clean them up manually
+                    if (provider.callTask) {
+                        provider.callTask.cancel();
+                    }
+                    
+                    Ext.direct.Manager.transactions.clear();
+                });
+                
                 it("should batch calls within specified enableBuffer timeout", function() {
                     var options, baseTid;
                 

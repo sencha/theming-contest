@@ -16,9 +16,10 @@
  *
  * The default layout for RadioGroup makes it easy to arrange the radio buttons into
  * columns; see the {@link #columns} and {@link #vertical} config documentation for details. You may also
- * use a completely different layout by setting the {@link #layout} to one of the other supported layout
- * types; for instance you may wish to use a custom arrangement of hbox and vbox containers. In that case
- * the Radio components at any depth will still be managed by the RadioGroup's validation.
+ * use a completely different layout by setting the {@link #cfg-layout} to one of the 
+ * other supported layout types; for instance you may wish to use a custom arrangement 
+ * of hbox and vbox containers. In that case the Radio components at any depth will 
+ * still be managed by the RadioGroup's validation.
  *
  * # Example usage
  *

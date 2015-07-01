@@ -540,8 +540,8 @@ Ext.define('Ext.form.field.Field', {
 
     /**
      * Display one or more error messages associated with this field, using 
-     * {@link #msgTarget} to determine how to display the messages and applying 
-     * {@link #invalidCls} to the field's UI element.
+     * {@link Ext.form.Labelable#msgTarget} to determine how to display the messages and 
+     * applying {@link Ext.form.Labelable#invalidCls} to the field's UI element.
      *
      *     var formPanel = Ext.create('Ext.form.Panel', {
      *         title: 'Contact Info',

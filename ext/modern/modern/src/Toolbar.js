@@ -104,13 +104,6 @@ Ext.define('Ext.Toolbar', {
         baseCls: Ext.baseCSSPrefix + 'toolbar',
 
         /**
-         * @cfg {String} ui
-         * The ui for this {@link Ext.Toolbar}. Either 'light' or 'dark'. You can create more UIs by using using the CSS Mixin {@link #sencha-toolbar-ui}
-         * @accessor
-         */
-        ui: 'dark',
-
-        /**
          * @cfg {String/Ext.Title} title
          * The title of the toolbar.
          * @accessor
@@ -123,6 +116,12 @@ Ext.define('Ext.Toolbar', {
          * @accessor
          */
         defaultType: 'button',
+
+        /**
+         * @cfg {String}
+         * A default {@link Ext.Component#ui ui} to use for {@link Ext.Button Button} items.
+         */
+        defaultButtonUI: null,
 
         /**
          * @cfg {String} docked
@@ -236,7 +235,7 @@ Ext.define('Ext.Toolbar', {
         if (title) {
             title.hide();
         }
-    }
+    },
 
     /**
      * Returns an {@link Ext.Title} component.
@@ -252,5 +251,20 @@ Ext.define('Ext.Toolbar', {
      * @param {String/Ext.Title} title You can either pass a String, or a config/instance of {@link Ext.Title}.
      */
 
+    onItemAdd: function(item, index) {
+        var defaultButtonUI = this.getDefaultButtonUI();
+
+        if (defaultButtonUI) {
+            if (item.isSegmentedButton) {
+                if (item.getDefaultUI() == null) {
+                    item.setDefaultUI(defaultButtonUI);
+                }
+            } else if (item.isButton && (item.getUi() == null)) {
+                item.setUi(defaultButtonUI);
+            }
+        }
+
+        this.callParent([item, index]);
+    }
 });
 

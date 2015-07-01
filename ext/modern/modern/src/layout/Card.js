@@ -53,9 +53,9 @@ Ext.define('Ext.layout.Card', {
      * @param {Mixed} oldActiveItem The old active item
      */
         
-    layoutClass: 'x-layout-card',
+    layoutClass: Ext.baseCSSPrefix + 'layout-card',
 
-    itemClass: 'x-layout-card-item',
+    itemClass: Ext.baseCSSPrefix + 'layout-card-item',
 
     requires: [
         'Ext.fx.layout.Card'
@@ -107,7 +107,8 @@ Ext.define('Ext.layout.Card', {
      * @private
      */
     onContainerActiveItemChange: function(container, newItem, oldItem) {
-        this.fireEventedAction('activeitemchange', [this, newItem, oldItem], 'doActiveItemChange', this, [this, newItem, oldItem]);
+        this.fireEventedAction('activeitemchange', [this, newItem, oldItem],
+            'doActiveItemChange', this);
     },
 
     onItemInnerStateChange: function(item, isInner, destroying) {

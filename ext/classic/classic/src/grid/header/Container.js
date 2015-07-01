@@ -103,7 +103,7 @@ Ext.define('Ext.grid.header.Container', {
 
     menuColsIcon: Ext.baseCSSPrefix + 'cols-icon',
 
-    ddLock: false,
+    blockEvents: false,
 
     dragging: false,
 
@@ -206,6 +206,15 @@ Ext.define('Ext.grid.header.Container', {
      * Fired immediately after the column header menu is created.
      * @param {Ext.grid.header.Container} ct This instance
      * @param {Ext.menu.Menu} menu The Menu that was created
+     */
+
+    /**
+     * @event headermenucreate
+     * Fired immediately after the column header menu is created.
+     * @param {Ext.panel.Table} grid This grid instance
+     * @param {Ext.menu.Menu} menu The Menu that was created
+     * @param {Ext.grid.header.Container} headerCt This header container
+     * @member Ext.panel.Table
      */
 
     initComponent: function() {
@@ -413,7 +422,7 @@ Ext.define('Ext.grid.header.Container', {
             return;
         }
 
-        if (headerEl && !me.ddLock) {
+        if (headerEl && !me.blockEvents) {
             header = Ext.getCmp(headerEl.id);
             if (header) {
                 targetEl = header[header.clickTargetName];
@@ -426,7 +435,8 @@ Ext.define('Ext.grid.header.Container', {
                         // the left header.
                         activeHeader = header.onTitleElClick(e, targetEl, me.sortOnClick);
                         if (activeHeader) {
-                            me.onHeaderTriggerClick(activeHeader, e, Ext.supports.Touch ? activeHeader.el : activeHeader.triggerEl);
+                            // If activated by touch, there is no trigger el to align with, so align to the header element.
+                            me.onHeaderTriggerClick(activeHeader, e, e.pointerType === 'touch' ? activeHeader.el : activeHeader.triggerEl);
                         } else {
                             me.onHeaderClick(header, e, t);
                         }
@@ -439,6 +449,15 @@ Ext.define('Ext.grid.header.Container', {
                 }
             }
         }
+    },
+
+    blockNextEvent: function() {
+        this.blockEvents = true;
+        Ext.asap(this.unblockEvents, this);
+    },
+
+    unblockEvents: function() {
+        this.blockEvents = false;
     },
 
     onHeaderCtMouseOver: function(e, t) {
@@ -715,11 +734,11 @@ Ext.define('Ext.grid.header.Container', {
     // Invalidate column cache on remove
     // We cannot refresh the View on every remove because this method is called
     // when the HeaderDropZone moves Headers around, that will also refresh the view
-    onRemove: function(c) {
+    onRemove: function(c, isDestroying) {
         var me = this,
             ownerCt = me.ownerCt;
 
-        me.callParent(arguments);
+        me.callParent([c, isDestroying]);
 
         //<debug>
         if (!me._usedIDs) {
@@ -1079,7 +1098,8 @@ Ext.define('Ext.grid.header.Container', {
      * @private
      */
     getMenu: function() {
-        var me = this;
+        var me = this,
+            grid = me.view && me.view.ownerGrid;
 
         if (!me.menu) {
             me.menu = new Ext.menu.Menu({
@@ -1092,6 +1112,9 @@ Ext.define('Ext.grid.header.Container', {
                 }
             });
             me.fireEvent('menucreate', me, me.menu);
+            if (grid) {
+                grid.fireEvent('headermenucreate', grid, me.menu, me);
+            }
         }
         return me.menu;
     },
@@ -1588,10 +1611,20 @@ Ext.define('Ext.grid.header.Container', {
                 down: me.showHeaderMenu,
                 left: me.onFocusableContainerLeftKey,
                 right: me.onFocusableContainerRightKey,
+                home: me.onHomeKey,
+                end: me.onEndKey,
 
                 space: me.onHeaderActivate,
                 enter: me.onHeaderActivate
             });
+        },
+        
+        onHomeKey: function(e) {
+            return this.focusChild(null, true, e);
+        },
+        
+        onEndKey: function(e) {
+            return this.focusChild(null, false, e);
         },
 
         showHeaderMenu: function(e) {

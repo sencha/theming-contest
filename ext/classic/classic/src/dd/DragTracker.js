@@ -250,7 +250,7 @@ Ext.define('Ext.dd.DragTracker', {
 
         // endDrag has a mandatory event parameter
         me.endDrag({});
-        me.el = me.handle = null;
+        me.el = me.handle = me.onBeforeStart = me.onStart = me.onDrag = me.onEnd = null;
         me.callParent();
     },
 

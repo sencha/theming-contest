@@ -53,7 +53,39 @@ describe('Ext.selection.RowModel', function () {
         rawData = store = grid = selModel = null;
     });
 
-    it('should render cells without the x-grid-cell-selected cls (EXTJSIV-11254)', function () {
+    it('should not select the row upon in-row navigation', function () {
+        createGrid({
+            columns: [
+                { text: 'ID', dataIndex: 'id' },
+                { text: 'Name',  dataIndex: 'name' }
+            ]
+        });
+        var navModel = view.getNavigationModel();
+
+        navModel.setPosition(0, 0, null, null, true);
+
+        // Wait for the nav model to be fully away of the focus
+        waitsFor(function(){
+            return !!navModel.getPosition();
+        });
+
+        runs(function() {
+            jasmine.fireKeyEvent(navModel.getPosition().getCell(true), 'keydown', Ext.event.Event.RIGHT);
+
+            // No selection should take place navigating INSIDE a row
+            expect(view.selModel.getSelection().length).toBe(0);
+
+            expect(Ext.fly(view.getNode(0)).hasCls(view.selectedItemCls)).toBe(false);
+
+            // Navigate to the next row however, and that should selectit
+            jasmine.fireKeyEvent(navModel.getPosition().getCell(true), 'keydown', Ext.event.Event.DOWN);
+
+            expect(view.selModel.getSelection().length).toBe(1);
+            expect(Ext.fly(view.getNode(1)).hasCls(view.selectedItemCls)).toBe(true);
+        });
+    });
+
+    it('should render cells without the x-grid-cell-selected cls (EXTJSIV-17255)', function () {
         createGrid();
 
         selModel.select(0);

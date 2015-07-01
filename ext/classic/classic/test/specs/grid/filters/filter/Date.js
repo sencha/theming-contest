@@ -1,6 +1,6 @@
 describe('Ext.grid.filters.filter.Date', function () {
     var grid, plugin, store, columnFilter, menu, headerCt, rootMenuItem, datepicker,
-        pickerEl, headerNode, selectedNode;
+        pickerEl, headerNode, selectedNode, before, after, on;
 
     function createGrid(listCfg, gridCfg, storeCfg) {
         store = new Ext.data.Store(Ext.apply({
@@ -82,7 +82,7 @@ describe('Ext.grid.filters.filter.Date', function () {
     }
 
     function tearDown() {
-        grid = plugin = store = columnFilter = menu = headerCt = rootMenuItem = datepicker = pickerEl = headerNode = selectedNode = Ext.destroy(grid);
+        grid = plugin = store = columnFilter = menu = headerCt = rootMenuItem = datepicker = pickerEl = headerNode = selectedNode = before = after = on = Ext.destroy(grid);
     }
 
     afterEach(tearDown);
@@ -349,10 +349,10 @@ describe('Ext.grid.filters.filter.Date', function () {
     });
 
     describe('selecting using the UI', function () {
-        var after, before, on, filters;
+        var filters;
 
         afterEach(function () {
-            after = before = on = filters = null;
+            filters = null;
         });
 
         describe('the After datepicker', function () {
@@ -499,28 +499,38 @@ describe('Ext.grid.filters.filter.Date', function () {
             function afterOrBefore(which) {
                 // Making a selection on either the After or Before datepicker should disable and deactivate the On datepicker.
                 other = showPicker(which);
-                setPicker('8/8/1992');
 
-                expect(other.up('menuitem').checked).toBe(true);
-                expect(on.up('menuitem').checked).toBe(false);
-                expect(filters.length).toBe(1);
-                expect(filters.getAt(0).getId()).toBe(columnFilter.getBaseIdPrefix() + (which === 'After' ? '-gt' : '-lt'));
+                waitsFor(function() {
+                    return !!datepicker.eventEl;
+                });
+                runs(function() {
+                    setPicker('8/8/1992');
+                    expect(other.up('menuitem').checked).toBe(true);
+                    expect(on.up('menuitem').checked).toBe(false);
+                    expect(filters.length).toBe(1);
+                    expect(filters.getAt(0).getId()).toBe(columnFilter.getBaseIdPrefix() + (which === 'After' ? '-gt' : '-lt'));
+                });
             }
 
             function selectOn() {
                 // Now select a date that would result in an empty result set.
                 on = showPicker('On');
-                setPicker('9/26/2009');
 
-                // We expect that the On selection will disable and deactivate the previous selection
-                // because we don't currently support OR operations.
-                expect(before.up('menuitem').checked).toBe(false);
-                if (after) {
-                    expect(after.up('menuitem').checked).toBe(false);
-                }
-                expect(on.up('menuitem').checked).toBe(true);
-                expect(filters.length).toBe(1);
-                expect(filters.getAt(0).getId()).toBe(columnFilter.getBaseIdPrefix() + '-eq');
+                waitsFor(function() {
+                    return !!datepicker.eventEl;
+                });
+                runs(function() {
+                    setPicker('9/26/2009');
+                    // We expect that the On selection will disable and deactivate the previous selection
+                    // because we don't currently support OR operations.
+                    expect(before.up('menuitem').checked).toBe(false);
+                    if (after) {
+                        expect(after.up('menuitem').checked).toBe(false);
+                    }
+                    expect(on.up('menuitem').checked).toBe(true);
+                    expect(filters.length).toBe(1);
+                    expect(filters.getAt(0).getId()).toBe(columnFilter.getBaseIdPrefix() + '-eq');
+                });
             }
 
             beforeEach(function () {
@@ -579,7 +589,6 @@ describe('Ext.grid.filters.filter.Date', function () {
                         }
                     });
 
-                    showMenu();
                     showPicker('Before');
 
                     expect((headerNode.textContent || headerNode.innerText).replace(/\s/g, '')).toBe('December1992');
@@ -598,7 +607,6 @@ describe('Ext.grid.filters.filter.Date', function () {
                         }
                     });
 
-                    showMenu();
                     showPicker('On');
 
                     expect((headerNode.textContent || headerNode.innerText).replace(/\s/g, '')).toBe('January1972');
@@ -619,7 +627,6 @@ describe('Ext.grid.filters.filter.Date', function () {
                             }
                         });
 
-                        showMenu();
                         showPicker('On');
                         columnFilter.setValue({
                             eq: Ext.Date.parse('1972-01-22T12:30:01', 'c')
@@ -633,5 +640,36 @@ describe('Ext.grid.filters.filter.Date', function () {
 
         setActive(true);
         setActive(false);
+
+        describe('toggling active state on same filter', function () {
+            // The root Filters menu item's checked state and the header filter class should all reflect the current state.
+            // See EXTJS-17430.
+            it('should update the UI', function () {
+                var column;
+
+                createGrid();
+
+                showPicker('Before');
+                setPicker('12/10/1992');
+                column = columnFilter.column;
+
+                // Everything should be on.
+                expect(rootMenuItem.checked).toBe(true);
+                expect(column.hasCls(plugin.filterCls)).toBe(true);
+
+                // Everything should be off.
+                rootMenuItem.setChecked(false);
+
+                expect(rootMenuItem.checked).toBe(false);
+                expect(column.hasCls(plugin.filterCls)).toBe(false);
+
+                setPicker('12/09/1992');
+
+                // Everything should be on.
+                expect(rootMenuItem.checked).toBe(true);
+                expect(column.hasCls(plugin.filterCls)).toBe(true);
+            });
+        });
     });
 });
+

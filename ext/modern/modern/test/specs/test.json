@@ -10,12 +10,15 @@
         "../../../packages/core/test/resources/helpers.js"
     ],
     "specs": {
-        "shuffle": 39,
         "src": [
             "../../../../packages/core/test/specs",
             ".",
             "../../../../packages/charts/test/specs",
-            "../../../../packages/charts/test/specs-modern"
+            "../../../../packages/charts/test/specs-modern",
+            "../../../../packages/ux/test/specs",
+            "../../../../packages/ux/test/modern/specs",
+            "../../../../../packages/exporter/test/specs",
+            "../../../../../packages/exporter/test/modern/specs"
         ]
     } 
 }

@@ -217,7 +217,6 @@ Ext.define('Ext.data.proxy.JsonP', {
         };
     },
 
-    // inherit docs
     setException: function(operation, response) {
         operation.setException(operation.getRequest().getRawRequest().errorType);
     },

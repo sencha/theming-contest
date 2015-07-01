@@ -12,6 +12,7 @@ Ext.define('Ext.viewport.Default', {
     LANDSCAPE: 'landscape',
 
     requires: [
+        'Ext.GlobalEvents',
         'Ext.LoadMask',
         'Ext.layout.Card',
         'Ext.util.InputBlocker'
@@ -46,6 +47,9 @@ Ext.define('Ext.viewport.Default', {
 
         /**
          * @private
+         *
+         * Auto blur the focused element when touching on a non-input. This is used to work around Android bugs
+         * where the virtual keyboard is not hidden when tapping outside an input.
          */
         autoBlurInput: true,
 
@@ -201,6 +205,20 @@ Ext.define('Ext.viewport.Default', {
         me.callParent();
     },
 
+    initInheritedState: function (inheritedState, inheritedStateInner) {
+        var me = this,
+            root = Ext.rootInheritedState;
+
+        if (inheritedState !== root) {
+            // We need to go at this again but with the rootInheritedState object. Let
+            // any derived class poke on the proper object!
+            me.initInheritedState(me.inheritedState = root,
+                me.inheritedStateInner = Ext.Object.chain(root));
+        } else {
+            me.callParent([inheritedState, inheritedStateInner]);
+        }
+    },
+
     onAppLaunch: function() {
         var me = this;
         if (!me.isReady) {
@@ -219,6 +237,7 @@ Ext.define('Ext.viewport.Default', {
         me.updateSize();
         me.onReady();
         me.fireEvent('ready', me);
+        Ext.GlobalEvents.fireEvent('viewportready', me);
     },
 
     onReady: function() {
@@ -247,7 +266,8 @@ Ext.define('Ext.viewport.Default', {
                 osName = osEnv.name.toLowerCase(),
                 browserName = Ext.browser.name.toLowerCase(),
                 osMajorVersion = osEnv.version.getMajor(),
-                orientation = this.getOrientation();
+                orientation = this.getOrientation(),
+                theme;
 
             this.renderTo(body);
 
@@ -290,6 +310,12 @@ Ext.define('Ext.viewport.Default', {
             classList.push(clsPrefix + orientation);
 
             body.addCls(classList);
+
+            theme = Ext.theme;
+            if (theme && theme.getDocCls) {
+                // hook for theme overrides to add css classes to the <html> element
+                Ext.fly(document.documentElement).addCls(theme.getDocCls());
+            }
         }
     },
 
@@ -357,7 +383,8 @@ Ext.define('Ext.viewport.Default', {
         var target = e.target,
             focusedElement = this.focusedElement;
         //In IE9/10 browser window loses focus and becomes inactive if focused element is <body>. So we shouldn't call blur for <body>
-        if (focusedElement && focusedElement.nodeName.toUpperCase() != 'BODY' && !this.isInputRegex.test(target.tagName)) {
+        // In FF, the focusedElement can be the document which doesn't have a blur method
+        if (focusedElement && focusedElement.blur && focusedElement.nodeName.toUpperCase() != 'BODY' && !this.isInputRegex.test(target.tagName)) {
             delete this.focusedElement;
             focusedElement.blur();
         }

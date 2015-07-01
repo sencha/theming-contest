@@ -898,6 +898,8 @@ Ext.define('Ext.field.Input', {
     onInput: function(e) {
         var me = this;
 
+        me.fireEvent('input', me, me.input.dom.value);
+
         // if we should ignore input, stop now.
         if (me.ignoreInput) {
             me.ignoreInput = false;

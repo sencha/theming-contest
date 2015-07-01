@@ -31,7 +31,10 @@
 Ext.define('Ext.button.Segmented', {
     extend: 'Ext.container.Container',
     xtype: 'segmentedbutton',
-    requires: [ 'Ext.button.Button' ],
+    requires: [ 
+        'Ext.button.Button',
+        'Ext.layout.container.SegmentedButton'
+    ],
 
     config: {
         /**

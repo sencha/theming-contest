@@ -129,6 +129,18 @@ describe('Ext.form.Labelable', function() {
                 expect(component.bodyEl.next()).toBe(component.errorWrapEl);
                 expect(component.errorWrapEl.first()).toBe(component.errorEl);
             });
+            
+            it("should render ariaErrorEl by default", function() {
+                create();
+                
+                expect(component.ariaErrorEl.dom).toBeDefined();
+            });
+            
+            it("should assign x-hidden-clip to ariaErrorEl", function() {
+                create();
+                
+                expect(component.ariaErrorEl.hasCls('x-hidden-clip')).toBe(true);
+            });
         });
 
         describe("fieldLabel and labelSeparator", function() {
@@ -421,6 +433,58 @@ describe('Ext.form.Labelable', function() {
                     count = component.componentLayoutCounter
                     component.setHideEmptyLabel(true);
                     expect(component.componentLayoutCounter).toBe(count + 1);
+                });
+            });
+        });
+        
+        describe("setActiveError/unsetActiveError", function() {
+            var ariaErrorEl;
+            
+            beforeEach(function() {
+                define({
+                    getSubTplMarkup: function() {
+                        return '<div></div>';
+                    }
+                });
+                
+                create();
+                
+                ariaErrorEl = component.ariaErrorEl;
+            });
+            
+            afterEach(function() {
+                ariaErrorEl = null;
+            });
+            
+            describe("setActiveErrors", function() {
+                beforeEach(function() {
+                    component.setActiveErrors(['foo', 'bar']);
+                });
+                
+                it("should set ariaErrorEl text", function() {
+                    expect(ariaErrorEl.dom.innerHTML).toBe('foo. bar');
+                });
+                
+                it("should point actionEl aria-describedby to ariaErrorEl", function() {
+                    var actionEl = component.getActionEl();
+                    
+                    expect(actionEl.dom.getAttribute('aria-describedby')).toBe(ariaErrorEl.id);
+                });
+                
+                describe("unsetActiveError", function() {
+                    beforeEach(function() {
+                        component.unsetActiveError();
+                    });
+                    
+                    it("should clear ariaErrorEl text", function() {
+                        expect(ariaErrorEl.dom.innerHTML).toBe('');
+                    });
+                    
+                    it("should remove aria-describedby attribute from actionEl", function() {
+                        var actionEl = component.getActionEl();
+                        
+                        expect(actionEl.dom.hasAttribute('aria-describedby')).toBe(false);
+                    });
                 });
             });
         });

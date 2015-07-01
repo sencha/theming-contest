@@ -107,7 +107,7 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
         selected: null,
 
         /**
-         * @cfg {String} [extensible]
+         * @cfg {String} extensible
          * This configures whether this selection model is to implement a mouse based dragging gesture to extend a *contiguou*s selection.
          *
          * Note that if there are multiple, discontiguous selected rows or columns, selection extension is not available.
@@ -234,8 +234,10 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
 
     /**
      * @member Ext.panel.Table.
-     * @event beforeselectionextend An event fired when an extension block is extended using a drag gesture.
-     * Only fired when the SpreadsheetSelectionModel is used and configured with the {@link #extensible} config.
+     * @event beforeselectionextend An event fired when an extension block is extended 
+     * using a drag gesture.  Only fired when the SpreadsheetSelectionModel is used and 
+     * configured with the 
+     * {@link Ext.grid.selection.SpreadsheetModel#extensible extensible} config.
      * @param {Ext.panel.Table} The owning grid.
      * @param {Ext.grid.selection.Selection} An object which encapsulates a contiguous selection block.
      * @param {Object} extension An object describing the type and size of extension.
@@ -248,13 +250,15 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
 
     /**
      * @member Ext.panel.Table.
-     * @event selectionextenderdrag An event fired when an extension block is dragged to encompass a new range.
-     * Only fired when the SpreadsheetSelectionModel is used and configured with the {@link #extensible} config.
+     * @event selectionextenderdrag An event fired when an extension block is dragged to 
+     * encompass a new range.  Only fired when the SpreadsheetSelectionModel is used and 
+     * configured with the 
+     * {@link Ext.grid.selection.SpreadsheetModel#extensible extensible} config.
      * @param {Ext.panel.Table} The owning grid.
      * @param {Ext.grid.selection.Selection} An object which encapsulates a contiguous selection block.
      * @param {Object} extension An object describing the type and size of extension.
      * @param {String} extension.type `"rows"` or `"columns"`
-     * @param {HtmlElement} extension.overCell The grid cell over which the mouse is being dragged.
+     * @param {HTMLElement} extension.overCell The grid cell over which the mouse is being dragged.
      * @param {Ext.grid.CellContext} extension.start The start (top left) cell of the extension area.
      * @param {Ext.grid.CellContext} extension.end The end (bottom right) cell of the extension area.
      * @param {number} [extension.columns] The number of columns extended (-ve means on the left side).
@@ -329,6 +333,7 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
             showCheck = me.showHeaderCheckbox !== false;
 
         return {
+            ignoreExport: true,
             isCheckerHd: showCheck,
             text : '&#160;',
             clickTargetName: 'el',
@@ -444,8 +449,9 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
      *  rowIdx - row index
      *  column - {@link Ext.grid.column.Column Column} under which the cell is located.
      *  record - {@link Ext.data.Model} Record from which the cell derives its data.
-     *  view - The view. If this selection model is for a locking grid, this will be the outermost view, the {@link Ext.grid.loacking.View}
-     *  which encapsulates the sub grids. Column indices are relative to the outermost view's visible column set.
+     *  view - The view. If this selection model is for a locking grid, this will be the 
+     *  outermost view, the {@link Ext.grid.locking.View} which encapsulates the sub 
+     *  grids. Column indices are relative to the outermost view's visible column set.
      *
      * @param {Number} record Record for which to select the cell, or row index.
      * @param {Number} column Grid column header, or column index.
@@ -685,18 +691,20 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
     selectRows: function(rows, keepSelection, suppressEvent) {
         var me = this,
             sel = me.selected,
-            isSelectingRows = sel && !sel.isRows,
+            isSelectingRows = sel && sel.isRows,
             len = rows.length,
             i;
 
-        if (!keepSelection || isSelectingRows) {
+        if (!keepSelection || !isSelectingRows) {
             me.resetSelection(true);
         }
         if (!isSelectingRows) {
             me.selected = sel = new Ext.grid.selection.Rows(me.view);
         }
 
-        for (i = 0; i < len; i++) {
+        if (rows.isEntity) {
+            sel.add(rows);
+        } else for (i = 0; i < len; i++) {
             sel.add(rows[i]);
         }
 
@@ -939,33 +947,19 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
         onViewCreated: function(grid, view) {
             var me = this,
                 ownerGrid = view.ownerGrid,
-                headerCt = view.headerCt,
-                shrinkwrapLocked = ownerGrid.shrinkWrapLocked;
+                headerCt = view.headerCt;
 
             // Only add columns to the locked view, or only view if there is no twin
             if (!ownerGrid.lockable || view.isLockedView) {
                 // if there is no row number column and we ask for it, then it should be added here
-                if (me.getRowSelect() && !headerCt.down('rownumberer')) {
-                    // Add rownumber column
-                    me.numbererColumn = headerCt.add(0, {
-                        xtype: 'rownumberer',
-                        width: me.rowNumbererHeaderWidth,
-                        editRenderer:  '&#160;',
-                        tdCls: me.rowNumbererTdCls,
-                        cls: me.rowNumbererHeaderCls,
-                        locked: me.hasLockedHeader
-                    });
-                    if (shrinkwrapLocked) {
-                        grid.width += me.numbererColumn.width;
-                    }
+                if (me.getRowSelect()) {
+                    // Ensure we have a rownumber column
+                    me.getNumbererColumn();
                 }
 
                 if (me.checkboxSelect) {
                     me.addCheckbox(view, true);
                     me.mon(view.ownerGrid, 'reconfigure', me.onReconfigure, me);
-                    if (shrinkwrapLocked) {
-                        grid.width += me.checkColumn.width;
-                    }
                 }
             }
 
@@ -1468,6 +1462,34 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
             }
         },
 
+        getNumbererColumn: function(col) {
+            var me = this,
+                result = me.numbererColumn,
+                view = me.view;
+
+            if (!result) {
+                // Always put row selection columns in the locked side if there is one.
+                if (view.isNormalView) {
+                    view = view.ownerGrid.lockedGrid;
+                }
+                result = me.numbererColumn = view.headerCt.down('rownumberer') || view.headerCt.add(0, me.getNumbererColumnConfig());
+            }
+            return result;
+        },
+
+        getNumbererColumnConfig: function() {
+            var me = this;
+
+            return {
+                xtype: 'rownumberer',
+                width: me.rowNumbererHeaderWidth,
+                editRenderer:  '&#160;',
+                tdCls: me.rowNumbererTdCls,
+                cls: me.rowNumbererHeaderCls,
+                locked: me.hasLockedHeader
+            };
+        },
+
         /**
          * Show/hide the extra column headers depending upon rowSelection.
          * @private
@@ -1487,18 +1509,7 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
                     if (me.checkColumn) {
                         me.checkColumn.show();
                     }
-                    if (me.numbererColumn) {
-                        me.numbererColumn.show();
-                    } else {
-                        me.numbererColumn = view.headerCt.add(0, {
-                            xtype: 'rownumberer',
-                            width: me.rowNumbererHeaderWidth,
-                            editRenderer:  '&#160;',
-                            tdCls: me.rowNumbererTdCls,
-                            cls: me.rowNumbererHeaderCls,
-                            locked: me.hasLockedHeader
-                        });
-                    }
+                    me.getNumbererColumn().show();
                 } else {
                     if (me.checkColumn) {
                         me.checkColumn.hide();
@@ -1575,9 +1586,12 @@ Ext.define('Ext.grid.selection.SpreadsheetModel', {
 
         /**
          * Called when a selection has been made. The selection object's onSelectionFinish calls back into this.
-         * @param {type} sel
-         * @param {type} firstCell
-         * @param {type} lastCell
+         * @param {Ext.grid.selection.Selection} sel The selection object specific to 
+         * the selection performed.
+         * @param {Ext.grid.CellContext} [firstCell] The left/top most selected cell.
+         * Will be undefined if the selection is clear.
+         * @param {Ext.grid.CellContext} [lastCell] The bottom/right most selected cell.
+         * Will be undefined if the selection is clear.
          * @private
          */
         onSelectionFinish: function(sel, firstCell, lastCell) {

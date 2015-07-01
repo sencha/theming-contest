@@ -79,9 +79,7 @@ Ext.define('Ext.field.Password', {
     },
 
     updateRevealable: function(newValue, oldValue) {
-        if(newValue === oldValue) return;
-
-        if(this.$revealIcon) {
+        if (this.$revealIcon) {
             this.getComponent().element.removeChild(this.$revealIcon);
             this.$revealIcon = null;
         }
@@ -113,35 +111,22 @@ Ext.define('Ext.field.Password', {
     /**
      * @private
      */
-    updateValue: function(newValue) {
-        var component  = this.getComponent(),
-        // allows newValue to be zero but not undefined or null (other falsey values)
-            valueValid = newValue !== undefined && newValue !== null && newValue !== "";
-
-        if (component) {
-            component.setValue(newValue);
-        }
-
-        this[valueValid && this.isDirty() ? 'showClearIcon' : 'hideClearIcon']();
-
-        this.syncEmptyCls();
-
-        this[valueValid ? 'showRevealIcon' : 'hideRevealIcon']();
+    updateValue: function(value, oldValue) {
+        this.toggleRevealIcon(this.isValidTextValue(value));
+        this.callParent([value, oldValue]);
     },
 
     doKeyUp: function(me, e) {
-        // getValue to ensure that we are in sync with the dom
-        var value      = me.getValue(),
-        // allows value to be zero but not undefined or null (other falsey values)
-            valueValid = value !== undefined && value !== null && value !== "";
+        var value = me.getValue(),
+            valid = me.isValidTextValue(me.getValue());
 
-        this[valueValid ? 'showClearIcon' : 'hideClearIcon']();
+        me.toggleClearIcon(valid);
 
         if (e.browserEvent.keyCode === 13) {
             me.fireAction('action', [me, e], 'doAction');
         }
 
-        this[valueValid ? 'showRevealIcon' : 'hideRevealIcon']();
+        me.toggleRevealIcon(valid);
     },
 
     /**
@@ -177,11 +162,7 @@ Ext.define('Ext.field.Password', {
      * @private
      */
     doRevealIconTap: function(me, e) {
-        if(this.getRevealed()) {
-            this.setRevealed(false)
-        } else {
-            this.setRevealed(true)
-        }
+        me.setRevealed(!this.getRevealed());
     },
 
     onRevealIconPress: function() {
@@ -190,5 +171,20 @@ Ext.define('Ext.field.Password', {
 
     onRevealIconRelease: function() {
         this.$revealIcon.removeCls(Ext.baseCSSPrefix + 'pressing');
+    },
+
+    privates: {
+        isValidTextValue: function(value) {
+            // allows newValue to be zero but not undefined or null (other falsey values)
+            return (value !== undefined && value !== null && value !== '');
+        },
+
+        toggleRevealIcon: function(state) {
+            if (state) {
+                this.showRevealIcon();
+            } else {
+                this.hideRevealIcon();
+            }
+        }
     }
 });

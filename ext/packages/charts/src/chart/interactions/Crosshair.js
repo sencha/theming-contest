@@ -188,7 +188,7 @@ Ext.define('Ext.chart.interactions.Crosshair', {
     },
 
     updateChart: function (chart) {
-        if (!(chart instanceof Ext.chart.CartesianChart)) {
+        if (chart && !chart.isCartesian) {
             throw 'Crosshair interaction can only be used on cartesian charts.';
         }
         this.callParent(arguments);
@@ -248,8 +248,8 @@ Ext.define('Ext.chart.interactions.Crosshair', {
                 axisHeight = axisRect[3];
                 axisPosition = axis.getPosition();
                 axisAlignment = axis.getAlignment();
-                title = axis.getTitle(),
-                titleBBox = title && title.attr.text !== '' && title.getBBox(),
+                title = axis.getTitle();
+                titleBBox = title && title.attr.text !== '' && title.getBBox();
                 attr = axisSprite.attr;
                 axisThickness = axisSprite.thickness;
                 lineWidth = attr.axisLine ? attr.lineWidth : 0;

@@ -139,7 +139,7 @@ Ext.define('Ext.chart.axis.Time', {
     },
 
     updateDateFormat: function (format) {
-        this.setRenderer(function (date) {
+        this.setRenderer(function (axis, date) {
             return Ext.Date.format(new Date(date), format);
         });
     },

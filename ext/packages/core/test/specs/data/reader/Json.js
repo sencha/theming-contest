@@ -21,39 +21,78 @@ describe("Ext.data.reader.Json", function() {
     });
 
     afterEach(function(){
+        if (reader) {
+            reader.destroy();
+        }
+        
+        reader = null;
+        
         Ext.ClassManager.enableNamespaceParseCache = true;
         Ext.undefine('spec.JsonReader');
         Ext.data.Model.schema.clear(true);
     });
     
-    it('should set a reference to the raw data in the .raw property on the record', function () {
-        var o = {
-            inter: 1
-        };
-
-        expect(reader.readRecords([o]).getRecords()[0].raw).toBe(o);
+    describe("raw data", function() {
+        var data, rec;
+        
+        beforeEach(function() {
+            data = {
+                inter: 1
+            };
+        });
+        
+        afterEach(function() {
+            rec = null;
+        });
+        
+        it("should not set raw data reference by default", function() {
+            rec = reader.readRecords([data]).getRecords()[0];
+            
+            expect(rec.raw).not.toBeDefined();
+        });
+        
+        it('should set raw data reference for a TreeStore record', function () {
+            // Simulate TreeStore node
+            spec.JsonReader.prototype.isNode = true;
+            
+            rec = reader.readRecords([data]).getRecords()[0];
+            
+            expect(rec.raw).toBe(data);
+        });
     });
 
     describe("copyFrom", function() {
-        var Model = Ext.define(null, {
-            extend: 'Ext.data.Model'
+        var Model, copy;
+        
+        beforeEach(function() {
+            Model = Ext.define(null, {
+                extend: 'Ext.data.Model'
+            });
+            
+            reader.destroy();
+            reader = null;
+        });
+        
+        afterEach(function() {
+            copy.destroy();
+            Model = copy = null;
         });
 
         it("should copy the model", function() {
-            var reader = new Ext.data.reader.Json({
+            reader = new Ext.data.reader.Json({
                 model: Model
             });
-            var copy = new Ext.data.reader.Json();
+            copy = new Ext.data.reader.Json();
             copy.copyFrom(reader);
             expect(copy.getModel()).toBe(Model);
         });
 
         it("should copy the record", function() {
-            var reader = new Ext.data.reader.Json({
+            reader = new Ext.data.reader.Json({
                 model: Model,
                 record: 'foo'
             });
-            var copy = new Ext.data.reader.Json();
+            copy = new Ext.data.reader.Json();
             copy.copyFrom(reader);
             expect(copy.getRecord()).toBe('foo');
 
@@ -66,11 +105,11 @@ describe("Ext.data.reader.Json", function() {
         });
 
         it("should copy the totalProperty", function() {
-            var reader = new Ext.data.reader.Json({
+            reader = new Ext.data.reader.Json({
                 model: Model,
                 totalProperty: 'aTotal'
             });
-            var copy = new Ext.data.reader.Json();
+            copy = new Ext.data.reader.Json();
             copy.copyFrom(reader);
             expect(copy.getTotalProperty()).toBe('aTotal');
 
@@ -81,11 +120,11 @@ describe("Ext.data.reader.Json", function() {
         });
 
         it("should copy the successProperty", function() {
-            var reader = new Ext.data.reader.Json({
+            reader = new Ext.data.reader.Json({
                 model: Model,
                 successProperty: 'aSuccess'
             });
-            var copy = new Ext.data.reader.Json();
+            copy = new Ext.data.reader.Json();
             copy.copyFrom(reader);
             expect(copy.getSuccessProperty()).toBe('aSuccess');
 
@@ -96,11 +135,11 @@ describe("Ext.data.reader.Json", function() {
         });
 
         it("should copy the messageProperty", function() {
-            var reader = new Ext.data.reader.Json({
+            reader = new Ext.data.reader.Json({
                 model: Model,
                 messageProperty: 'aMessage'
             });
-            var copy = new Ext.data.reader.Json();
+            copy = new Ext.data.reader.Json();
             copy.copyFrom(reader);
             expect(copy.getMessageProperty()).toBe('aMessage');
 
@@ -111,11 +150,11 @@ describe("Ext.data.reader.Json", function() {
         });
 
         it("should copy the rootProperty", function() {
-            var reader = new Ext.data.reader.Json({
+            reader = new Ext.data.reader.Json({
                 model: Model,
                 rootProperty: 'aRoot'
             });
-            var copy = new Ext.data.reader.Json();
+            copy = new Ext.data.reader.Json();
             copy.copyFrom(reader);
             expect(copy.getRootProperty()).toBe('aRoot');
 
@@ -166,7 +205,7 @@ describe("Ext.data.reader.Json", function() {
         });
         
         afterEach(function(){
-            reader = createReader = null;
+            createReader = null;
         });
         
         it("should run function extractors in the reader scope", function(){
@@ -1041,6 +1080,9 @@ describe("Ext.data.reader.Json", function() {
                     }
                 ]
             });
+            
+            // Created in global beforeEach
+            reader.destroy();
 
             reader = new Ext.data.reader.Json({
                 rootProperty: 'data',
@@ -1213,6 +1255,9 @@ describe("Ext.data.reader.Json", function() {
                     'id', 'name', 'email'
                 ]
             });
+            
+            // Created in global beforeEach
+            reader.destroy();
 
             reader = new Ext.data.reader.Json({
                 model: 'spec.User',
@@ -1267,6 +1312,9 @@ describe("Ext.data.reader.Json", function() {
                 fields: ['name'],
                 onLoad: function() {}
             });
+
+            // Created in global beforeEach
+            reader.destroy();
         });
 
         afterEach(function() {
@@ -1434,6 +1482,9 @@ describe("Ext.data.reader.Json", function() {
 
                 hasMany: {model: 'spec.OrderItem', name: 'orderItems'}
             });
+            
+            // Created in global beforeEach
+            reader.destroy();
         });
         
         afterEach(function() {
@@ -1560,6 +1611,9 @@ describe("Ext.data.reader.Json", function() {
                 extend: 'Ext.data.Model',
                 fields: ['name', 'location']
             });
+
+            // Created in global beforeEach
+            reader.destroy();
 
             reader = new Ext.data.reader.Json({
                 rootProperty: 'users',

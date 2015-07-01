@@ -74,6 +74,14 @@ describe("Ext.dom.Element", function() {
             expectError('<12345/>');
             expectError('1<>234.567');
         });
+        
+        it("should not call initConfig", function() {
+            spyOn(Ext.dom.Element.prototype, 'initConfig').andCallThrough();
+            
+            element = new Ext.dom.Element(domEl);
+            
+            expect(Ext.dom.Element.prototype.initConfig).not.toHaveBeenCalled();
+        });
     });
 
     function describeMethods(fly) {
@@ -93,6 +101,49 @@ describe("Ext.dom.Element", function() {
                     element.destroy();
                     element = null;
                 }
+            });
+
+    
+            describe('clone', function() {
+                var clone,
+                    domElInnerHTML = '<span class="bar" style="color:red">Some Text</span>';
+                
+                afterEach(function() {
+                    if (domEl) {
+                        Ext.fly(domEl).destroy();
+                    }
+                    if (clone) {
+                        clone.destroy();
+                    }
+                });
+
+                it('should create an exact copy', function() {
+                    domEl = document.createElement('div');
+                    domEl.innerHTML = domElInnerHTML;
+
+                    document.body.appendChild(domEl);
+
+                    clone = Ext.fly(domEl).clone();
+
+                    // deep != true, so it should not have cloned descendants
+                    expect(clone.dom.innerHTML).toBe('');
+                });
+                
+                describe('deep', function() {
+                    // Comparing innerHTML does not work in all browsers:
+                    //    Expected '<SPAN style="COLOR: red" class=bar _extData="null">Some Text</SPAN>'
+                    //    to be '<span class="bar" style="color:red">Some Text</span>'.
+                    xit('should create an exact copy', function() {
+                        domEl = document.createElement('div');
+                        domEl.innerHTML = domElInnerHTML;
+
+                        document.body.appendChild(domEl);
+
+                        clone = Ext.fly(domEl).clone(true);
+
+                        expect(clone.dom.innerHTML).toBe(domElInnerHTML);
+                    });
+                });
             });
 
             describe("classes", function() {
@@ -835,6 +886,219 @@ describe("Ext.dom.Element", function() {
                     };
 
                     expect(element.blur.bind(element)).not.toThrow("error");
+                });
+            });
+
+            describe("wrap/unwrap", function() {
+                describe("wrap", function() {
+                    var wrap;
+
+                    beforeEach(function() {
+                        element = addElement('div');
+                    });
+
+                    afterEach(function() {
+                        wrap = Ext.destroy(wrap);
+                    });
+
+                    it("should wrap the element", function() {
+                        var parent = element.dom.parentNode;
+                        wrap = element.wrap();
+                        expect(element.dom.parentNode.parentNode).toBe(parent);
+                    });
+
+                    it("should wrap the element in place", function() {
+                        var el1 = Ext.getBody().createChild(),
+                            el2 = Ext.getBody().createChild();
+
+                        el1.insertBefore(element);
+
+                        wrap = element.wrap();
+
+                        expect(wrap.prev()).toBe(el1);
+                        expect(wrap.next()).toBe(el2);
+
+                        Ext.destroy(el1, el2);
+                    });
+
+                    describe("config", function() {
+                        it("should apply the config to the wrapping element", function() {
+                            var newId = Ext.id();
+                            wrap = element.wrap({
+                                cls: 'foo',
+                                id: newId
+                            });
+                            expect(wrap.dom.className).toBe('foo');
+                            expect(wrap.dom.id).toBe(newId);
+                        });
+                    });
+
+                    describe("returnDom", function() {
+                        it("should return an Ext.dom.Element by default", function() {
+                            wrap = element.wrap();
+                            expect(wrap.isElement).toBe(true);
+                        });
+
+                        it("should return an Ext.dom.Element when passing false", function() {
+                            wrap = element.wrap({}, false);
+                            expect(wrap.isElement).toBe(true);
+                        });
+
+                        it("should return an DOM element when passing true", function() {
+                            wrap = element.wrap({}, true);
+                            expect(wrap.isElement).not.toBe(true);
+                            // To allow it to be destroyed in the afterEach
+                            wrap = Ext.get(wrap);
+                        });
+                    });
+
+                    describe("selector", function() {
+                        it("should place the element in the element match the selector", function() {
+                            wrap = element.wrap({
+                                cls: 'foo',
+                                children: [{
+                                    cls: 'bar',
+                                    children: [{
+                                        cls: 'baz'
+                                    }]
+                                }]
+                            }, false, '.baz');
+
+                            expect(element.dom.parentNode.className).toBe('baz');
+                            expect(element.dom.parentNode.parentNode.className).toBe('bar');
+                            expect(element.dom.parentNode.parentNode.parentNode.className).toBe('foo');
+                        });
+                    });
+
+                    describe("focus", function() {
+                        it("should keep focus if the active element is inside the wrapped element", function() {
+                            var child = element.createChild({
+                                tag: 'a',
+                                html: 'Foo',
+                                tabIndex: '0'
+                            });
+
+                            jasmine.focusAndWait(child);
+                            runs(function() {
+                                wrap = element.wrap();
+                            });
+                            jasmine.waitsForFocus(child);
+                            runs(function() {
+                                expect(Ext.dom.Element.getActiveElement()).toBe(child.dom);
+                            });
+                        });
+
+                        it("should not fire focus/blur events on the element", function() {
+                            var child = element.createChild({
+                                tag: 'a',
+                                html: 'Foo',
+                                tabIndex: '0'
+                            }), spy = jasmine.createSpy();
+
+                            jasmine.focusAndWait(child);
+                            runs(function() {
+                                child.on('focus', spy);
+                                child.on('blur', spy);
+                                wrap = element.wrap();
+                            });
+                            jasmine.waitsForFocus(child);
+                            runs(function() {
+                                expect(spy).not.toHaveBeenCalled();
+                                child.destroy();
+                            });
+                        });
+
+                        it("should not cause an exception when the focused element is not in the element cache", function() {
+                            var newId = Ext.id();
+                            element.dom.innerHTML = '<a tabIndex="0" id="' + newId + '">Foo</a>';
+
+                            var child = element.dom.firstChild;
+
+                            jasmine.focusAndWait(child);
+                            runs(function() {
+                                expect(function() {
+                                    wrap = element.wrap();
+                                }).not.toThrow();
+                                expect(Ext.cache[newId]).toBeUndefined();
+                            });
+                            jasmine.waitsForFocus(child);
+                            runs(function() {
+                                expect(Ext.dom.Element.getActiveElement()).toBe(child);
+                            });
+                        });
+                    });
+                });
+
+                // API is private, just want to test focus stuff here
+                describe("unwrap", function() {
+                    var wrap;
+
+                    beforeEach(function() {
+                        element = addElement('div');
+                        wrap = element.wrap();
+                    });
+
+                    afterEach(function() {
+                        wrap = Ext.destroy(wrap);
+                    });
+
+                    describe("focus", function() {
+                        it("should keep focus if the active element is inside the wrapped element", function() {
+                            var child = element.createChild({
+                                tag: 'a',
+                                html: 'Foo',
+                                tabIndex: '0'
+                            });
+
+                            jasmine.focusAndWait(child);
+                            runs(function() {
+                                element.unwrap();
+                            });
+                            jasmine.waitsForFocus(child);
+                            runs(function() {
+                                expect(Ext.dom.Element.getActiveElement()).toBe(child.dom);
+                            });
+                        });
+
+                        it("should not fire focus/blur events on the element", function() {
+                            var child = element.createChild({
+                                tag: 'a',
+                                html: 'Foo',
+                                tabIndex: '0'
+                            }), spy = jasmine.createSpy();
+
+                            jasmine.focusAndWait(child);
+                            runs(function() {
+                                child.on('focus', spy);
+                                child.on('blur', spy);
+                                element.unwrap();
+                            });
+                            jasmine.waitsForFocus(child);
+                            runs(function() {
+                                expect(spy).not.toHaveBeenCalled();
+                                child.destroy();
+                            });
+                        });
+
+                        it("should not cause an exception when the focused element is not in the element cache", function() {
+                            var newId = Ext.id();
+                            element.dom.innerHTML = '<a tabIndex="0" id="' + newId + '">Foo</a>';
+
+                            var child = element.dom.firstChild;
+
+                            jasmine.focusAndWait(child);
+                            runs(function() {
+                                expect(function() {
+                                    element.unwrap();
+                                }).not.toThrow();
+                                expect(Ext.cache[newId]).toBeUndefined();
+                            });
+                            jasmine.waitsForFocus(child);
+                            runs(function() {
+                                expect(Ext.dom.Element.getActiveElement()).toBe(child);
+                            });
+                        });
+                    });
                 });
             });
 
@@ -1898,7 +2162,7 @@ describe("Ext.dom.Element", function() {
             // tabIndex of -1 ensures that the iframe is not focusable by the user
             element.enableShim();
 
-            expect(element.shim.el.dom.getAttribute('tabindex')).toBe('-1');
+            expect(element.shim.el.dom.getAttribute('tabIndex')).toBe('-1');
         });
 
         it("should not show the shim if the element is not visible", function() {
@@ -3440,11 +3704,11 @@ describe("Ext.dom.Element", function() {
                     it("should delay the listener", function() {
                         addListener({ delay: 150 });
                         fire();
-                        waits(100);
+                        waits(30);
                         runs(function() {
                             expect(handler).not.toHaveBeenCalled();
                         });
-                        waits(100);
+                        waits(150);
                         runs(function() {
                             expect(handler).toHaveBeenCalled();
                         });

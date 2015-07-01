@@ -1,5 +1,5 @@
 /**
- * Field is the base class for all form fields used in Sencha Touch. It provides a lot of shared functionality to all
+ * Field is the base class for all form fields. It provides a lot of shared functionality to all
  * field subclasses (for example labels, simple validation, {@link #clearIcon clearing} and tab index management), but
  * is rarely used directly. Instead, it is much more common to use one of the field subclasses:
  *
@@ -162,6 +162,8 @@ Ext.define('Ext.field.Field', {
         inputCls: null
     },
 
+    noWrapCls: Ext.baseCSSPrefix + 'form-label-nowrap',
+
     /**
      * @cfg {Boolean} isFocused
      * `true` if this field is currently focused.
@@ -173,7 +175,7 @@ Ext.define('Ext.field.Field', {
 
         return {
             reference: 'element',
-            className: 'x-container',
+            className: Ext.baseCSSPrefix + 'container',
             children: [
                 {
                     reference: 'label',
@@ -260,13 +262,7 @@ Ext.define('Ext.field.Field', {
      * @private
      */
     updateLabelWrap: function(newLabelWrap, oldLabelWrap) {
-        var cls = Ext.baseCSSPrefix + 'form-label-nowrap';
-
-        if (!newLabelWrap) {
-            this.addCls(cls);
-        } else {
-            this.removeCls(cls);
-        }
+        this.toggleCls(this.noWrapCls, !newLabelWrap);
     },
 
     /**
@@ -274,7 +270,7 @@ Ext.define('Ext.field.Field', {
      * @private
      */
     updateRequired: function(newRequired) {
-        this.renderElement[newRequired ? 'addCls' : 'removeCls'](this.getRequiredCls());
+        this.renderElement.toggleCls(this.getRequiredCls(), newRequired);
     },
 
     /**

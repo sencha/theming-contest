@@ -52,18 +52,19 @@ describe('Ext.grid.plugin.BufferedRenderer', function () {
 
     function satisfyRequests(total) {
         var requests = Ext.Ajax.mockGetAllRequests(),
+            empty = total === 0,
             request, params, data;
 
         while (requests.length) {
             request = requests[0];
 
             params = request.options.params;
-            data = getData(params.start, params.limit);
+            data = getData(empty ? 0 : params.start, empty ? 0 : params.limit);
 
             Ext.Ajax.mockComplete({
                 status: 200,
                 responseText: Ext.encode({
-                    total: total || 5000,
+                    total: (total || empty) ? total : 5000,
                     data: data
                 })
             });
@@ -188,6 +189,19 @@ describe('Ext.grid.plugin.BufferedRenderer', function () {
         store = grid = tree = view = plugin = null;
     });
 
+    describe('updateing scroller when changing width', function() {
+        it('should update the horizontal scroll range', function() {
+            makeGrid();
+            var scroller = view.getScrollable(),
+                maxX = scroller.getMaxPosition().x;
+
+            grid.setWidth(grid.getWidth() - 100);
+
+            // The scroll range should have increased
+            expect(scroller.getMaxPosition().x).toBe(maxX + 100);
+        });
+    });
+
     describe('autogenerating the plugin', function () {
         var BR = Ext.grid.plugin.BufferedRenderer;
 
@@ -262,6 +276,70 @@ describe('Ext.grid.plugin.BufferedRenderer', function () {
                     expect(locked).toBe(false);
                     expect(locked instanceof BR).toBe(false);
                 });
+            });
+        });
+    });
+
+    describe("Less data than the computed view size", function() {
+        it("should add new rows at top while scrolled to bottom", function() {
+            var Person = Ext.define(null, {
+                extend: 'Ext.data.Model',
+                fields: ['name'],
+                proxy: {
+                    type: 'ajax',
+                    url: '/foo',
+                    reader: {
+                        rootProperty: 'data'
+                    }
+                }
+            });
+
+            store = new Ext.data.Store({
+                model: Person,
+                data: makeData(12)
+            });
+
+            grid = new Ext.grid.Panel({
+                width: 600,
+                height: 305,
+                store: store,
+                deferRowRender: false,
+                columns: [{
+                    dataIndex: 'id',
+                    renderer: function(v) {
+                        return '<span style="line-height:25px">' + v + '</span>';
+                    },
+                    producesHTML: true
+                }, {
+                    dataIndex: 'name'
+                }],
+                renderTo: Ext.getBody()
+            });
+            view = grid.getView();
+
+            // Wait until known correct condition is met.
+            // Timeout === test failure.
+            waitsFor(function() {
+                if (view.bufferedRenderer.getLastVisibleRowIndex() === store.getCount() - 1) {
+                    view.scrollBy(0, 100);
+                    view.bufferedRenderer.scrollTop = view.getScrollY();
+                    return true;
+                }
+                // Scroll incrementally until the correct starting point is found
+                view.scrollBy(0, 10);
+            });
+
+            runs(function() {
+                store.insert(0, {id: 666, name: 'Old Nick'});
+                view.scrollTo(0, 0);
+                
+                var r0 = view.all.item(0, true);
+
+                // Must have been rendered
+                expect(r0).not.toBeNull();
+
+                // The new row zero must have been rendered.
+                expect((r0.innerText || r0.textContent).replace(/\n/g,'').replace(/\r/g,'')).toBe("666Old Nick");
             });
         });
     });
@@ -1398,7 +1476,8 @@ describe('Ext.grid.plugin.BufferedRenderer', function () {
                 }, {
                     text: 'gender',
                     dataIndex: 'gender'
-                }]
+                }],
+                region: 'center'
             });
 
             var normalView = grid.normalGrid.getView(),
@@ -1416,7 +1495,7 @@ describe('Ext.grid.plugin.BufferedRenderer', function () {
                 if (p) {
                     // Scroll only when the last scroll signal has found both views and caused them to update
                     if (navModel.getCell() && (a === navModel.getCell().dom) && normalRows.startIndex === lockedRows.startIndex) {
-                        jasmine.fireKeyEvent(a, 'keydown', Ext.EventObject.PAGE_DOWN);
+                        jasmine.fireKeyEvent(a, 'keydown', Ext.event.Event.PAGE_DOWN);
                     }
 
                     // Scroll until the end
@@ -1587,7 +1666,7 @@ describe('Ext.grid.plugin.BufferedRenderer', function () {
                     }
                     // Scroll incrementally until the correct end point is found
                     view.scrollBy(0, 20);
-                }, 'row 99 to scroll into view', 10000);
+                }, 'row 99 to scroll into view', Ext.isIE ? 20000 : 10000);
 
                 // Must have invoked the row syncher and the two body heights must be the same
                 runs(function () {
@@ -1603,7 +1682,7 @@ describe('Ext.grid.plugin.BufferedRenderer', function () {
                     }
                     // Scroll in teleporting chunks until the correct end point is found
                     view.scrollBy(0, 1000);
-                }, 'row 990 to scroll into view', 10000);
+                }, 'row 990 to scroll into view', Ext.isIE ? 20000 : 10000);
 
                 // Must have invoked the row syncher and the two body heights must be the same
                 runs(function () {
@@ -1964,6 +2043,246 @@ describe('Ext.grid.plugin.BufferedRenderer', function () {
                 // Unfortunately, we're testing private properties here :(
                 expect(plugin.bodyTop).toBe(0);
                 expect(plugin.position).toBe(0);
+            });
+        });
+    });
+
+    describe("reloading store", function() {
+        describe("from having items to not having items", function() {
+            it("should not cause an error when reloading", function() {
+                var store = new Ext.data.BufferedStore({
+                    fields: ['id'],
+                    autoDestroy: true,
+                    proxy: {
+                        type: 'ajax',
+                        url: '/foo',
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data',
+                            totalProperty: 'total'
+                        }
+                    }
+                });
+
+                makeGrid({
+                    columns: [{
+                        dataIndex: 'name',
+                        width: 100
+                    }]
+                }, {
+                    store: store
+                });
+
+                store.load();
+                satisfyRequests();
+
+                store.reload();
+                satisfyRequests(0);
+
+                expect(view.getNodes()).toEqual([]);
+            });
+
+            it("should show emptyText if specified", function() {
+                var store = new Ext.data.BufferedStore({
+                    fields: ['id'],
+                    autoDestroy: true,
+                    proxy: {
+                        type: 'ajax',
+                        url: '/foo',
+                        reader: {
+                            type: 'json',
+                            rootProperty: 'data',
+                            totalProperty: 'total'
+                        }
+                    }
+                });
+
+                makeGrid({
+                    columns: [{
+                        dataIndex: 'name',
+                        width: 100
+                    }],
+                    emptyText: 'Empty'
+                }, {
+                    store: store
+                });
+
+                store.load();
+                satisfyRequests();
+
+                store.reload();
+                satisfyRequests(0);
+
+                expect(grid.el.down('.' + grid.emptyCls, true)).hasHTML('Empty');
+            });
+        });
+
+        describe('loading the bound store', function () {
+            function testLockable(locked) {
+                makeTree({
+                    columns: [{
+                        xtype: 'treecolumn',
+                        text: 'Tree Column',
+                        width: 300,
+                        locked: locked,
+                        dataIndex: 'task'
+                    }, {
+                        text: 'Task1',
+                        dataIndex: 'task1'
+                    }, {
+                        text: 'Task2',
+                        dataIndex: 'task2'
+                    }, {
+                        text: 'Task3',
+                        dataIndex: 'task3'
+                    }, {
+                        text: 'Task4',
+                        dataIndex: 'task4'
+                    }, {
+                        text: 'Task5',
+                        dataIndex: 'task5'
+                    }],
+                }, 1000);
+            }
+
+            it('should not scroll the view, non-locked grid', function () {
+
+                testLockable(false);
+
+                expect(view.el.dom.scrollTop).toBe(0);
+                store.load();
+                expect(view.el.dom.scrollTop).toBe(0);
+            });
+
+            it('should not scroll the view, locked grid', function () {
+                var lockedView, normalView;
+
+                testLockable(true);
+                lockedViewDom = view.lockedView.el.dom;
+                normalViewDom = view.normalView.el.dom;
+
+                expect(lockedViewDom.scrollTop).toBe(0);
+                expect(normalViewDom.scrollTop).toBe(0);
+                store.load();
+                expect(lockedViewDom.scrollTop).toBe(0);
+                expect(normalViewDom.scrollTop).toBe(0);
+            });
+        });
+    });
+
+    describe('Expanding view size', function() {
+        var window;
+
+        afterEach(function() {
+            window.destroy();
+        });
+
+        it('should scroll to top when view size expands to encapsulate whole dataset', function() {
+            var Person = Ext.define(null, {
+                extend: 'Ext.data.Model',
+                fields: ['name'],
+                proxy: {
+                    type: 'ajax',
+                    url: '/foo',
+                    reader: {
+                        rootProperty: 'data'
+                    }
+                }
+            });
+
+            var store = new Ext.data.Store({
+                model: Person,
+                proxy: {
+                    type: 'memory',
+                    data: makeData(52)
+                }
+            });
+            store.load();
+            var store1 = new Ext.data.Store({
+                model: Person,
+                proxy: {
+                    type: 'memory',
+                    data: makeData(52)
+                }
+            });
+            store1.load();
+
+            var grid = new Ext.grid.Panel({
+                hideMode: 'offsets',
+                title: 'Grid 1',
+                store: store,
+                deferRowRender: false,
+                columns: [{
+                    dataIndex: 'id'
+                }, {
+                    dataIndex: 'name'
+                }]
+            });
+            var grid1 = new Ext.grid.Panel({
+                hideMode: 'offsets',
+                title: 'Grid 2',
+                store: store1,
+                deferRowRender: false,
+                columns: [{
+                    dataIndex: 'id'
+                }, {
+                    dataIndex: 'name'
+                }]
+            });
+
+            window = new Ext.window.Window({
+                title: 'Test',
+                height: 395,
+                width: 800,
+                x: 10,
+                y: 10,
+                autoShow: true,
+                maximizable: true,
+                minimizable: true,
+                constrain: false,
+                layout: 'fit',
+                items: {
+                    xtype: 'tabpanel',
+                    items: [
+                        grid, grid1
+                    ]
+                }
+            });
+            var tabPanel = window.child('tabpanel');
+
+            var view = grid.getView();
+
+            // Scroll all the way to the end
+            waitsFor(function () {
+                view.scrollBy(0, 100);
+                return view.all.endIndex === view.store.getCount() - 1;
+            }, 'scroll to end', 10000);
+
+            runs(function() {
+                view.scrollBy(0, 100);
+
+                tabPanel.setActiveTab(1);
+
+                // inserting at top
+                grid.store.insert(0,{'title': 'hi',replycount:5});
+                grid.store.insert(0,{'title': 'hi2',replycount:5});
+
+                grid1.store.insert(0,{'title': 'hi',replycount:5});
+                grid1.store.insert(0,{'title': 'hi2',replycount:5});
+
+                tabPanel.setActiveTab(0);
+
+                window.setHeight(940);
+            });
+            
+            // Scroll all the way to the start
+            waitsFor(function () {
+                view.scrollBy(0, -100);
+                return view.getScrollY() === 0;;
+            }, 'scroll to top', 10000);
+
+            runs(function() {
+                expect(view.bufferedRenderer.bodyTop).toBe(0);
             });
         });
     });

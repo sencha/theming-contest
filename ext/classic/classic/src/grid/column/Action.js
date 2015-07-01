@@ -3,6 +3,9 @@
  * handler for each icon.
  *
  *     @example
+ *     // Init the singleton.  Any tag-based quick tips will start working.
+ *     Ext.tip.QuickTipManager.init();
+ *
  *     Ext.create('Ext.data.Store', {
  *         storeId:'employeeStore',
  *         fields:['firstname', 'lastname', 'seniority', 'dep', 'hired'],
@@ -287,6 +290,12 @@ Ext.define('Ext.grid.column.Action', {
      * Text to display in this column's menu item if no {@link #text} was specified as a header.
      */
     menuText: '<i>Actions</i>',
+
+    /**
+     * @cfg {Boolean} ignoreExport
+     * @inheritdoc
+     */
+    ignoreExport: true,
 
     sortable: false,
 

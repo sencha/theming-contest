@@ -67,7 +67,8 @@ Ext.define('Ext.util.Floating', {
 
     /**
      * @property {Ext.ZIndexManager} zIndexManager
-     * Only present for {@link Ext.Component#floating floating} Components after they have been rendered.
+     * Only present for {@link Ext.Component#cfg-floating floating} Components after 
+     * they have been rendered.
      *
      * A reference to the ZIndexManager which is managing this Component's z-index.
      *
@@ -80,24 +81,26 @@ Ext.define('Ext.util.Floating', {
      * This defaults to the global {@link Ext.WindowManager ZIndexManager} for floating Components that are
      * programatically {@link Ext.Component#method-render rendered}.
      *
-     * For {@link Ext.Component#floating floating} Components that are added to a
+     * For {@link Ext.Component#cfg-floating floating} Components that are added to a
      * Container, the ZIndexManager is acquired from the first ancestor Container found
      * that is floating. If no floating ancestor is found, the global
      * {@link Ext.WindowManager ZIndexManager} is used.
      *
-     * See {@link Ext.Component#floating} and {@link #zIndexParent}
+     * See {@link Ext.Component#cfg-floating} and {@link #zIndexParent}
      * @readonly
      */
 
     /**
      * @property {Ext.Container} zIndexParent
-     * Only present for {@link Ext.Component#floating} Components which were inserted as child items of Containers, and which have a floating
-     * Container in their containment ancestry.
+     * Only present for {@link Ext.Component#cfg-floating} Components which were 
+     * inserted as child items of Containers, and which have a floating Container in 
+     * their containment ancestry.
      *
-     * For {@link Ext.Component#floating} Components which are child items of a Container, the zIndexParent will be a floating
-     * ancestor Container which is responsible for the base z-index value of all its floating descendants. It provides
-     * a {@link Ext.ZIndexManager ZIndexManager} which provides z-indexing services for all its descendant floating
-     * Components.
+     * For {@link Ext.Component#cfg-floating} Components which are child items of a 
+     * Container, the zIndexParent will be a floating ancestor Container which is 
+     * responsible for the base z-index value of all its floating descendants. It 
+     * provides a {@link Ext.ZIndexManager ZIndexManager} which provides z-indexing 
+     * services for all its descendant floating Components.
      *
      * Floating Components that are programmatically {@link Ext.Component#method-render rendered} will not have a `zIndexParent`
      * property.
@@ -105,7 +108,7 @@ Ext.define('Ext.util.Floating', {
      * For example, the dropdown {@link Ext.view.BoundList BoundList} of a ComboBox which is in a Window will have the
      * Window as its `zIndexParent`, and will always show above that Window, wherever the Window is placed in the z-index stack.
      *
-     * See {@link Ext.Component#floating} and {@link #zIndexManager}
+     * See {@link Ext.Component#cfg-floating} and {@link #zIndexManager}
      * @readonly
      */
 
@@ -162,12 +165,6 @@ Ext.define('Ext.util.Floating', {
         }
 
         el.setVisibilityMode(me._visModeMap[me.hideMode]);
-
-        // If modal, and focus navigation not being handled by the FocusManager,
-        // catch tab navigation, and loop back in on tab off first or last item.
-        if (me.modal && !(Ext.enableFocusManager)) {
-            me.el.on('keydown', me.onKeyDown, me);
-        }
 
         // mousedown brings to front
         // Use capture to see the event first before any contained DD instance stop the event.
@@ -255,42 +252,6 @@ Ext.define('Ext.util.Floating', {
             zip.registerFloatingItem(me);
         } else {
             Ext.WindowManager.register(me);
-        }
-    },
-
-    // Listen for TAB events and wrap round if tabbing of either end of the Floater
-    onKeyDown: function(e) {
-        var me = this,
-            shift,
-            focusables,
-            first,
-            last;
-
-        // If tabbing off either end, wrap round.
-        // See Ext.dom.Element.isFocusable
-        // Certain browsers always report tabIndex zero in the absence of the tabIndex attribute.
-        // Testing the specified property (Standards: http://www.w3.org/TR/DOM-Level-2-Core/core.html#ID-862529273)
-        // Should filter out these cases.
-        // The exception is IE8. In this browser, all elements will yield a tabIndex
-        // and therefore all elements will appear to be focusable.
-        // This adversely affects modal Floating components.
-        // These listen for the TAB key, and then test whether the event target === last focusable
-        // or first focusable element, and forcibly to a circular navigation.
-        // We cannot know the true first or last focusable element, so this problem still exists for IE8
-        if (e.getKey() === e.TAB) {
-            shift = e.shiftKey;
-            focusables = me.query(':focusable');
-            if (focusables.length) {
-                first = focusables[0];
-                last = focusables[focusables.length - 1];
-                if (!shift && last.hasFocus) {
-                    e.stopEvent();
-                    first.focus();
-                } else if (shift && first.hasFocus) {
-                    e.stopEvent();
-                    last.focus();
-                }
-            }
         }
     },
 

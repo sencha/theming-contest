@@ -165,7 +165,7 @@ Ext.define('Ext.grid.CellContext', {
      * the cell referenced may be removed from the DOM due to paging or buffered rendering or column or record removal.
      *
      * @param {Boolean} returnDom Pass `true` to return a DOM object instead of an {@link Ext.dom.Element Element).
-     * @return {HtmlElement/Ext.dom.Element} The cell referenced by this context.
+     * @return {HTMLElement/Ext.dom.Element} The cell referenced by this context.
      */
     getCell: function(returnDom) {
         return this.view.getCellByPosition(this, returnDom);
@@ -176,7 +176,7 @@ Ext.define('Ext.grid.CellContext', {
      * the row referenced may be removed from the DOM due to paging or buffered rendering or column or record removal.
      *
      * @param {Boolean} returnDom Pass `true` to return a DOM object instead of an {@link Ext.dom.Element Element).
-     * @return {HtmlElement/Ext.dom.Element} The grid row referenced by this context.
+     * @return {HTMLElement/Ext.dom.Element} The grid row referenced by this context.
      */
     getRow: function(returnDom) {
         var result = this.view.getRow(this.record);
@@ -189,7 +189,7 @@ Ext.define('Ext.grid.CellContext', {
      * to paging or buffered rendering or column or record removal.
      *
      * @param {Boolean} returnDom Pass `true` to return a DOM object instead of an {@link Ext.dom.Element Element).
-     * @return {HtmlElement/Ext.dom.Element} The grid item referenced by this context.
+     * @return {HTMLElement/Ext.dom.Element} The grid item referenced by this context.
      */
     getNode: function(returnDom) {
         var result = this.view.getNode(this.record);
@@ -220,6 +220,68 @@ Ext.define('Ext.grid.CellContext', {
         result.record = me.record;
         result.column = me.column;
         return result;
+    },
+
+    privates: {
+        isFirstColumn: function() {
+            var cell = this.getCell(true);
+
+            if (cell) {
+                return !cell.previousSibling;
+            }
+        },
+
+        isLastColumn: function() {
+            var cell = this.getCell(true);
+
+            if (cell) {
+                return !cell.nextSibling;
+            }
+        },
+
+        getLastColumnIndex: function() {
+            var row = this.getRow(true);
+
+            if (row) {
+                return row.lastChild.cellIndex;
+            }
+            return -1;
+        },
+
+        /**
+         * @private
+         * Navigates left or right within the current row.
+         * @param {Number} direction `-1` to go towards the row start or `1` to go towards row end
+         */
+        navigate: function(direction) {
+            var me = this,
+                columns = me.view.getVisibleColumnManager().getColumns();
+
+            switch (direction) {
+                case -1:
+                    do {
+                        // If we iterate off the start, wrap back to the end.
+                        if (!me.colIdx) {
+                            me.colIdx = columns.length - 1;
+                        } else {
+                            me.colIdx--;
+                        }
+                        me.setColumn(me.colIdx);
+                    } while (!me.getCell(true))
+                    break;
+                case 1:
+                    do {
+                        // If we iterate off the end, wrap back to the start.
+                        if (me.colIdx >= columns.length) {
+                            me.colIdx = 0;
+                        } else {
+                            me.colIdx++;
+                        }
+                        me.setColumn(me.colIdx);
+                    } while (!me.getCell(true))
+                    break;
+            }
+        }
     },
 
     statics: {

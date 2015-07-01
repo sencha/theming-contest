@@ -118,7 +118,7 @@ Ext.define('Ext.grid.feature.Summary', {
             priority: 300,
 
             beginRowSync: function (rowSync) {
-                rowSync.add('fullSummary', this.summaryRowSelector);
+                rowSync.add('fullSummary', this.summaryFeature.summaryRowSelector);
             },
 
             syncContent: function(destRow, sourceRow, columnsToUpdate) {
@@ -132,13 +132,10 @@ Ext.define('Ext.grid.feature.Summary', {
                 // Sync just the updated columns in the summary row.
                 if (destSummaryRow && sourceSummaryRow) {
 
-                    // If we were passed a column set, only update them
+                    // If we were passed a column set, only update those, otherwise do the entire row
                     if (columnsToUpdate) {
                         this.summaryFeature.view.updateColumns(destSummaryRow, sourceSummaryRow, columnsToUpdate);
-                    }
-
-                    // Else simply sync the content
-                    else {
+                    } else {
                         Ext.fly(destSummaryRow).syncContent(sourceSummaryRow);
                     }
                 }
@@ -219,7 +216,7 @@ Ext.define('Ext.grid.feature.Summary', {
             }
         }
 
-        grid.on({
+        grid.ownerGrid.on({
             beforereconfigure: me.onBeforeReconfigure,
             columnmove: me.onStoreUpdate,
             scope: me
@@ -229,6 +226,7 @@ Ext.define('Ext.grid.feature.Summary', {
 
     onBeforeReconfigure: function(grid, store) {
         this.summaryRecord = null;
+        
         if (store) {
             this.bindStore(grid, store);
         }
@@ -244,6 +242,8 @@ Ext.define('Ext.grid.feature.Summary', {
             update: me.onStoreUpdate,
             datachanged: me.onStoreUpdate
         });
+        
+        me.callParent([grid, store]);
     },
 
     renderSummaryRow: function(values, out, parent) {
@@ -321,9 +321,14 @@ Ext.define('Ext.grid.feature.Summary', {
         // Set the summary field values
         summaryRecord.beginEdit();
 
-        if (remoteRoot && view.store.proxy.reader.rawData) {
-            summaryRecord.set(me.generateSummaryData());
-        } else if (!remoteRoot) {
+        if (remoteRoot) {
+            summaryValue = me.generateSummaryData();
+            
+            if (summaryValue) {
+                summaryRecord.set(summaryValue);
+            }
+        }
+        else {
             for (i = 0; i < colCount; i++) {
                 column = columns[i];
 

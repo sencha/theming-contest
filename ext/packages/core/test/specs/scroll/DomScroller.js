@@ -229,6 +229,70 @@ describe("Ext.scroll.DomScroller", function() {
         });
     });
 
+    describe("setSize", function() {
+        it("should set the size", function() {
+            makeScroller();
+            scroller.setSize({
+                x: 300,
+                y: 200
+            });
+
+            expect(scroller.getSize()).toEqual({
+                x: 300,
+                y: 200
+            });
+        });
+
+        it("should unset the size", function() {
+            makeScroller();
+            scroller.setSize({
+                x: 300,
+                y: 200
+            });
+
+            scroller.setSize(null);
+
+            expect(scroller.getSize()).toEqual({
+                x: 100,
+                y: 100
+            });
+        });
+
+        it("should set the size on both axes to a single number", function() {
+            makeScroller();
+            scroller.setSize(200);
+
+            expect(scroller.getSize()).toEqual({
+                x: 200,
+                y: 200
+            });
+        });
+
+        it("should set the x size", function() {
+            makeScroller();
+            scroller.setSize({
+                x: 200
+            });
+
+            expect(scroller.getSize()).toEqual({
+                x: 200,
+                y: 100 - Ext.getScrollbarSize().height
+            });
+        });
+
+        it("should set the y size", function() {
+            makeScroller();
+            scroller.setSize({
+                y: 200
+            });
+
+            expect(scroller.getSize()).toEqual({
+                x: 100 - Ext.getScrollbarSize().width,
+                y: 200
+            });
+        });
+    });
+
     describe("getClientSize", function() {
         beforeEach(function() {
             el.destroy();

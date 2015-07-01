@@ -49,6 +49,7 @@ Ext.define('Ext.slider.Thumb', {
         me.callParent();
 
         me.getDraggable().onBefore({
+            beforedragstart: 'onBeforeDragStart',
             dragstart: 'onDragStart',
             drag: 'onDrag',
             dragend: 'onDragEnd',
@@ -62,20 +63,6 @@ Ext.define('Ext.slider.Thumb', {
         });
 
         me.element.on('resize', 'onElementResize', me);
-    },
-
-    getTemplate: function() {
-        if(Ext.theme.is.Blackberry) {
-            return [
-                {
-                    tag: 'div',
-                    className: Ext.baseCSSPrefix + 'thumb-inner',
-                    reference: 'innerElement'
-                }
-            ]
-        } else {
-            return this.template;
-        }
     },
 
 
@@ -119,11 +106,15 @@ Ext.define('Ext.slider.Thumb', {
         }
     },
 
-    onDragStart: function(draggable, e, x, y) {
+    onBeforeDragStart: function(draggable, e, x, y) {
         if (this.isDisabled()) {
             return false;
         }
 
+        return this.fireEvent('beforedragstart', this, e, x, y);
+    },
+
+    onDragStart: function(draggable, e, x, y) {
         this.fireEvent('dragstart', this, e, x, y);
     },
 

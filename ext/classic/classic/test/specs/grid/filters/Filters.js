@@ -27,7 +27,7 @@ describe('Ext.grid.filters.Filters', function () {
         // Note: lower the updateBuffer (defaults to 500ms) which is what determines the delay between onStateChange
         // being called and reload, which removes/adds store filters and sends a request for remote filtering.
         filtersPlugin = new Ext.grid.filters.Filters({
-            updateBuffer: 1
+            updateBuffer: 0
         });
 
         grid = new Ext.grid.Panel(Ext.apply({

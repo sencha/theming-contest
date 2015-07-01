@@ -361,8 +361,11 @@ Ext.define('Ext.mixin.Observable', function(Observable) {
 
             if (me.$applyConfigs) {
                 // Ext.util.Observable applies config properties directly to the instance
-                Ext.apply(me, config);
-            } else {
+                if (config) {
+                    Ext.apply(me, config);
+                }
+            }
+            else {
                 // Ext.mixin.Observable uses the config system
                 me.initConfig(config);
             }
@@ -662,6 +665,50 @@ Ext.define('Ext.mixin.Observable', function(Observable) {
             this.fireEventArgs(eventName, args);
         },
 
+        $eventedController: {
+            _paused: 1,
+
+            pause: function () {
+                ++this._paused;
+            },
+
+            resume: function () {
+                var me = this,
+                    fn = me.fn,
+                    scope = me.scope,
+                    fnArgs = me.fnArgs,
+                    owner = me.owner,
+                    args, ret;
+
+                if (! --me._paused) {
+                    if (fn) {
+                        args = Ext.Array.slice(fnArgs || me.args);
+                        if (fnArgs === false) {
+                            // Passing false will remove the first item (typically the owner)
+                            args.shift();
+                        }
+
+                        me.fn = null; // only call fn once
+                        args.push(me);
+
+                        if (Ext.isFunction(fn)) {
+                            ret = fn.apply(scope, args);
+                        } else if (scope && Ext.isString(fn) && Ext.isFunction(scope[fn])) {
+                            ret = scope[fn].apply(scope, args);
+                        }
+
+                        if (ret === false) {
+                            return false;
+                        }
+                    }
+
+                    if (!me._paused) {  // fn could have paused us
+                        return me.owner.fireEventArgs(me.eventName, me.args);
+                    }
+                }
+            }
+        },
+
         /**
          * Fires the specified event with the passed parameters and executes a function (action).
          * Evented Actions will automatically dispatch a 'before' event passing. This event will
@@ -675,41 +722,32 @@ Ext.define('Ext.mixin.Observable', function(Observable) {
          * @param {Function/String} fn The action function.
          * @param {Object} [scope] The scope (`this` reference) in which the handler function is
          * executed. **If omitted, defaults to the object which fired the event.**
-         * @param {Array} fnArgs
+         * @param {Array/Boolean} [fnArgs] Optional arguments for the action `fn`. If not
+         * given, the normal `args` will be used to call `fn`. If `false` is passed, the
+         * `args` are used but if the first argument is this instance it will be removed
+         * from the args passed to the action function.
          */
-        fireEventedAction: function(eventName, args, fn, scope, fnArgs) {
+        fireEventedAction: function (eventName, args, fn, scope, fnArgs) {
             var me = this,
-                beforeEventName  = me.eventedBeforeEventNames[eventName] || (me.eventedBeforeEventNames[eventName] = 'before' + eventName),
-                controller = {
-                    _paused: false,
-                    pause: function() {
-                        this._paused = true;
-                    },
-                    resume: function() {
-                        this._paused = false;
-
-                        if (fn) {
-                            if (Ext.isFunction(fn)) {
-                                fn.apply(scope, fnArgs);
-                            } else if (Ext.isString(fn) && scope && Ext.isFunction(scope[fn])) {
-                                scope[fn].apply(scope, fnArgs);
-                            }
-                        }
-
-                        return me.fireEventArgs(eventName, args);
-                    }
-                },
+                eventedBeforeEventNames = me.eventedBeforeEventNames,
+                beforeEventName  = eventedBeforeEventNames[eventName] ||
+                        (eventedBeforeEventNames[eventName] = 'before' + eventName),
+                controller = Ext.apply({
+                        owner: me,
+                        eventName: eventName,
+                        fn: fn,
+                        scope: scope,
+                        fnArgs: fnArgs,
+                        args: args
+                    }, me.$eventedController),
                 value;
 
             args.push(controller);
-            value = this.fireEventArgs(beforeEventName, args);
+            value = me.fireEventArgs(beforeEventName, args);
             args.pop();
+
             if (value === false) {
                 return false;
-            }
-
-            if (controller._paused) {
-                return;
             }
 
             return controller.resume();
@@ -1226,6 +1264,8 @@ Ext.define('Ext.mixin.Observable', function(Observable) {
                         }
                     }
                 }
+                
+                me.events = null;
             }
 
             me.clearManagedListeners();
@@ -1419,7 +1459,12 @@ Ext.define('Ext.mixin.Observable', function(Observable) {
         * will be the controller rather than the grid).
         *
         * @param {Object} origin The Observable whose events this object is to relay.
-        * @param {String[]} events Array of event names to relay.
+        * @param {String[]/Object} events Array of event names to relay or an Object with key/value
+        * pairs translating to ActualEventName/NewEventName respectively. For example:
+        *     this.relayEvents(this, {add:'push', remove:'pop'});
+        *
+        * Would now redispatch the add event of this as a push event and the remove event as a pop event.
+        *
         * @param {String} [prefix] A common prefix to prepend to the event names. For example:
         *
         *     this.relayEvents(this.getStore(), ['load', 'clear'], 'store');
@@ -1441,14 +1486,21 @@ Ext.define('Ext.mixin.Observable', function(Observable) {
             var me = this,
                 len = events.length,
                 i = 0,
-                oldName,
+                oldName, newName,
                 relayers = {};
 
-            for (; i < len; i++) {
-                oldName = events[i];
+            if(Ext.isObject(events)) {
+                for (i in events) {
+                    newName = events[i];
+                    relayers[i] = me.createRelayer(newName);
+                }
+            } else {
+                for (; i < len; i++) {
+                    oldName = events[i];
 
-                // Build up the listener hash.
-                relayers[oldName] = me.createRelayer(prefix ? prefix + oldName : oldName);
+                    // Build up the listener hash.
+                    relayers[oldName] = me.createRelayer(prefix ? prefix + oldName : oldName);
+                }
             }
             // Add the relaying listeners as ManagedListeners so that they are removed when this.clearListeners is called (usually when _this_ is destroyed)
             // Explicitly pass options as undefined so that the listener does not get an extra options param

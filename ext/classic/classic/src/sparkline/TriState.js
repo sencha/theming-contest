@@ -50,13 +50,13 @@ Ext.define('Ext.sparkline.TriState', {
          * For example, to render green bars on all values less than -1 and red on values
          * higher than 1, you would use:
          *
-         *    colorMap: {
-         *        // Open ended range, with max value -1
-         *        ":-1": "green",
+         *     colorMap: {
+         *         // Open ended range, with max value -1
+         *         ":-1": "green",
          *
-         *        // Open ended range, with min value 1
-         *        "1:": "red"
-         *    }
+         *         // Open ended range, with min value 1
+         *         "1:": "red"
+         *     }
          */
         colorMap: {},
         

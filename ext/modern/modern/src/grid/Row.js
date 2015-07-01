@@ -1,24 +1,35 @@
 /**
- * Description
+ * This class is created by a {@link Ext.grid.Grid grid} to manage each record. Rows act
+ * as containers for {@link Ext.grid.cell.Base cells}.
+ *
+ * Row does not extend {@link Ext.Container} to keep overhead to a minimum. Application
+ * code should not need to create instances of this class directly. Rows are created by
+ * the {@link Ext.dataview.List} base as configured by {@link Ext.grid.Grid}.
  */
 Ext.define('Ext.grid.Row', {
     extend: 'Ext.Component',
     xtype: 'gridrow',
 
+    requires: [
+        'Ext.grid.cell.Cell'
+    ],
+
     config: {
         baseCls: Ext.baseCSSPrefix + 'grid-row',
+
         header: {
             xtype: 'component',
             cls: 'x-grid-header',
             html: ' '
         },
+
         grid: null
     },
 
-    constructor: function() {
+    constructor: function(config) {
         this.cells = [];
         this.columnMap = {};
-        this.callParent(arguments);
+        this.callParent([config]);
     },
 
     applyHeader: function(header) {
@@ -38,9 +49,6 @@ Ext.define('Ext.grid.Row', {
         var me = this,
             i, columns, ln;
 
-        me.element.innerHTML = '';
-        me.cells = [];
-
         if (grid) {
             columns = grid.getColumns();
             for (i = 0, ln = columns.length; i < ln; i++) {
@@ -54,96 +62,83 @@ Ext.define('Ext.grid.Row', {
     },
 
     insertColumn: function(index, column) {
-        if (this.getCellByColumn(column)) {
-            return;
-        }
-
         var me = this,
-            element = me.element,
             cells = me.cells,
-            columnMap = me.columnMap,
-            cell = me.createCell(index),
-            beforeCell = me.cells[index],
-            cellCls = column.getCellCls(),
-            cellEl = Ext.get(cell),
-            record = this.getRecord(),
-            cls = [];
+            cell = me.createCell(column);
 
-        cell.$column = column;
-        cell.style.width = column.getWidth() + 'px';
-
-        if (column.isHidden()) {
-            cell.style.display = 'none';
-        }
-
-        cls.push(Ext.baseCSSPrefix + 'grid-cell-align-' + column.getAlign());
-        if (cellCls) {
-            cls.push(cellCls);
-        }
-        cellEl.addCls(cls);
-
-        if (record) {
-            column.updateCell(cell, record);
-        }
-
-        if (beforeCell) {
-            element.dom.insertBefore(cell, beforeCell);
-            cells.splice(index, 0, cell);
-        } else {
-            element.dom.appendChild(cell);
+        if (index === cells.length) {
+            me.element.appendChild(cell.element);
             cells.push(cell);
+        } else {
+            cell.element.insertBefore(cells[index].element);
+            cells.splice(index, 0, cell);
         }
 
-        columnMap[column.getId()] = cell;
+        me.columnMap[column.getId()] = cell;
+    },
+
+    moveColumn: function(column, fromIdx, toIdx) {
+        var cells = this.cells,
+            cell = cells[fromIdx];
+
+        Ext.Array.move(cells, fromIdx, toIdx);
+        if (toIdx === cells.length - 1) {
+            this.element.appendChild(cell.element);
+        } else {
+            cell.element.insertBefore(cells[toIdx + 1].element);
+        }
     },
 
     removeColumn: function(column) {
         var me = this,
             columnMap = me.columnMap,
-            element = me.element,
             columnId = column.getId(),
             cell = columnMap[columnId];
 
-        delete cell.$column;
         if (cell) {
-            element.removeChild(cell);
+            Ext.Array.remove(me.cells, cell);
+            delete columnMap[columnId];
+            cell.destroy();
         }
-
-        Ext.Array.remove(me.cells, cell);
-        delete columnMap[columnId];
     },
 
     updateRecord: function(record) {
-        var me = this,
-            cells = me.cells,
-            i, ln, cell, column;
+        if (!record) {
+            return;
+        }
 
-        for (i = 0, ln = cells.length; i < ln; i++) {
+        var cells = this.cells,
+            len = cells.length,
+            i, cell, vm;
+
+        for (i = 0; i < len; ++i) {
             cell = cells[i];
-            column = me.getColumnByCell(cell);
-            column.updateCell(cell, record);
+            if (cell.getRecord() === record) {
+                cell.updateRecord(record);
+            } else {
+                cell.setRecord(record);
+            }
+        }
+
+        vm = this.getViewModel();
+        if (vm) {
+            vm.set('record', record);
         }
     },
 
     setColumnWidth: function(column, width) {
         var cell = this.getCellByColumn(column);
         if (cell) {
-            cell.style.width = width + 'px';
+            cell.setWidth(width);
         }
     },
 
     showColumn: function(column) {
-        var cell = this.getCellByColumn(column);
-        if (cell) {
-            cell.style.display = '';
-        }
+        this.setCellHidden(column, false);
     },
 
     hideColumn: function(column) {
-        var cell = this.getCellByColumn(column);
-        if (cell) {
-            cell.style.display = 'none';
-        }
+        this.setCellHidden(column, true);
     },
 
     getCellByColumn: function(column) {
@@ -151,35 +146,50 @@ Ext.define('Ext.grid.Row', {
     },
 
     getColumnByCell: function(cell) {
-        return cell.$column;
+        return cell.getColumn();
     },
 
-    createCell: function() {
-        var prototype = this.self.prototype,
-            renderTemplate, elements, element, i, ln;
+    destroy: function() {
+        var me = this,
+            cells = me.cells,
+            len = cells.length,
+            i;
 
-        if (!prototype.hasOwnProperty('cellRenderTemplate')) {
-            prototype.cellRenderTemplate = renderTemplate = document.createDocumentFragment();
-            renderTemplate.appendChild(Ext.Element.create(this.getCellElementConfig(), true));
-
-            elements = renderTemplate.querySelectorAll('[id]');
-
-            for (i = 0, ln = elements.length; i < ln; i++) {
-                element = elements[i];
-                element.removeAttribute('id');
-            }
+        for (i = 0; i < len; ++i) {
+            cells[i].destroy();
         }
 
-        return prototype.cellRenderTemplate.cloneNode(true).firstChild;
+        me.cells = null;
+        me.setRecord(null);
+        me.callParent();
     },
 
-    getCellElementConfig: function() {
-        var config = {
-                tag: 'div',
-                cls: Ext.baseCSSPrefix + 'grid-cell',
-                html: '&nbsp;'
-            };
+    privates: {
+        createCell: function(column) {
+            var cell = this.getCellCfg(column);
 
-        return config;
+            cell.$initParent = this;
+            cell = Ext.create(cell);
+            delete cell.$initParent;
+
+            return cell;
+        },
+
+        getCellCfg: function(column) {
+            return Ext.apply({
+                parent: this,
+                column: column,
+                record: this.getRecord(),
+                hidden: column.getHidden(),
+                width: column.getWidth()
+            }, column.getCell());
+        },
+
+        setCellHidden: function(column, hidden) {
+            var cell = this.getCellByColumn(column);
+            if (cell) {
+                cell.setHidden(hidden);
+            }
+        }
     }
 });

@@ -88,7 +88,9 @@ describe('Ext.grid.plugin.RowEditing', function () {
             // Second click - the dblclick - should not edit being on a focusable widget
             jasmine.fireMouseEvent(cell.firstChild.firstChild, 'dblclick');
 
-            expect(store.getCount()).toBe(storeCount - 1);
+            // Some browsers process the first and second click separately and will delete two rows.
+            // So just check that the store size has been reduced.
+            expect(store.getCount()).toBeLessThan(storeCount);
 
             // Editing should never start; flag should be undefined/falsy
             expect(plugin.editing).not.toBe(true);
@@ -394,18 +396,8 @@ describe('Ext.grid.plugin.RowEditing', function () {
                 {header: 'Email', dataIndex: 'email', width: 100, editor: true},
                 {header: 'Phone', dataIndex: 'phone', width: 100, editor: true}
             ],
-            plugins: null,
-            lockedGridConfig: {
-                plugins: {
-                    pluginId: 'lockedPlugin',
-                    ptype: 'rowediting'
-                }
-            },
-            normalGridConfig: {
-                plugins: {
-                    pluginId: 'normalPlugin',
-                    ptype: 'rowediting'
-                }
+            plugins: {
+                ptype: 'rowediting'
             }
         },
         node;
@@ -423,7 +415,7 @@ describe('Ext.grid.plugin.RowEditing', function () {
 
             jasmine.fireMouseEvent(Ext.fly(node).down('.x-grid-cell-inner', true), 'dblclick');
 
-            plugin = grid.lockedGrid.getPlugin('lockedPlugin');
+            plugin = grid.findPlugin('rowediting');
 
             expect(plugin.editor !== null).toBe(true);
             expect(plugin.editing).toBe(true);
@@ -434,7 +426,7 @@ describe('Ext.grid.plugin.RowEditing', function () {
 
             jasmine.fireMouseEvent(Ext.fly(node).down('.x-grid-cell-inner', true), 'dblclick');
 
-            plugin = grid.normalGrid.getPlugin('normalPlugin');
+            plugin = grid.findPlugin('rowediting');
 
             expect(plugin.editor !== null).toBe(true);
             expect(plugin.editing).toBe(true);

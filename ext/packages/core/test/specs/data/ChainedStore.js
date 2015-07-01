@@ -54,6 +54,7 @@ describe("Ext.data.ChainedStore", function() {
     }
     
     beforeEach(function() {
+        Ext.data.Model.schema.setNamespace('spec');
         MockAjaxManager.addMethods();
         edRaw = {name: 'Ed Spencer',   email: 'ed@sencha.com',    evilness: 100, group: 'code',  old: false, age: 25, valid: 'yes'};
         abeRaw = {name: 'Abe Elias',    email: 'abe@sencha.com',   evilness: 70,  group: 'admin', old: false, age: 20, valid: 'yes'};
@@ -88,6 +89,7 @@ describe("Ext.data.ChainedStore", function() {
         }
         store.destroy();
         User = source = store = null;
+        Ext.data.Model.schema.clear(true);
     });
     
     describe("constructing", function() {
@@ -149,6 +151,181 @@ describe("Ext.data.ChainedStore", function() {
         var joined = edRec.joined;
         expect(joined.length).toBe(1);
         expect(joined[0]).toBe(source);
+    });
+
+    describe("getting records", function() {
+        beforeEach(function() {
+            createStore();
+            addSourceData();
+        });
+        
+        describe("first", function() {
+            it("should return the first record", function() {
+                expect(store.first()).toBe(edRec);
+            });
+
+            it("should return the record if there is only 1", function() {
+                store.remove([edRec, abeRec, tommyRec]);
+                expect(store.first()).toBe(aaronRec);
+            });
+            
+            it("should return null with an empty store", function() {
+                store.removeAll();
+                expect(store.first()).toBeNull();
+            });
+
+            it("should be affected by filters", function() {
+                store.getFilters().add({
+                    property: 'group',
+                    value: 'admin'
+                });
+                expect(store.first()).toBe(abeRec);
+            });
+        });
+        
+        describe("last", function() {
+            it("should return the last record", function() {
+                expect(store.last()).toBe(tommyRec);
+            });
+
+            it("should return the record if there is only 1", function() {
+                store.remove([edRec, abeRec, tommyRec]);
+                expect(store.last()).toBe(aaronRec);
+            });
+            
+            it("should return null with an empty store", function() {
+                store.removeAll();
+                expect(store.last()).toBeNull();
+            });
+
+            it("should be affected by filters", function() {
+                store.getFilters().add({
+                    property: 'group',
+                    value: 'admin'
+                });
+                expect(store.last()).toBe(aaronRec);
+            });
+        });
+        
+        describe("getAt", function() {
+            it("should return the record at the specified index", function() {
+                expect(store.getAt(1)).toBe(abeRec);
+            });
+            
+            it("should return null when the index is outside the store bounds", function() {
+                expect(store.getAt(100)).toBe(null);
+            });
+            
+            it("should return null when the store is empty", function() {
+                store.removeAll();
+                expect(store.getAt(0)).toBe(null);
+            });
+        });
+        
+        describe("getById", function() {
+            it("should return the record with the matching id", function() {
+                expect(store.getById('tommy@sencha.com')).toBe(tommyRec);
+            });
+            
+            it("should return null if a matching id is not found", function() {
+                expect(store.getById('foo@sencha.com')).toBe(null);
+            });
+            
+            it("should return null when the store is empty", function() {
+                store.removeAll();
+                expect(store.getById('ed@sencha.com')).toBe(null);
+            });
+            
+            it("should ignore filters", function() {
+                store.filter('email', 'ed@sencha.com');
+                expect(store.getById('aaron@sencha.com')).toBe(aaronRec);
+            });
+        });
+        
+        describe("getByInternalId", function() {
+            it("should return the record with the matching id", function() {
+                expect(store.getByInternalId(tommyRec.internalId)).toBe(tommyRec);
+            });
+            
+            it("should return null if a matching id is not found", function() {
+                expect(store.getByInternalId('foo@sencha.com')).toBe(null);
+            });
+            
+            it("should return null when the store is empty", function() {
+                store.removeAll();
+                expect(store.getByInternalId('ed@sencha.com')).toBe(null);
+            });
+            
+            it("should ignore filters", function() {
+                store.filter('email', 'ed@sencha.com');
+                expect(store.getByInternalId(aaronRec.internalId)).toBe(aaronRec);
+            });
+
+            it("should work correctly if not called before filtering", function() {
+                store.filter('email', 'ed@sencha.com');
+                expect(store.getByInternalId(aaronRec.internalId)).toBe(aaronRec);
+            });
+
+            it("should work correctly if called before & after filtering", function() {
+                expect(store.getByInternalId(aaronRec.internalId)).toBe(aaronRec);
+                store.filter('email', 'ed@sencha.com');
+                expect(store.getByInternalId(aaronRec.internalId)).toBe(aaronRec);
+            });
+        });
+        
+        describe("getRange", function() {
+            it("should default to the full store range", function() {
+                expect(store.getRange()).toEqual([edRec, abeRec, aaronRec, tommyRec]);
+            });
+            
+            it("should return from the start index", function() {
+                expect(store.getRange(2)).toEqual([aaronRec, tommyRec]);
+            });
+            
+            it("should use the end index, and include it", function() {
+                expect(store.getRange(0, 2)).toEqual([edRec, abeRec, aaronRec]);
+            });
+            
+            it("should ignore an end index greater than the store range", function() {
+                expect(store.getRange(1, 100)).toEqual([abeRec, aaronRec, tommyRec]);
+            });
+        });
+
+        describe("query", function() {
+            var coders,
+                slackers;
+
+            it("should return records with group: 'coder'", function() {
+                coders = store.query('group', 'code');
+                expect(coders.length).toBe(2);
+                expect(coders.contains(edRec)).toBe(true);
+                expect(coders.contains(tommyRec)).toBe(true);
+                expect(coders.contains(aaronRec)).toBe(false);
+                expect(coders.contains(abeRec)).toBe(false);
+            });
+            
+            it("should return null if a matching id is not found", function() {
+                slackers = store.query('group', 'slackers');
+                expect(slackers.length).toBe(0);
+            });
+            
+            it("should return null when the store is empty", function() {
+                store.removeAll();
+                coders = store.query('group', 'code');
+                expect(coders.length).toBe(0);
+            });
+            
+            it("should ignore filters", function() {
+                store.filter('email', 'ed@sencha.com');
+                expect(store.getCount()).toBe(1);
+                coders = store.query('group', 'code');
+                expect(coders.length).toBe(2);
+                expect(coders.contains(edRec)).toBe(true);
+                expect(coders.contains(tommyRec)).toBe(true);
+                expect(coders.contains(aaronRec)).toBe(false);
+                expect(coders.contains(abeRec)).toBe(false);
+            });
+        });        
     });
 
     describe("sorting", function() {
@@ -1350,4 +1527,53 @@ describe("Ext.data.ChainedStore", function() {
             });
         });
     });   
+
+    describe("misc", function() {
+        it("should allow adding when chained to an associated store and the chained store is sorted", function() {
+            var Order = Ext.define('spec.Order', {
+                extend: 'Ext.data.Model',
+                fields: ['id']
+            });
+
+            var OrderItem = Ext.define('spec.OrderItem', {
+                extend: 'Ext.data.Model',
+                fields: ['id', {
+                    name: 'orderId',
+                    reference: 'Order'
+                }]
+            });
+
+            var orders = new Ext.data.Store({
+                model: Order
+            });
+
+            orders.loadRawData([{
+                id: 1,
+                orderItems: [{
+                    id: 1,
+                    orderId: 1
+                }, {
+                    id: 3,
+                    orderId: 1
+                }]
+            }]);
+
+            source = orders.first().orderItems();
+
+            createStore({
+                sorters: ['id']
+            });
+
+            var rec = source.add({
+                id: 2
+            })[0];
+
+            expect(store.getAt(0)).toBe(source.getById(1));
+            expect(store.getAt(1)).toBe(source.getById(2));
+            expect(store.getAt(2)).toBe(source.getById(3));
+
+            Ext.undefine('spec.Order');
+            Ext.undefine('spec.OrderItem');
+        });
+    });
 });

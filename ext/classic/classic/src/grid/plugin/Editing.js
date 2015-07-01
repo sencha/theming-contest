@@ -160,7 +160,8 @@ Ext.define('Ext.grid.plugin.Editing', {
 
     // @private
     init: function(grid) {
-        var me = this;
+        var me = this,
+            ownerLockable = grid.ownerLockable;
 
         me.grid = grid;
         me.view = grid.view;
@@ -182,11 +183,11 @@ Ext.define('Ext.grid.plugin.Editing', {
             });
         }
 
-        grid.relayEvents(me, me.relayedEvents);
+        grid.editorEventRelayers = grid.relayEvents(me, me.relayedEvents);
 
         // If the editable grid is owned by a lockable, relay up another level.
-        if (me.grid.ownerLockable) {
-            me.grid.ownerLockable.relayEvents(me, me.relayedEvents);
+        if (ownerLockable) {
+            ownerLockable.editorEventRelayers = ownerLockable.relayEvents(me, me.relayedEvents);
         }
         // Marks the grid as editable, so that the SelectionModel
         // can make appropriate decisions during navigation
@@ -222,10 +223,19 @@ Ext.define('Ext.grid.plugin.Editing', {
             grid = me.grid;
 
         Ext.destroy(me.keyNav);
+        
         // Clear all listeners from all our events, clear all managed listeners we added to other Observables
         me.clearListeners();
 
         if (grid) {
+            if (grid.ownerLockable) {
+                Ext.destroy(grid.ownerLockable.editorEventRelayers);
+                grid.ownerLockable.editorEventRelayers = null;
+            }
+            
+            Ext.destroy(grid.editorEventRelayers);
+            grid.editorEventRelayers = null;
+            
             grid.editingPlugin = grid.view.editingPlugin = me.grid = me.view = me.editor = me.keyNav = null;
         }
 
@@ -548,8 +558,9 @@ Ext.define('Ext.grid.plugin.Editing', {
             columnHeader = columnHeader.next(':not([hidden])') || columnHeader.prev(':not([hidden])');
         }
 
-        // Navigate to the view which the column header relates to.
-        view = columnHeader.getRootHeaderCt().view;
+        // Navigate to the view and grid which the column header relates to.
+        view = columnHeader.getView();
+        grid = view.ownerCt;
 
         gridRow = view.getRow(record);
 

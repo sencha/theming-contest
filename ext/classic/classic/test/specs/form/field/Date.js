@@ -49,7 +49,7 @@ describe("Ext.form.field.Date", function() {
                 clickTrigger();
 
                 // Fire the key event through the target of the keyNav
-                jasmine.fireKeyEvent(component.picker.keyNav.map.target, 'keydown', Ext.EventObject.SPACE);
+                jasmine.fireKeyEvent(component.picker.keyNav.map.target, 'keydown', Ext.event.Event.SPACE);
 
                 var value = component.getValue();
                 expect(value).not.toBeNull();
@@ -70,7 +70,7 @@ describe("Ext.form.field.Date", function() {
 
                 expect(picker.hidden).toBe(false);
 
-                jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.ESC);
+                jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.ESC);
 
                 expect(picker.hidden).toBe(true);
             });

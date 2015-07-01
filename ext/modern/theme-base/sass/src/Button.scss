@@ -2,30 +2,33 @@
  * @class Ext.Button
  */
 
-.x-button {
+.x-button,
+.x-tab {
     @include st-box;
     @include st-box-align(center);
-
-    background-color: #eee;
-    border: 1px solid #ccc;
 
     position: relative;
     overflow: hidden;
     z-index: 1;
 
-    .x-button-icon {
-        position: relative;
-        background-repeat: no-repeat;
-        background-position: center;
+    &.x-hasbadge {
+        overflow: visible;
     }
+}
 
-    .x-button-icon.x-shown {
-        display: block;
-    }
+.x-button-icon {
+    position: relative;
+    background-repeat: no-repeat;
+    background-position: center;
+    text-align: center;
+}
 
-    .x-button-icon.x-hidden {
-        display: none;
-    }
+.x-button-icon.x-shown {
+    display: block;
+}
+
+.x-button-icon.x-hidden {
+    display: none;
 }
 
 // Button icon alignment
@@ -60,15 +63,7 @@
 }
 
 .x-badge {
-    @extend .x-button-label;
-    background-color: #ccc;
-    border: 1px solid #aaa;
     z-index: 2;
-    position: absolute !important;
-    width: auto;
-    font-size: .6em;
-    right: 0;
-    top: 0;
-    max-width: 95%;
-    display: inline-block;
+    position: absolute;
+    text-overflow: ellipsis;
 }

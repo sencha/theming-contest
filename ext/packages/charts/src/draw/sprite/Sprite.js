@@ -852,9 +852,11 @@ Ext.define('Ext.draw.sprite.Sprite', {
         // bounding box.
         var x = point[0],
             y = point[1],
-            bbox = this.getBBox();
+            bbox = this.getBBox(),
+            isBBoxHit = bbox && x >= bbox.x && x <= (bbox.x + bbox.width) &&
+                                y >= bbox.y && y <= (bbox.y + bbox.height);
 
-        if (bbox && x >= bbox.left && x <= bbox.right && y >= bbox.top && y <= bbox.bottom) {
+        if (isBBoxHit) {
             return {
                 sprite: this
             }
@@ -870,23 +872,42 @@ Ext.define('Ext.draw.sprite.Sprite', {
     },
 
     /**
+     * Removes this sprite from its surface.
+     * The sprite itself is not destroyed.
+     * @returns {Boolean} Returns the removed sprite or `null` otherwise.
+     */
+    remove: function () {
+        var surface = this.getSurface();
+
+        if (surface && surface.isSurface) {
+            return surface.remove(this);
+        }
+
+        return null;
+    },
+
+    /**
      * Removes the sprite and clears all listeners.
      */
     destroy: function () {
-        var me = this, 
-            modifier = me.topModifier, 
-            curr;
+        var me = this,
+            modifier = me.topModifier,
+            currentModifier;
 
         while (modifier) {
-            curr = modifier;
+            currentModifier = modifier;
             modifier = modifier.getPrevious();
-            curr.destroy();
+            currentModifier.destroy();
         }
+
         delete me.attr;
+
+        me.remove();
 
         if (me.fireEvent('beforedestroy', me) !== false) {
             me.fireEvent('destroy', me);
         }
+
         me.callParent();
     }
 }, function () { // onClassCreated

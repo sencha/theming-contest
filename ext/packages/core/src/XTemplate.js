@@ -283,6 +283,8 @@ Ext.define('Ext.XTemplate', {
         'Ext.util.XTemplateCompiler'
     ],
 
+    isXTemplate: true,
+
     /**
      * @private
      */

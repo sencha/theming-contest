@@ -88,10 +88,13 @@ Ext.define('Ext.plugin.Abstract', {
      * The destroy method is invoked by the owning Component at the time the Component is
      * being destroyed.
      *
-     * The supplied implementation is empty. Subclasses should perform plugin cleanup in
-     * their own implementation of this method.
      * @method destroy
      */
+    destroy: function() {
+        this.cmp = this.pluginConfig = null;
+        
+        this.callParent();
+    },
 
     // Private.
     // Inject a ptype property so that Component.findPlugin(ptype) works.

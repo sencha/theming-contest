@@ -674,9 +674,9 @@ Ext.apply(Ext, {
                         } else if (value === null || primitiveRe.test(type) || Ext.isDate(value)) {
                             member = Ext.encode(value);
                         } else if (Ext.isArray(value)) {
-                            member = this.dumpObject(value, level+1, maxLevel, withFunctions);
+                            member = dumpObject(value, level+1, maxLevel, withFunctions);
                         } else if (Ext.isObject(value)) {
-                            member = this.dumpObject(value, level+1, maxLevel, withFunctions);
+                            member = dumpObject(value, level+1, maxLevel, withFunctions);
                         } else {
                             member = type;
                         }

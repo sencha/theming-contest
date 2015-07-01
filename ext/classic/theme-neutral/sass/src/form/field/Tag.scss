@@ -139,6 +139,10 @@
             padding: $ui-padding;
         }
 
+        .#{$prefix}tagfield-input {
+            margin: $tag-field-item-margin;
+        }
+
         .#{$prefix}tagfield-input-field {
             height: $ui-item-height;
             line-height: $ui-item-height;

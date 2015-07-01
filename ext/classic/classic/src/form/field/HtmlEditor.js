@@ -837,7 +837,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
             me.syncValue();
             iframe.addCls(hiddenCls);
             textarea.removeCls(hiddenCls);
-            textarea.dom.removeAttribute('tabindex');
+            textarea.dom.removeAttribute('tabIndex');
             textarea.focus();
             me.inputEl = textarea;
         } else {
@@ -847,7 +847,7 @@ Ext.define('Ext.form.field.HtmlEditor', {
             me.pushValue();
             iframe.removeCls(hiddenCls);
             textarea.addCls(hiddenCls);
-            textarea.dom.setAttribute('tabindex', -1);
+            textarea.dom.setAttribute('tabIndex', -1);
             me.deferFocus();
             me.inputEl = iframe;
         }

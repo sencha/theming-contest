@@ -381,7 +381,8 @@ Ext.define('Ext.event.publisher.Gesture', {
 
     onTouchStart: function(e) {
         var me = this,
-            target = e.target;
+            target = e.target,
+            touches = e.browserEvent.touches;
 
         if (e.browserEvent.type === 'touchstart') {
             // When using touch events, if the target is removed from the dom mid-gesture
@@ -393,6 +394,13 @@ Ext.define('Ext.event.publisher.Gesture', {
             target.addEventListener('touchmove', me.onTargetTouchMove);
             target.addEventListener('touchend', me.onTargetTouchEnd);
             target.addEventListener('touchcancel', me.onTargetTouchEnd);
+        }
+
+        // There is a bug in IOS8 where touchstart, but not touchend event is
+        // fired when clicking on controls for audio/video, which can leave
+        // us in a bad state here.
+        if (touches && touches.length <= me.activeTouches.length) {
+            me.removeGhostTouches(touches);
         }
 
         me.updateTouches(e);
@@ -543,6 +551,31 @@ Ext.define('Ext.event.publisher.Gesture', {
         }
 
         this.callParent();
+    },
+
+    privates: {
+        removeGhostTouches: function(touches) {
+            var ids = {}, 
+                len = touches.length,
+                activeTouches = this.activeTouches,
+                map = this.activeTouchesMap,
+                i, id, touch;
+
+            // Collect the actual touches
+            for (i = 0; i < len; ++i) {
+                ids[touches[i].identifier] = true;
+            }
+
+            i = activeTouches.length;
+            while (i--) {
+                touch = activeTouches[i];
+                id = touch.identifier;
+                if (!touches[id]) {
+                    Ext.Array.remove(activeTouches, touch);
+                    delete map[id];
+                }
+            }
+        }
     }
 }, function(Gesture) {
     Gesture.instance = new Gesture();

@@ -105,15 +105,5 @@ Ext.define('Ext.slider.Toggle', {
 
         this.setIndexValue(0, newValue, this.getAnimation());
         this.refreshThumbConstraints(thumb);
-    },
-
-    onThumbDragEnd: function(thumb, e) {
-        var me = this,
-            minValue = me.getMinValue(),
-            offset = me.offsetValueRatio;
-
-        // Force the thumb to either end if the user dragged the toggle
-        thumb.getDraggable().setExtraConstraint(null).setOffset((me.getValue() - minValue) * offset);
-        me.callParent([thumb, e]);
     }
 });

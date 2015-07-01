@@ -55,12 +55,7 @@ Ext.define('Ext.mixin.Container', {
      * @since 5.0.0
      */
     getReferences: function () {
-        var ComponentManager = Ext.ComponentManager;
-
-        if (ComponentManager.referencesDirty) {
-            ComponentManager.fixReferences();
-        }
-
+        Ext.ComponentManager.fixReferences();
         return this.refs || null;
     },
 

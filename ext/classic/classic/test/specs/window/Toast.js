@@ -32,6 +32,47 @@ describe("Ext.window.Toast", function() {
         win = field1 = field2 = null;
     });
     
+    describe("creation", function() {
+        describe("autoClose is true", function() {
+            describe("closable is not defined", function() {
+                beforeEach(function() {
+                    makeToast({
+                        autoClose: true
+                    });
+                });
+                
+                it("should force closable to false", function() {
+                    expect(toast.closable).toBe(false);
+                });
+                
+                it("should not render close tool", function() {
+                    var tool = toast.down('[type=close]');
+                    
+                    expect(tool).toBeFalsy();
+                });
+            });
+            
+            describe("closable is true", function() {
+                beforeEach(function() {
+                    makeToast({
+                        closable: true,
+                        autoClose: true
+                    });
+                });
+                
+                it("should not force closable to false", function() {
+                    expect(toast.closable).toBe(true);
+                });
+                
+                it("should render close tool", function() {
+                    var tool = toast.down('[type=close]');
+                    
+                    expect(tool).toBeTruthy();
+                });
+            });
+        });
+    });
+    
     describe("closeOnMouseDown", function() {
         beforeEach(function() {
             makeToast({

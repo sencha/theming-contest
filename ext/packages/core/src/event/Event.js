@@ -533,7 +533,7 @@ Ext.define('Ext.event.Event', {
         var me = this,
             k = me.keyCode;
 
-       return (k >= 33 && k <= 40) ||  // Page Up/Down, End, Home, Left, Up, Right, Down
+       return (me.type !== 'keypress' && k >= 33 && k <= 40) ||  // Page Up/Down, End, Home, Left, Up, Right, Down ("!#%^" if a keypress)
               (!scrollableOnly &&
                (k === me.RETURN ||
                 k === me.TAB ||
@@ -565,15 +565,18 @@ Ext.define('Ext.event.Event', {
      *  - Print Screen
      *  - Insert
      *
-     * @return {Boolean} `true` if the press is a special keypress
+     * @return {Boolean} `true` if the key for this event is special
      */
-    isSpecialKey: function(){
-        var k = this.keyCode;
-        return (this.type === 'keypress' && this.ctrlKey) ||
-        this.isNavKeyPress() ||
-        (k === this.BACKSPACE) || // Backspace
-        (k >= 16 && k <= 20) ||   // Shift, Ctrl, Alt, Pause, Caps Lock
-        (k >= 44 && k <= 46);     // Print Screen, Insert, Delete
+    isSpecialKey: function() {
+        var me = this,
+            k = me.keyCode,
+            isKeyPress = me.type === 'keypress';
+        
+        return (isKeyPress && me.ctrlKey) ||
+               me.isNavKeyPress() ||
+               (k === me.BACKSPACE) || // Backspace
+               (k >= 16 && k <= 20) ||   // Shift, Ctrl, Alt, Pause, Caps Lock
+               (!isKeyPress && k >= 44 && k <= 46);     // Print Screen, Insert, Delete (",-." if a keypress)
     },
 
     makeUnpreventable: function() {

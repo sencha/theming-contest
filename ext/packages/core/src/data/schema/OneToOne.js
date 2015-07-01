@@ -205,7 +205,9 @@ Ext.define('Ext.data.schema.OneToOne', {
             if (rightRecords) {
                 rightRecord = rightRecords[0];
                 field = me.association.field;
-                fieldName = field.name;
+                if (field) {
+                    fieldName = field.name;
+                }
                 session = leftRecord.session;
                 data = leftRecord.data;
                 if (rightRecord) {

@@ -4,6 +4,9 @@
  * 
  * Creates a Bar or Column Chart (depending on the value of the
  * {@link Ext.chart.CartesianChart#flipXY flipXY} config).
+ *
+ * Note: 'bar' series is meant to be used with the
+ * {@link Ext.chart.axis.Category 'category'} axis as its x-axis.
  * 
  *     @example
  *     Ext.create({

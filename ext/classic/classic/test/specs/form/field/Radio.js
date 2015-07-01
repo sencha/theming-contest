@@ -20,8 +20,8 @@ describe("Ext.form.field.Radio", function() {
         radios = [component];
     });
 
-
-    it("should render a button input with type='radio'", function(){
+    // https://sencha.jira.com/browse/EXTJS-18309
+    xit("should render a button input with type='radio'", function(){
         var component = new Ext.form.field.Radio({
             name: 'test',
             renderTo: Ext.getBody()

@@ -74,6 +74,12 @@ describe("Ext.data.proxy.Memory", function() {
         
             expect(records[0].get('phone')).toEqual('555 1234');
         });
+        
+        it("should keep raw data by default", function() {
+            var reader = proxy.getReader();
+            
+            expect(reader.rawData).toBeDefined();
+        });
     });
     
     describe("filtering", function(){

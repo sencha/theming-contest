@@ -210,7 +210,8 @@ describe("Ext.container.Container", function() {
     });
 
     describe("getComponent", function(){
-        var a, b, c, d;
+        var a, b, c, d, cmp;
+        
         beforeEach(function(){
             a = new Ext.Component({
                 itemId: 'a'
@@ -230,7 +231,8 @@ describe("Ext.container.Container", function() {
         });
 
         afterEach(function(){
-            a = b = c = d = null;
+            Ext.destroy(a, b, c, d, cmp);
+            a = b = c = d = cmp = null;
         });
 
         it("should return undefined if id is not found", function(){
@@ -242,7 +244,9 @@ describe("Ext.container.Container", function() {
         });
 
         it("should return undefined if instance is not found", function(){
-            expect(ct.getComponent(new Ext.Component())).not.toBeDefined();
+            cmp = new Ext.Component();
+            
+            expect(ct.getComponent(cmp)).not.toBeDefined();
         });
 
         it("should find a passed instance", function(){
@@ -368,8 +372,9 @@ describe("Ext.container.Container", function() {
             ct.on('beforeadd', function(){
                 return false;
             });
-            ct.add({});
+            var cmp = ct.add({});
             expect(ct.items.getCount()).toEqual(0);
+            cmp.destroy();
         });
 
         it("should fire the add event", function(){
@@ -509,6 +514,8 @@ describe("Ext.container.Container", function() {
                 var c = new Ext.Component();
 
                 expect(ct.move(c, 1)).toBe(false);
+                
+                c.destroy();
             });
 
             it("should move components by index", function(){
@@ -635,6 +642,8 @@ describe("Ext.container.Container", function() {
                 expect(other.items.indexOf(c)).toBe(-1);
                 expect(ct.items.getAt(0)).toBe(c);
                 expect(ct.items.getAt(1)).toBe(ref);
+                
+                other.destroy();
             });
 
             it("should be able to move existing items in a container", function() {
@@ -844,6 +853,8 @@ describe("Ext.container.Container", function() {
                 expect(other.items.indexOf(c)).toBe(-1);
                 expect(ct.items.getAt(1)).toBe(c);
                 expect(ct.items.getAt(0)).toBe(ref);
+                
+                other.destroy();
             });
 
             it("should be able to move existing items in a container", function() {
@@ -1091,6 +1102,11 @@ describe("Ext.container.Container", function() {
                 makeContainer();
                 cmp = new Ext.Component();
                 ct.remove(cmp);
+            });
+            
+            afterEach(function() {
+                Ext.destroy(cmp);
+                cmp = null;
             });
 
             it("should not remove", function(){
@@ -2390,6 +2406,25 @@ describe("Ext.container.Container", function() {
 
                 });
             });
+
+            describe("child disabled before being added to container", function() {
+                it("should keep the child disabled state", function() {
+                    makeDisableCt();
+                    ct.disable();
+
+                    a = new Ext.Component({
+                        disabled: true
+                    });
+
+                    ct.add(a);
+                    expect(ct.disabled).toBe(true);
+                    expect(a.disabled).toBe(true);
+
+                    ct.enable();
+                    expect(ct.disabled).toBe(false);
+                    expect(a.disabled).toBe(true);
+                });
+            });
         });
     });
 
@@ -2476,6 +2511,11 @@ describe("Ext.container.Container", function() {
 
             age = container.getComponent(2);
         });
+        
+        afterEach(function() {
+            container.destroy();
+            container = null;
+        });
 
         it('should return the next child', function () {
             expect(container.nextChild(age)).toBe(container.getComponent(3));
@@ -2523,6 +2563,11 @@ describe("Ext.container.Container", function() {
             });
 
             age = container.getComponent(2);
+        });
+        
+        afterEach(function() {
+            container.destroy();
+            container = null;
         });
 
         it('should return the previous child', function () {
@@ -4470,6 +4515,34 @@ describe("Ext.container.Container", function() {
                         removed.destroy();
                     });    
                 });
+            });
+        });
+
+        describe("setup", function() {
+            it("should not create references on the rootInheritedState if not requested", function() {
+                var vp = new Ext.container.Viewport({
+                    referenceHolder: true
+                });
+
+                var temp = new Ext.container.Container({
+                    items: {
+                        xtype: 'component',
+                        reference: 'a'
+                    }
+                });
+
+                var c = temp.items.first();
+
+
+                ct = new Ext.container.Container({
+                    referenceHolder: true,
+                    items: temp
+                });
+
+                expect(vp.lookupReference('a')).toBeNull();
+                expect(ct.lookupReference('a')).toBe(c);
+
+                vp.destroy();
             });
         });
     });

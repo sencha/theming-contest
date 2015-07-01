@@ -54,6 +54,10 @@ Ext.define('Ext.app.bind.BaseBinding', {
         me.scope = me.callback = me.owner = null;
     },
 
+    isReadOnly: function() {
+        return true;
+    },
+
     privates: {
         getScheduler: function () {
             var owner = this.owner;

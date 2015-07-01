@@ -185,7 +185,7 @@ describe("Ext.form.field.Spinner", function() {
             makeComponent({
                 renderTo: Ext.getBody()
             });
-            fireKey(Ext.EventObject.UP);
+            fireKey(Ext.event.Event.UP);
             expect(component.onSpinUp).toHaveBeenCalled();
         });
 
@@ -194,7 +194,7 @@ describe("Ext.form.field.Spinner", function() {
                 renderTo: Ext.getBody(),
                 keyNavEnabled: false
             });
-            fireKey(Ext.EventObject.UP);
+            fireKey(Ext.event.Event.UP);
             expect(component.onSpinUp).not.toHaveBeenCalled();
         });
 
@@ -203,7 +203,7 @@ describe("Ext.form.field.Spinner", function() {
                 renderTo: Ext.getBody(),
                 spinUpEnabled: false
             });
-            fireKey(Ext.EventObject.UP);
+            fireKey(Ext.event.Event.UP);
             expect(component.onSpinUp).not.toHaveBeenCalled();
         });
 
@@ -211,7 +211,7 @@ describe("Ext.form.field.Spinner", function() {
             makeComponent({
                 renderTo: Ext.getBody()
             });
-            fireKey(Ext.EventObject.DOWN);
+            fireKey(Ext.event.Event.DOWN);
             expect(component.onSpinDown).toHaveBeenCalled();
         });
 
@@ -220,7 +220,7 @@ describe("Ext.form.field.Spinner", function() {
                 renderTo: Ext.getBody(),
                 keyNavEnabled: false
             });
-            fireKey(Ext.EventObject.DOWN);
+            fireKey(Ext.event.Event.DOWN);
             expect(component.onSpinDown).not.toHaveBeenCalled();
         });
 
@@ -229,7 +229,7 @@ describe("Ext.form.field.Spinner", function() {
                 renderTo: Ext.getBody(),
                 spinDownEnabled: false
             });
-            fireKey(Ext.EventObject.DOWN);
+            fireKey(Ext.event.Event.DOWN);
             expect(component.onSpinDown).not.toHaveBeenCalled();
         });
     });

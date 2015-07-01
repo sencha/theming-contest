@@ -1,4 +1,6 @@
 describe("Ext.grid.column.Widget", function() {
+    var webkitIt = Ext.isWebKit ? it : xit;
+
     var Model = Ext.define(null, {
         extend: 'Ext.data.Model',
         fields: ['a', 'b', 'c']
@@ -118,6 +120,35 @@ describe("Ext.grid.column.Widget", function() {
                 xtype: 'button',
                 cls: 'foo'
             });
+        });
+    });
+
+    describe('widget refocus on row delete', function() {
+        // Test that focus reversion upon delete of focus-containing row works.
+        webkitIt("should not cause an error when deleting the focused row using an actionable widget", function() {
+            createGrid([{
+                itemId: 'ct',
+                columns: [getColCfg({
+                    xtype: 'button',
+                    handler: function(btn) {
+                        var rec = btn.getWidgetRecord();
+                        store.remove(rec);
+                    }
+                })]
+            }]);
+            var btn = colRef[0].getWidget(store.last());
+
+            // The mousedown part will focus the button, and flip into actionable mode.
+            // The click phase will delete the row.
+            // Focus should revert to the previous row
+            jasmine.fireMouseEvent(btn.el.dom, 'click');
+
+            // Should remove the last record
+            expect(view.all.getCount()).toBe(3);
+
+            // And focus should have jumped from the mousedowned button (which has gone)
+            // to the button above it.
+            expect(colRef[0].getWidget(store.last()).hasFocus).toBe(true);
         });
     });
 
@@ -402,10 +433,9 @@ describe("Ext.grid.column.Widget", function() {
                     makeGrid([cfg]);
                     spy.reset();
                     var rec = store.insert(2, {})[0],
-                        spyCall = withBuffered ? spy.calls[2] : spy.mostRecentCall;
+                        spyCall = spy.mostRecentCall;
 
-                    // Buffering on add triggers a view refresh
-                    expect(spy.callCount).toBe(withBuffered ? 5 : 1);
+                    expect(spy.callCount).toBe(1);
                     expect(spyCall.args[0]).toBe(colRef[0]);
                     expect(spyCall.args[1].isButton).toBe(true);
                     expect(spyCall.args[2]).toBe(rec);

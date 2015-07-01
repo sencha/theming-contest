@@ -80,7 +80,7 @@ Ext.define('Ext.panel.Header', {
                 flex: 1
             },
             merge: function(newValue, oldValue) {
-                if (typeof newValue === 'string') {
+                if (typeof newValue !== 'object') {
                     newValue = {
                         text: newValue
                     };

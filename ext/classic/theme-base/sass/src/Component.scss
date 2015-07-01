@@ -217,3 +217,10 @@ td.#{$prefix}frame-br {
 :focus {
     outline:none;
 }
+
+.#{$prefix}sync-repaint {
+    &:before,
+    &:after {
+        content: none !important;
+    }
+}

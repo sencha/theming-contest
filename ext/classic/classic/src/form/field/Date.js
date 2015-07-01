@@ -73,12 +73,23 @@ Ext.define('Ext.form.field.Date', {
 
     //<locale>
     /**
-     * @cfg {String} format
+     * @cfg {String} [format="m/d/Y"]
      * The default date format string which can be overriden for localization support. The format must be valid
      * according to {@link Ext.Date#parse}.
      */
     format : "m/d/Y",
     //</locale>
+    
+    //<locale>
+    /**
+     * @cfg {String} [ariaFormat="M j Y"]
+     * This date format will be used to format ARIA attributes in the field and its Picker,
+     * to provide Assistive Technologies such as screen readers with user friendly text.
+     * The format must be valid {@link Ext.Date#format}.
+     */
+    ariaFormat: 'M j Y',
+    //</locale>
+    
     //<locale>
     /**
      * @cfg {String} altFormats
@@ -90,10 +101,19 @@ Ext.define('Ext.form.field.Date', {
     //<locale>
     /**
      * @cfg {String} disabledDaysText
-     * The tooltip to display when the date falls on a disabled day.
+     * The tooltip to display when the date falls on a disabled day of week.
      */
     disabledDaysText : "Disabled",
     //</locale>
+    
+    //<locale>
+    /**
+     * @cfg {String} ariaDisabledDaysText The text that Assistive Technologies such as screen readers
+     * will announce when the date falls on a disabled day of week.
+     */
+    ariaDisabledDaysText: "This day of week is disabled",
+    //</locale>
+    
     //<locale>
     /**
      * @cfg {String} disabledDatesText
@@ -101,6 +121,15 @@ Ext.define('Ext.form.field.Date', {
      */
     disabledDatesText : "Disabled",
     //</locale>
+    
+    //<locale>
+    /**
+     * @cfg {String} ariaDisabledDatesText The text that Assistive Technologies such as screen readers
+     * will announce when the date falls on a disabled date.
+     */
+    ariaDisabledDatesText: "This date cannot be selected",
+    //</locale>
+    
     //<locale>
     /**
      * @cfg {String} minText
@@ -108,6 +137,16 @@ Ext.define('Ext.form.field.Date', {
      */
     minText : "The date in this field must be equal to or after {0}",
     //</locale>
+    
+    //<locale>
+    /**
+     * @cfg {String} ariaMinText The text that Assistive Technologies such as screen readers
+     * will announce when the date in the cell is before {@link #minValue}. The date substituted
+     * for {0} will be formatted as per {@link #ariaFormat}.
+     */
+    ariaMinText: "The date must be equal to or after {0}",
+    //</locale>
+    
     //<locale>
     /**
      * @cfg {String} maxText
@@ -115,6 +154,16 @@ Ext.define('Ext.form.field.Date', {
      */
     maxText : "The date in this field must be equal to or before {0}",
     //</locale>
+    
+    //<locale>
+    /**
+     * @cfg {String} ariaMaxText The text that Assistive Technologies such as screen readers
+     * will announce when the date in the cell is after {@link #maxValue}. The date substituted
+     * for {0} will be formatted as per {@link #ariaFormat}.
+     */
+    ariaMaxText: "The date must be equal to or before {0}",
+    //</locale>
+    
     //<locale>
     /**
      * @cfg {String} invalidText
@@ -504,8 +553,8 @@ Ext.define('Ext.form.field.Date', {
     /**
      * @private
      */
-    formatDate: function(date){
-        return Ext.isDate(date) ? Ext.Date.dateFormat(date, this.format) : date;
+    formatDate: function(date, format) {
+        return Ext.isDate(date) ? Ext.Date.dateFormat(date, format || this.format) : date;
     },
 
     createPicker: function() {
@@ -518,25 +567,30 @@ Ext.define('Ext.form.field.Date', {
         return new Ext.picker.Date({
             pickerField: me,
             floating: true,
-            focusable: false, // Key events are listened from the input field which is never blurred
+            preventRefocus: true,
             hidden: true,
             minDate: me.minValue,
             maxDate: me.maxValue,
             disabledDatesRE: me.disabledDatesRE,
             disabledDatesText: me.disabledDatesText,
+            ariaDisabledDatesText: me.ariaDisabledDatesText,
             disabledDays: me.disabledDays,
             disabledDaysText: me.disabledDaysText,
+            ariaDisabledDaysText: me.ariaDisabledDaysText,
             format: me.format,
             showToday: me.showToday,
             startDay: me.startDay,
             minText: format(me.minText, me.formatDate(me.minValue)),
+            ariaMinText: format(me.ariaMinText, me.formatDate(me.minValue, me.ariaFormat)),
             maxText: format(me.maxText, me.formatDate(me.maxValue)),
+            ariaMaxText: format(me.ariaMaxText, me.formatDate(me.maxValue, me.ariaFormat)),
             listeners: {
                 scope: me,
                 select: me.onSelect
             },
             keyNavConfig: {
                 esc: function() {
+                    me.inputEl.focus();
                     me.collapse();
                 }
             }
@@ -548,6 +602,14 @@ Ext.define('Ext.form.field.Date', {
 
         me.setValue(d);
         me.fireEvent('select', me, d);
+        
+        // Focus the inputEl first and then collapse. We configure
+        // the picker not to revert focus which is a normal thing to do
+        // for floaters; in our case when the picker is focusable it will
+        // lead to unexpected results on Tab key presses.
+        // Note that this focusing might happen synchronously during Tab
+        // key handling in the picker, which is the way we want it.
+        me.inputEl.focus();
         me.collapse();
     },
 

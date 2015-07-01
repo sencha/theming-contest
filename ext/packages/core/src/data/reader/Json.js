@@ -98,7 +98,7 @@
  *
  *     reader: {
  *         type  : 'json',
- *         root  : 'users',
+ *         rootProperty  : 'users',
  *         record: 'user'
  *     }
  *
@@ -121,7 +121,7 @@
  *
  *     reader: {
  *         type : 'json',
- *         root : 'root',
+ *         rootProperty : 'root',
  *         totalProperty  : 'total',
  *         successProperty: 'success',
  *         messageProperty: 'message'
@@ -140,7 +140,7 @@
  *             "email": "ed@sencha.com"
  *         }],
  *         "metaData": {
- *             "root": "users",
+ *             "rootProperty": "users",
  *             "totalProperty": 'count',
  *             "successProperty": 'ok',
  *             "messageProperty": 'msg'
@@ -269,7 +269,6 @@ Ext.define('Ext.data.reader.Json', {
         return me.callParent([data, readOptions, internalReadOptions]);
     },
 
-    //inherit docs
     getResponseData: function(response) {
         try {
             return Ext.decode(response.responseText);
@@ -279,7 +278,6 @@ Ext.define('Ext.data.reader.Json', {
         }
     },
 
-    //inherit docs
     buildExtractors : function() {
         var me = this,
             metaProp, rootProp;

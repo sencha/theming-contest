@@ -210,7 +210,7 @@ describe("Ext.form.field.Text", function() {
                 });
 
                 it("should have tabindex set to the tabIndex config", function() {
-                    expect('' + component.inputEl.dom.getAttribute("tabindex")).toEqual('5');
+                    expect('' + component.inputEl.dom.getAttribute("tabIndex")).toEqual('5');
                 });
 
                 it("should set the size attribute", function() {

@@ -12,6 +12,7 @@
 .#{$prefix}grid-locked-split .#{$prefix}grid-inner-normal {
     border-width: 0 0 0 $grid-lockable-separator-border-width;
     border-style: $grid-lockable-separator-border-style;
+    border-left-color: $grid-lockable-separator-border-color;
 }
 @if $include-rtl {
     .#{$prefix}grid-locked-split .#{$prefix}rtl.#{$prefix}grid-inner-normal {

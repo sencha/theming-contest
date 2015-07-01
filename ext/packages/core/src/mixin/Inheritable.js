@@ -360,7 +360,7 @@ Ext.define('Ext.mixin.Inheritable', {
             }
 
             if (me.getReference()) {
-                me.fixReference();
+                Ext.ComponentManager.markReferencesDirty();
             }
         },
 

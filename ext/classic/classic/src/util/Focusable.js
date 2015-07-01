@@ -11,7 +11,6 @@ Ext.define('Ext.util.Focusable', {
      */
     hasFocus: false,
     
-    
     /**
      * @property {Boolean} focusable
      * @readonly
@@ -31,7 +30,8 @@ Ext.define('Ext.util.Focusable', {
      */
     
     /**
-     * @cfg {Number} [tabIndex] DOM tabIndex attribute for this Focusable
+     * @cfg {Number} [tabIndex] DOM tabIndex attribute for this Focusable's
+     * focusEl.
      */
     
     /**
@@ -95,13 +95,17 @@ Ext.define('Ext.util.Focusable', {
      * @return {Ext.Element}
      * @protected
      */
-    getFocusEl: function () {
+    getFocusEl: function() {
         return this.element || this.el;
     },
 
     destroyFocusable: function() {
-        this.focusListeners = Ext.destroy(this.focusListeners);
-        delete this.focusTask;
+        var me = this;
+        
+        Ext.destroy(me.focusListeners);
+        
+        me.focusListeners = me.focusEnterEvent = me.focusTask = null;
+        me.focusEl = me.ariaEl = null;
     },
 
     enableFocusable: Ext.emptyFn,
@@ -162,7 +166,7 @@ Ext.define('Ext.util.Focusable', {
         return false;
     },
     
-    canFocus: function() {
+    canFocus: function(/* private */ skipVisibility) {
         var me = this;
         
         // Containers may have focusable children while being non-focusable
@@ -170,7 +174,7 @@ Ext.define('Ext.util.Focusable', {
         // ordinary Components here and below.
         return (me.isContainer || me.focusable) && me.rendered &&
                !me.destroying && !me.destroyed && !me.disabled &&
-               me.isVisible(true);
+               (skipVisibility || me.isVisible(true));
     },
     
     /**
@@ -219,13 +223,6 @@ Ext.define('Ext.util.Focusable', {
 
                 // If it was an Element with a dom property
                 if (focusElDom) {
-
-                    // Not a natural focus holding element, add a tab index to make it
-                    // programmatically focusable
-                    if (focusTarget.needsTabIndex()) {
-                        focusElDom.tabIndex = -1;
-                    }
-
                     if (me.floating) {
                         containerScrollTop = me.container.dom.scrollTop;
                     }
@@ -286,7 +283,7 @@ Ext.define('Ext.util.Focusable', {
             task.cancel();
         }
     },
-
+    
     /**
      * Template method to do any pre-blur processing.
      * @protected
@@ -416,7 +413,7 @@ Ext.define('Ext.util.Focusable', {
             // We can't query el.dom.tabIndex because IE8 will return 0
             // when tabIndex attribute is not present.
             else if (el.isElement) {
-                index = el.getAttribute(Ext.Element.tabIndexAttributeName);
+                index = el.getAttribute('tabIndex');
             }
             
             // A component can be configured with el: '#id' to look up
@@ -442,7 +439,7 @@ Ext.define('Ext.util.Focusable', {
      *
      * @param {Number} newTabIndex new tabIndex to set
      */
-    setTabIndex: function(newTabIndex) {
+    setTabIndex: function(newTabIndex, /* private */ focusEl) {
         var me = this,
             el;
         
@@ -456,7 +453,7 @@ Ext.define('Ext.util.Focusable', {
             return;
         }
         
-        el = me.getFocusEl();
+        el = focusEl || me.getFocusEl();
         
         if (el) {
             // getFocusEl may return a child Component
@@ -468,7 +465,7 @@ Ext.define('Ext.util.Focusable', {
             // still be a string by the time setTabIndex is called from
             // FocusableContainer.
             else if (el.isElement) {
-                el.set({ tabindex: newTabIndex });
+                el.set({ tabIndex: newTabIndex });
             }
         }
     },
@@ -481,8 +478,8 @@ Ext.define('Ext.util.Focusable', {
      * @param {Ext.event.Event} e.event The underlying DOM event.
      * @param {HTMLElement} e.target The element gaining focus.
      * @param {HTMLElement} e.relatedTarget The element losing focus.
-     * @param {Component} e.toComponent The Component gaining focus.
-     * @param {Component} e.fromComponent The Component losing focus.
+     * @param {Ext.Component} e.toComponent The Component gaining focus.
+     * @param {Ext.Component} e.fromComponent The Component losing focus.
      */
     onFocusEnter: function(e) {
         var me = this;
@@ -505,12 +502,12 @@ Ext.define('Ext.util.Focusable', {
      * @template
      * @protected
      * Called when focus exits from this Component's hierarchy
-     * @param {type} e
+     * @param {Ext.event.Event} e
      * @param {Ext.event.Event} e.event The underlying DOM event.
      * @param {HTMLElement} e.target The element gaining focus.
      * @param {HTMLElement} e.relatedTarget The element losing focus.
-     * @param {Component} e.toComponent The Component gaining focus.
-     * @param {Component} e.fromComponent The Component losing focus.
+     * @param {Ext.Component} e.toComponent The Component gaining focus.
+     * @param {Ext.Component} e.fromComponent The Component losing focus.
      */
     onFocusLeave: function(e) {
         var me = this;
@@ -546,8 +543,9 @@ Ext.define('Ext.util.Focusable', {
                 focusTarget = focusEvent.fromComponent;
 
                 // If reverting back to a Component, it will re-route to a close focusable relation
-                // if it is not now focusable.
-                if (focusTarget && !focusTarget.canFocus()) {
+                // if it is not now focusable. But check that it's a Component because it can be
+                // a Widget instead!
+                if (focusTarget && focusTarget.canFocus && !focusTarget.canFocus()) {
                     focusTarget.focus();
                 }
                 // The component canFocus, so we can simply focus its element.
@@ -615,20 +613,19 @@ Ext.define('Ext.util.Focusable', {
         initFocusableElement: function() {
             var me = this,
                 tabIndex = me.tabIndex,
-                focusEl = me.getFocusEl(),
-                needsTabIndex;
+                focusEl = me.getFocusEl();
 
             if (focusEl && !focusEl.isComponent) {
                 // Cache focusEl as a property for speedier lookups
                 me.focusEl = focusEl;
                 
-                needsTabIndex = focusEl.needsTabIndex();
-
-                // Add the tabIndex only is it's needed to make it tabbable, or there is a user-configured tabIndex
-                if (needsTabIndex || tabIndex != null) {
-                    focusEl.dom.setAttribute('tabindex', tabIndex);
+                // focusEl is not available until after rendering, and rendering tabIndex
+                // into focusEl is not always convenient. So we apply it here if Component's
+                // tabIndex property is set and Component is otherwise focusable.
+                if (tabIndex != null && me.canFocus(true)) {
+                    me.setTabIndex(tabIndex, focusEl);
                 }
-
+                
                 // This attribute is a shortcut to look up a Component by its Elements
                 // It only makes sense on focusable elements, so we set it here
                 focusEl.dom.setAttribute(Ext.Component.componentIdAttribute, me.id);
@@ -650,7 +647,93 @@ Ext.define('Ext.util.Focusable', {
             
             return this.focusTask;
         },
-
+        
+        /**
+         * @private
+         */
+        handleFocusEvent: function(e) {
+            var event;
+            
+            // handleFocusEvent and handleBlurEvent are called by ComponentManager
+            // passing the normalized element event that might or might not cause
+            // component focus or blur. The component itself makes the decision
+            // whether focus/blur happens or not. This is necessary for components
+            // that might have more than one focusable element within the component's
+            // DOM structure, like Ext.button.Split.
+            if (this.isFocusing(e)) {
+                event = new Ext.event.Event(e.event);
+                event.type = 'focus';
+                event.relatedTarget = e.fromElement;
+                event.target = e.toElement;
+                
+                this.onFocus(event);
+            }
+        },
+        
+        /**
+         * @private
+         */
+        handleBlurEvent: function(e) {
+            var event;
+            
+            if (this.isBlurring(e)) {
+                event = new Ext.event.Event(e.event);
+                event.type = 'blur';
+                event.target = e.fromElement;
+                event.relatedTarget = e.toElement;
+                
+                this.onBlur(event);
+            }
+        },
+        
+        /**
+         * @private
+         */
+        isFocusing: function(e) {
+            var from = e.fromElement,
+                to = e.toElement,
+                focusEl;
+            
+            if (this.focusable) {
+                focusEl = this.getFocusEl();
+            
+                if (focusEl) {
+                    if (focusEl.isComponent) {
+                        return focusEl.isFocusing(from, to);
+                    }
+                    else {
+                        return to === focusEl.dom && from !== to;
+                    }
+                }
+            }
+            
+            return false;
+        },
+        
+        /**
+         * @private
+         */
+        isBlurring: function(e) {
+            var from = e.fromElement,
+                to = e.toElement,
+                focusEl;
+            
+            if (this.focusable) {
+                focusEl = this.getFocusEl();
+            
+                if (focusEl) {
+                    if (focusEl.isComponent) {
+                        return focusEl.isBlurring(from, to);
+                    }
+                    else {
+                        return from === focusEl.dom && from !== to;
+                    }
+                }
+            }
+            
+            return false;
+        },
+        
         /**
          * @private
          */
@@ -658,7 +741,7 @@ Ext.define('Ext.util.Focusable', {
             var me = this,
                 focusEl;
             
-            if (!me.focusable || !me.rendered) {
+            if (!me.focusable || !me.canFocus()) {
                 return;
             }
             

@@ -366,10 +366,13 @@ Ext.define('Ext.window.MessageBox', {
 
     onClose: function(){
         var btn = this.header.child('[type=close]');
-        // Give a temporary itemId so it can act like the cancel button
-        btn.itemId = 'cancel';
-        this.btnCallback(btn);
-        delete btn.itemId;
+        
+        if (btn) {
+            // Give a temporary itemId so it can act like the cancel button
+            btn.itemId = 'cancel';
+            this.btnCallback(btn);
+            delete btn.itemId;
+        }
     },
 
     onPromptKey: function(textField, e) {
@@ -394,7 +397,7 @@ Ext.define('Ext.window.MessageBox', {
             headerCfg = header && !header.isHeader,
             message = cfg && (cfg.message || cfg.msg),
             resizeTracker, width, height, i, textArea,
-            textField, msg, progressBar, msgButtons, wait;
+            textField, msg, progressBar, msgButtons, wait, tool;
 
         // Restore default buttonText before reconfiguring.
         me.updateButtonText();
@@ -484,7 +487,11 @@ Ext.define('Ext.window.MessageBox', {
         header = me.header;
 
         if (header) {
-            header.child('[type=close]').setVisible(me.closable);
+            tool = header.child('[type=close]');
+            
+            if (tool) {
+                tool.setVisible(me.closable);
+            }
 
             // Hide or show the header
             if (!cfg.title && !me.closable && !cfg.iconCls) {

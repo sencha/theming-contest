@@ -32,6 +32,8 @@ Ext.define('Ext.SegmentedButton', {
     xtype : 'segmentedbutton',
     requires: ['Ext.Button'],
 
+    isSegmentedButton: true,
+
     config: {
         /**
          * @cfg
@@ -89,7 +91,14 @@ Ext.define('Ext.SegmentedButton', {
          * @cfg
          * @inheritdoc
          */
-        defaultType: 'button'
+        defaultType: 'button',
+
+        /**
+         * @cfg {String}
+         * Default {@link Ext.Component#ui ui} to use for buttons in this segmented button.
+         * Buttons can override this default by specifying their own UI
+         */
+        defaultUI: null
     },
 
     /**
@@ -317,6 +326,16 @@ Ext.define('Ext.SegmentedButton', {
         }
     },
 
+    setPressed: function(button, pressed) {
+        var pressedButtons = this.getPressedButtons().slice();
+        if (pressed)  {
+            Ext.Array.include(pressedButtons, button);
+        } else {
+            Ext.Array.remove(pressedButtons, button);
+        }
+        this.setPressedButtons(pressedButtons);
+    },
+
     /**
      * Returns `true` if a specified {@link Ext.Button} is pressed.
      * @param {Ext.Button} button The button to check if pressed.
@@ -352,5 +371,28 @@ Ext.define('Ext.SegmentedButton', {
             out = this.items.indexOf(buttons[0]);
         }
         return out;
+    },
+
+    updateDefaultUI: function(defaultUI) {
+        var items = this.items && this.items.items,
+            len = items.length,
+            i, item;
+
+        for (i = 0; i < len; i++) {
+            item = items[i];
+            if (item.getUi() == null) {
+                item.setUi(defaultUI);
+            }
+        }
+
+    },
+
+    doAdd: function(item, instanced) {
+        var defaultUI = this.getDefaultUI();
+
+        if (defaultUI && (item.getUi() == null)) {
+            item.setUi(defaultUI);
+        }
+        this.callParent([item, instanced]);
     }
 });

@@ -4,7 +4,21 @@ describe("grid-rowedit", function() {
             var ENTER = 13,
                 ESC = 27;
 
-            var grid, view, store, plugin, colRef;
+            var grid, view, store, plugin, colRef, GridEventModel = Ext.define(null, {
+                extend: 'Ext.data.Model',
+                fields: [
+                    'field1',
+                    'field2',
+                    'field3',
+                    'field4',
+                    'field5',
+                    'field6',
+                    'field7',
+                    'field8',
+                    'field9',
+                    'field10'
+                ]
+            });
                 
             function triggerCellMouseEvent(type, rowIdx, cellIdx, button, x, y) {
                 var target = findCell(rowIdx, cellIdx);
@@ -49,22 +63,6 @@ describe("grid-rowedit", function() {
 
             // locked param as true means that columns 1 and 2 are locked
             function makeGrid(columns, pluginCfg, locked) {
-                Ext.define('spec.GridEventModel', {
-                    extend: 'Ext.data.Model',
-                    fields: [
-                        'field1',
-                        'field2',
-                        'field3',
-                        'field4',
-                        'field5',
-                        'field6',
-                        'field7',
-                        'field8',
-                        'field9',
-                        'field10'
-                    ]
-                });
-
                 var data = [],
                     defaultCols = [],
                     hasCols,
@@ -110,7 +108,7 @@ describe("grid-rowedit", function() {
                 }
                 
                 store = new Ext.data.Store({
-                    model: spec.GridEventModel,
+                    model: GridEventModel,
                     data: data
                 });
                 
@@ -139,7 +137,6 @@ describe("grid-rowedit", function() {
             afterEach(function(){
                 Ext.destroy(grid, store);
                 plugin = grid = store = view = null;
-                Ext.undefine('spec.GridEventModel');
                 Ext.data.Model.schema.clear();
             });
 
@@ -219,7 +216,6 @@ describe("grid-rowedit", function() {
 
                 it("should trigger the first time when clicking a cell without a defined editor", function() {
                     Ext.destroy(grid, store);
-                    Ext.undefine('spec.GridEventModel');
                     Ext.data.Model.schema.clear();
                     makeGrid([{
                         dataIndex: 'field1',

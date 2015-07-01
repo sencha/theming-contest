@@ -6,7 +6,7 @@
  * the sub-component items in a list. 
  *   
  * Overwrite the `updateRecord()` method to set a sub-component's value. 
- * Sencha Touch calls `updateRecord()` whenever the data in the list updates.
+ * the framework calls `updateRecord()` whenever the data in the list updates.
  *
  * The `updatedata` event fires after `updateRecord()` runs.
  *

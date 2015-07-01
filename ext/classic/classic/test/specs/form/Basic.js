@@ -1,11 +1,8 @@
 describe("Ext.form.Basic", function() {
-
     var basicForm,
         container,
         currentActionInstance,
         mockActionCtorSpy;
-
-
 
     /**
      * Utility to add a MockField object to the container
@@ -23,7 +20,6 @@ describe("Ext.form.Basic", function() {
         ct = ct || container;
         return ct.add(c);
     }
-
 
     /**
      * For each test create a container and bind a BasicForm instance to it.
@@ -53,9 +49,9 @@ describe("Ext.form.Basic", function() {
     afterEach(function() {
         Ext.undefine('MockAction');
         container.destroy();
-        basicForm = container = currentActionInstance = undefined;
+        basicForm.destroy();
+        basicForm = container = currentActionInstance = null;
     });
-
 
     /*========== SPECS ==========*/
 

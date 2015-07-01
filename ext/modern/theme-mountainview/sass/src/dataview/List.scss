@@ -16,6 +16,7 @@
         &:before {
             @include absolute-position(0, 0, 0, 0);
             content: '4';
+            // TODO: Use FontAwesome
             font-family: 'Pictos';
             color: $background-color;
             font-size: 20px;

@@ -25,6 +25,7 @@
         &:before {
             @include absolute-position;
             text-indent: 0;
+            // TODO: Use FontAwesome
             font-family: 'Pictos';
             font-size: 26px;
             line-height: 29px;

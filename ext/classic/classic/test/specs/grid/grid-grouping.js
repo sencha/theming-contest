@@ -251,7 +251,7 @@ describe("grid-grouping", function() {
                         it("should fire itemremove for each item on collapse", function() {
                             var spy = jasmine.createSpy(),
                                 view = grid.getView(),
-                                items, i, j, records;
+                                items, i, records;
 
                             view.on('itemremove', spy);
 
@@ -260,14 +260,13 @@ describe("grid-grouping", function() {
 
                             triggerHeaderClick('t1');
 
-                            expect(spy.callCount).toBe(25);
+                            expect(spy.callCount).toBe(1);
 
-                            // Fired in reverse order
-                            for (i = 24, j = 0; i >= 0; --i, ++j) {
-                                expect(spy.calls[j].args[0]).toBe(records[i]);
-                                expect(spy.calls[j].args[1]).toBe(i);
-                                expect(spy.calls[j].args[2]).toBe(items[i]);
-                                expect(spy.calls[j].args[3]).toBe(view);
+                            for (i = 0; i < 25; i++) {
+                                expect(spy.calls[0].args[0][i]).toBe(records[i]);
+                                expect(spy.calls[0].args[1]).toBe(0);
+                                expect(spy.calls[0].args[2][i]).toBe(items[i]);
+                                expect(spy.calls[0].args[3]).toBe(view);
                             }
 
                             triggerHeaderClick('t1');
@@ -278,18 +277,122 @@ describe("grid-grouping", function() {
 
                             triggerHeaderClick('t4');
 
-                            expect(spy.callCount).toBe(25);
+                            expect(spy.callCount).toBe(1);
 
-                            // Fired in reverse order
-                            for (i = 24, j = 0; i >= 0; --i, ++j) {
-                                expect(spy.calls[j].args[0]).toBe(records[i]);
-                                expect(spy.calls[j].args[1]).toBe(75 + i);
-                                expect(spy.calls[j].args[2]).toBe(items[i]);
-                                expect(spy.calls[j].args[3]).toBe(view);
+                            for (i = 0; i < 25; i++) {
+                                expect(spy.calls[0].args[0][i]).toBe(records[i]);
+                                expect(spy.calls[0].args[1]).toBe(75);
+                                expect(spy.calls[0].args[2][i]).toBe(items[i]);
+                                expect(spy.calls[0].args[3]).toBe(view);
                             }
                         });
                     }
                 });
+            });
+
+            describe("expand/collapse", function() {
+                function manyGroups() {
+                    var data = [],
+                        i, n;
+
+                    for (i = 0; i < 300; ++i) {
+                        n = i + 1; 
+                        data.push({
+                            id: n,
+                            name: 'Item' + n,
+                            type: 'group' + Ext.String.leftPad(Math.ceil(n / 3), 3, '0')
+                        });
+                    }
+                    return data;
+                }
+
+                describe("expand", function() {
+                    describe("with focus: true", function() {
+                        describe("with the group in view", function() {
+                            it("should expand the group", function() {
+                                makeGrid(null, {
+                                    height: 400
+                                }, manyGroups(), false, {
+                                    startCollapsed: true
+                                });
+                                grouping.expand('group001', true);
+                                expect(grouping.isExpanded('group001')).toBe(true);
+                                expect(grid.getView().getScrollable().getPosition()).toEqual({
+                                    x: 0,
+                                    y: 0
+                                });
+                            });
+                        });
+
+                        describe("with the group not in the view", function() {
+                            it("should expand the group & scroll to the first record", function() {
+                                makeGrid(null, {
+                                    height: 400,
+                                    trailingBufferZone: 20,
+                                    leadingBufferZone: 20
+                                }, manyGroups(), false, {
+                                    startCollapsed: true
+                                });
+                                grouping.expand('group100', true);
+                                expect(grouping.isExpanded('group100')).toBe(true);
+                                waitsFor(function() {
+                                    var node = view.getNodeByRecord(store.getById(298));
+                                    if (node) {
+                                        return view.getScrollable().isInView(node).y;
+                                    }
+                                });
+                                runs(function() {
+                                    // Although already implied by the wait above, let's just be explicit
+                                    // anyway, seems weird to have the test end on a waitsFor
+                                    var node = view.getNodeByRecord(store.getById(298));
+                                    expect(view.getScrollable().isInView(node).y).toBe(true);
+                                });
+                            });
+                        });
+                    });
+                });
+
+                describe("collapse", function() {
+                    describe("with focus: true", function() {
+                        describe("with the group in view", function() {
+                            it("should collapse the group", function() {
+                                makeGrid(null, {
+                                    height: 400
+                                }, manyGroups());
+                                grouping.collapse('group001', true);
+                                expect(grouping.isExpanded('group001')).toBe(false);
+                                expect(grid.getView().getScrollable().getPosition()).toEqual({
+                                    x: 0,
+                                    y: 0
+                                });
+                            });
+                        });
+
+                        describe("with the group not in the view", function() {
+                            it("should collapse the group & scroll to the placeholder", function() {
+                                makeGrid(null, {
+                                    height: 400,
+                                    trailingBufferZone: 20,
+                                    leadingBufferZone: 20
+                                }, manyGroups());
+                                grouping.collapse('group100', true);
+                                expect(grouping.isExpanded('group100')).toBe(false);
+                                waitsFor(function() {
+                                    var node = grouping.getHeaderNode('group100');
+                                    if (node) {
+                                        return view.getScrollable().isInView(node).y;
+                                    }
+                                });
+                                runs(function() {
+                                    // Although already implied by the wait above, let's just be explicit
+                                    // anyway, seems weird to have the test end on a waitsFor
+                                    var node = grouping.getHeaderNode('group100');
+                                    expect(view.getScrollable().isInView(node).y).toBe(true);
+                                });
+                            });
+                        });
+                    });
+                })
             });
 
             describe("moving columns", function() {
@@ -345,6 +448,28 @@ describe("grid-grouping", function() {
 
                     dragColumn(columns[2], columns[0], false);
                     expect(spy).not.toHaveBeenCalled();
+                });
+
+                it("should react to events when collapsed", function() {
+                    makeGrid(false, {
+                        columns: [{
+                            text: 'A',
+                            dataIndex: 'name'
+                        }, {
+                            text: 'B',
+                            dataIndex: 'name'
+                        }, {
+                            text: 'C',
+                            dataIndex: 'name'
+                        }]
+                    });
+                    var columns = grid.getColumnManager().getColumns();
+
+                    grouping.collapse('t1');
+                    dragColumn(columns[2], columns[0], false);
+
+                    triggerHeaderClick('t1');
+                    expect(grouping.isExpanded('t1')).toBe(true);
                 });
 
                 it("should update the summary rows", function() {
@@ -828,6 +953,25 @@ describe("grid-grouping", function() {
                         triggerHeaderClick('t1');
                     }).not.toThrow();
                 });
+
+                // https://sencha.jira.com/browse/EXTJS-18047
+                it('should not throw an exception when focusing a view in which all groups are collapsed', function() {
+                    makeGrid(false, {
+                        columns: [{
+                            locked: true,
+                            itemId: 'locked',
+                            dataIndex: 'name'
+                        }, {
+                            dataIndex: 'name'
+                        }]
+                    }, null, null, {
+                        startCollapsed: true
+                    });
+                    var normalView = grid.normalGrid.getView();
+
+                    normalView.focus();
+                    expect(Ext.Element.getActiveElement()).toBe(normalView.el.dom);
+                });
             });
 
             describe("reconfiguring", function() {
@@ -964,14 +1108,14 @@ describe("grid-grouping", function() {
                         // ALT+End - Ask to go to end.
                         // With buffered rendering, that will expand the group that the target
                         // is in, so should select record 99
-                        triggerCellKeyEvent(1, 0, 'keydown', Ext.EventObject.END, true);
+                        triggerCellKeyEvent(1, 0, 'keydown', Ext.event.Event.END, true);
 
                         expect(grid.selModel.getSelection()[0] === grid.store.getAt(99)).toBe(true);
 
                         // ALT+Home - Ask to go to top.
                         // With buffered rendering, that will expand the group that the target
                         // is in, so should select record 0
-                        triggerCellKeyEvent(1, 0, 'keydown', Ext.EventObject.HOME, true);
+                        triggerCellKeyEvent(1, 0, 'keydown', Ext.event.Event.HOME, true);
 
                         expect(grid.selModel.getSelection()[0] === grid.store.getAt(0)).toBe(true);
 
@@ -985,7 +1129,7 @@ describe("grid-grouping", function() {
                         triggerCellMouseEvent('click', 0, 0);
 
                         // ALT/END - Ask to go to end. Should skip the two collapsed groups and select record 99
-                        triggerCellKeyEvent(1, 0, 'keydown', Ext.EventObject.END, true);
+                        triggerCellKeyEvent(1, 0, 'keydown', Ext.event.Event.END, true);
 
                         expect(grid.selModel.getSelection()[0] === grid.store.getAt(99)).toBe(true);
 
@@ -993,12 +1137,12 @@ describe("grid-grouping", function() {
                         triggerCellMouseEvent('click', 24, 0);
 
                         // Ask to go to down 1. Should skip the two collapsed groups and select record 75
-                        triggerCellKeyEvent(24, 0, 'keydown', Ext.EventObject.DOWN);
+                        triggerCellKeyEvent(24, 0, 'keydown', Ext.event.Event.DOWN);
 
                         expect(grid.selModel.getSelection()[0] === grid.store.getAt(75)).toBe(true);
 
                         // Ask to go to up 1. Should skip the two collapsed groups and select record 24
-                        triggerCellKeyEvent(27, 0, 'keydown', Ext.EventObject.UP);
+                        triggerCellKeyEvent(27, 0, 'keydown', Ext.event.Event.UP);
 
                         expect(grid.selModel.getSelection()[0] === grid.store.getAt(24)).toBe(true);
                     });

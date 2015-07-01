@@ -6,7 +6,7 @@
     "creator": "anonymous",
     "summary": "Short summary",
     "detailedDescription": "Long description of package",
-    "version": "6.0.0.415",
+    "version": "6.0.0.640",
     "compatVersion": "5.0.0",
     "format": "1",
     "output": "${workspace.subpkg.prefix}/${package.name}",
@@ -15,5 +15,13 @@
     },
     "local": true,
     "requires": [],
-    "framework": "ext"
+    "framework": "ext",
+    "classpath": "${package.dir}/src",
+    "overrides": "${package.dir}/overrides/${package.locale}",
+    "sass": {
+        "namespace": "Ext",
+        "etc": "${package.dir}/sass/etc/all.scss",
+        "var": "${package.dir}/sass/var",
+        "src": "${package.dir}/sass/src"
+    }
 }

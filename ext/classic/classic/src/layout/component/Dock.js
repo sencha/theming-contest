@@ -1324,7 +1324,7 @@ Ext.define('Ext.layout.component.Dock', {
         // docked items, which puts it out of (t,l,r,b) order. Avoiding a second
         // sort operation here, for now, in the name of performance. getDockedItems()
         // needs the sort operation not just for this layout-time rendering, but
-        // also for getRefItems() to return a logical ordering (FocusManager, CQ, et al).
+        // also for getRefItems() to return a logical ordering (CQ, et al).
 
         if (dockedItemCount) {
             childNodes = me.getRenderTarget().dom.childNodes;

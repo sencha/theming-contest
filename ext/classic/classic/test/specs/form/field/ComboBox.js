@@ -1383,7 +1383,7 @@ describe("Ext.form.field.ComboBox", function() {
             runs(function() {
                 spyOn(component, 'doQuery');
                 component.inputEl.dom.value = 'foob';
-                jasmine.fireKeyEvent(component.inputEl.dom, 'keyup', Ext.EventObject.DOWN);
+                jasmine.fireKeyEvent(component.inputEl.dom, 'keyup', Ext.event.Event.DOWN);
             });
             waits(10);
             runs(function() {
@@ -1394,7 +1394,7 @@ describe("Ext.form.field.ComboBox", function() {
             runs(function() {
                 spyOn(component, 'doQuery');
                 component.inputEl.dom.value = 'foob';
-                jasmine.fireKeyEvent(component.inputEl.dom, 'keyup', Ext.EventObject.BACKSPACE);
+                jasmine.fireKeyEvent(component.inputEl.dom, 'keyup', Ext.event.Event.BACKSPACE);
             });
             waitsFor(function() {
                 return component.doQuery.callCount > 0;
@@ -1404,7 +1404,7 @@ describe("Ext.form.field.ComboBox", function() {
             runs(function() {
                 spyOn(component, 'doQuery');
                 component.inputEl.dom.value = 'foob';
-                jasmine.fireKeyEvent(component.inputEl.dom, 'keyup', Ext.EventObject.DELETE);
+                jasmine.fireKeyEvent(component.inputEl.dom, 'keyup', Ext.event.Event.DELETE);
             });
             waitsFor(function() {
                 return component.doQuery.callCount > 0;
@@ -1416,7 +1416,7 @@ describe("Ext.form.field.ComboBox", function() {
             // FIXME the component.inputEl.dom.focus(); calls should not be necessary
             // Expand the picker
             component.inputEl.dom.focus();
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.DOWN);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.DOWN);
             var selModel = component.picker.getSelectionModel();
 
             // Picker should be visible
@@ -1427,7 +1427,7 @@ describe("Ext.form.field.ComboBox", function() {
 
             // This should select the first record, and hide the picker
             component.inputEl.dom.focus();
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.TAB);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.TAB);
 
             // We must wait until after the browser's TAB handling has blurred the field, and therefore hidden the picker
             waitsFor(function() {
@@ -1568,7 +1568,7 @@ describe("Ext.form.field.ComboBox", function() {
                 rawVal = '';
 
             // Expand the picker
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.DOWN);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.DOWN);
 
             // Picker should be visible
             expect(component.picker.isVisible()).toBe(true);
@@ -1578,27 +1578,27 @@ describe("Ext.form.field.ComboBox", function() {
             expect(sm.getSelection().length).toBe(0);
 
             // This should select the 1st record
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.ENTER);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.ENTER);
             selected = sm.getSelection();
             expect(selected.length).toBe(1);
             expect(selected[0] === store.getAt(0)).toBe(true);
 
             // This should DEselect the 1st record
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.ENTER);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.ENTER);
 
             // No select 2nd and 3rd records
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.DOWN);
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.ENTER);
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.DOWN);
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.ENTER);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.DOWN);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.ENTER);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.DOWN);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.ENTER);
             selected = sm.getSelection();
             expect(selected.length).toBe(2);
             expect(selected[0] === store.getAt(1)).toBe(true);
             expect(selected[1] === store.getAt(2)).toBe(true);
 
             // This should select the 4th record, and hide the picker
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.DOWN);
-            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.EventObject.TAB);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.DOWN);
+            jasmine.fireKeyEvent(component.inputEl, 'keydown', Ext.event.Event.TAB);
 
             // Wait for the browser's TAB handling to complete and the picker to hide
             waitsFor(function() {

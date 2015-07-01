@@ -404,5 +404,11 @@ Ext.define('Ext.data.proxy.Ajax', {
             }
             me.processResponse(success, operation, request, response);
         };
+    },
+    
+    destroy: function() {
+        this.lastRequest = null;
+        
+        this.callParent();
     }
 });

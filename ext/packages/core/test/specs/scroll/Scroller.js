@@ -24,7 +24,7 @@ describe("Ext.scroll.Scroller", function() {
             expect(scroller instanceof Ext.scroll.DomScroller).toBe(true);
         });
 
-        it("should create an instance of Ext.scroll.TouchScroller if Ext.supports.Touch is true", function() {
+        (Ext.isIE9m ? xit : it)("should create an instance of Ext.scroll.TouchScroller if Ext.supports.Touch is true", function() {
             Ext.supports.Touch = true;
             scroller = Ext.scroll.Scroller.create({
                 element: el

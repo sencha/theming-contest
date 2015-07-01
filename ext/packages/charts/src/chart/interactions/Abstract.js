@@ -44,10 +44,21 @@ Ext.define('Ext.chart.interactions.Abstract', {
     stopAnimationBeforeSync: false,
 
     constructor: function (config) {
-        var me = this;
+        var me = this,
+            id;
+
+        config = config || {};
+
+        if ('id' in config) {
+            id = config.id;
+        } else if ('id' in me.config) {
+            id = me.config.id;
+        } else {
+            id = me.getId();
+        }
+        me.setId(id);
+
         me.mixins.observable.constructor.call(me, config);
-        me.getId();
-        Ext.ComponentManager.register(me);
     },
 
     /**
@@ -58,13 +69,16 @@ Ext.define('Ext.chart.interactions.Abstract', {
 
     updateChart: function (newChart, oldChart) {
         var me = this;
+
         if (oldChart === newChart) {
             return;
         }
         if (oldChart) {
+            oldChart.unregister(me);
             me.removeChartListener(oldChart);
         }
         if (newChart) {
+            newChart.register(me);
             me.addChartListener();
         }
     },
@@ -202,7 +216,7 @@ Ext.define('Ext.chart.interactions.Abstract', {
         if (Ext.browser.is.IE10) {
             return true;
         }
-        return !(Ext.browser.is.AndroidStock2 || Ext.os.is.Desktop);
+        return !Ext.os.is.Desktop;
     },
 
     initializeDefaults: Ext.emptyFn,
@@ -248,18 +262,15 @@ Ext.define('Ext.chart.interactions.Abstract', {
     },
 
     destroy: function () {
-        var me = this,
-            chart = me.getChart();
+        var me = this;
 
-        me.removeChartListener(chart);
-        Ext.ComponentManager.unregister(me);
+        me.setChart(null);
         delete me.listeners;
         me.callParent();
     }
+
 }, function () {
-    if (Ext.browser.is.AndroidStock2) {
-        this.prototype.throttleGap = 20;
-    } else if (Ext.os.is.Android4) {
+    if (Ext.os.is.Android4) {
         this.prototype.throttleGap = 40;
     }
 });

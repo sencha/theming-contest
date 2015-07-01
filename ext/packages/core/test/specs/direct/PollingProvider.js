@@ -51,6 +51,8 @@ describe("Ext.direct.PollingProvider", function() {
         }
         
         if (remotingProvider) {
+            Ext.direct.Manager.removeProvider(remotingProvider);
+            
             remotingProvider.disconnect();
             remotingProvider.destroy();
             remotingProvider = null;

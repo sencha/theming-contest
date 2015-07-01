@@ -284,13 +284,9 @@ Ext.define('Ext.draw.Surface', {
      * @return {Ext.draw.sprite.Sprite}
      */
     get: function (id) {
-        return this.map[id] || this.items[id];
+        return this.map[id] || this.getItems()[id];
     },
 
-    /**
-     * @param {Object/Object[]}
-     * @returns {Ext.draw.sprite.Sprite/Ext.draw.sprite.Sprite[]}
-     */
     /**
      * Add a Sprite to the surface.
      * You can put any number of object as parameter.
@@ -307,27 +303,40 @@ Ext.define('Ext.draw.Surface', {
      *     });
      *     drawContainer.renderFrame();
      *
+     * @param {Object/Object[]}
+     * @returns {Ext.draw.sprite.Sprite/Ext.draw.sprite.Sprite[]}
+     *
      */
     add: function () {
         var me = this,
             args = Array.prototype.slice.call(arguments),
             argIsArray = Ext.isArray(args[0]),
+            map = me.map,
             results = [],
-            sprite, sprites, items, i, ln;
+            items, item, sprite,
+            i, ln;
 
         items = Ext.Array.clean(argIsArray ? args[0] : args);
+
         if (!items.length) {
             return results;
         }
-        sprites = me.prepareItems(items);
 
-        for (i = 0, ln = sprites.length; i < ln; i++) {
-            sprite = sprites[i];
-            me.map[sprite.getId()] = sprite;
-            results.push(sprite);
-            sprite.setParent(me);
-            sprite.setSurface(me);
-            me.onAdd(sprite);
+        for (i = 0, ln = items.length; i < ln; i++) {
+            item = items[i];
+            sprite = null;
+            if (item.isSprite && !map[item.getId()]) {
+                sprite = item;
+            } else if (!map[item.id]) {
+                sprite = this.createItem(item);
+            }
+            if (sprite) {
+                map[sprite.getId()] = sprite;
+                results.push(sprite);
+                sprite.setParent(me);
+                sprite.setSurface(me);
+                me.onAdd(sprite);
+            }
         }
 
         items = me.getItems();
@@ -363,30 +372,43 @@ Ext.define('Ext.draw.Surface', {
      *      // or...
      *      sprite.remove();
      *
-     * @param {Ext.draw.sprite.Sprite/String} sprite
-     * @param {Boolean} [isDestroy=false]
+     * @param {Ext.draw.sprite.Sprite/String} sprite A sprite instance or its ID.
+     * @param {Boolean} [isDestroy=false] If `true`, the sprite will be destroyed.
+     * @returns {Boolean} Returns the removed/destroyed sprite or `null` otherwise.
      */
     remove: function (sprite, isDestroy) {
-        var me = this;
+        var me = this,
+            id, isOwnSprite;
 
-        if (Ext.isString(sprite)) {
-            sprite = me.map[sprite];
-        }
         if (sprite) {
             if (sprite.charAt) { // is String
                 sprite = me.map[sprite];
             }
-            delete me.map[sprite.getId()];
+            if (!sprite || !sprite.isSprite) {
+                return null;
+            }
+            if (sprite.isDestroyed || sprite.isDestroying) {
+                return sprite;
+            }
+            id = sprite.getId();
+            isOwnSprite = me.map[id];
+            delete me.map[id];
+
             if (isDestroy) {
                 sprite.destroy();
-            } else {
-                sprite.setParent(null);
-                sprite.setSurface(null);
-                Ext.Array.remove(me.getItems(), sprite);
             }
+            if (!isOwnSprite) {
+                return sprite;
+            }
+            sprite.setParent(null);
+            sprite.setSurface(null);
+            Ext.Array.remove(me.getItems(), sprite);
+
             me.dirtyZIndex = true;
             me.setDirty(true);
         }
+
+        return sprite || null;
     },
 
     /**
@@ -394,27 +416,27 @@ Ext.define('Ext.draw.Surface', {
      *
      * For example:
      *
-     *      drawContainer.getSurface('main').removeAll();
+     *     drawContainer.getSurface('main').removeAll();
      *
-     * @param {Boolean} [destroySprites=false]
+     * @param {Boolean} [isDestroy=false]
      */
-    removeAll: function (destroySprites) {
+    removeAll: function (isDestroy) {
         var items = this.getItems(),
-            i = items.length,
+            i = items.length - 1,
             item;
 
-        if (destroySprites) {
-            while (i > 0) {
-                items[--i].destroy();
+        if (isDestroy) {
+            for (; i >= 0; i--) {
+                items[i].destroy();
             }
         } else {
-            while (i > 0) {
-                i--;
+            for (; i >= 0; i--) {
                 item = items[i];
                 item.setParent(null);
                 item.setSurface(null);
             }
         }
+
         items.length = 0;
         this.map = {};
         this.dirtyZIndex = true;
@@ -428,31 +450,6 @@ Ext.define('Ext.draw.Surface', {
             this.removeAll(true);
         }
         return Ext.Array.from(this.add(items));
-    },
-
-    /**
-     * @private
-     * Initialize and apply defaults to surface items.
-     */
-    prepareItems: function (items) {
-        items = [].concat(items);
-        // Make sure defaults are applied and item is initialized
-
-        var me = this,
-            item, i, ln, j,
-            removeSprite = function (sprite) {
-                this.remove(sprite, false);
-            };
-
-        for (i = 0, ln = items.length; i < ln; i++) {
-            item = items[i];
-            if (!(item instanceof Ext.draw.sprite.Sprite)) {
-                // Temporary, just take in configs...
-                item = items[i] = me.createItem(item);
-            }
-            item.on('beforedestroy', removeSprite, me);
-        }
-        return items;
     },
 
     /**
@@ -670,10 +667,12 @@ Ext.define('Ext.draw.Surface', {
      */
     destroy: function () {
         var me = this;
+
         me.removeAll(true);
         me.setBackground(null);
         me.predecessors = null;
         me.successors = null;
+
         me.callParent();
     }
 });

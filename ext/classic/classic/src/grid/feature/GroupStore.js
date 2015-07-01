@@ -118,12 +118,6 @@ Ext.define('Ext.grid.feature.GroupStore', {
                     // TODO: Create a method in Grouping to create new metaGroups?
                     metaGroup = metaGroupCache[key] = oldMetaGroupCache[key] || groupingFeature.getMetaGroup(key);
 
-                    // It's necessary to get the raw value of the group item which will then be passed to the column renderer.
-                    // The renderer callbacks are expectind the complete data  value, not a stringified value of a complex type,
-                    // so we cache this in the group's metaGroup for easy lookup.
-                    // See Grouping#setupRowData().
-                    metaGroup.raw = group.getAt(0).get(groupField);
-
                     // Remove the group name from the list of all possible group names. This is how we'll know if any remaining groups
                     // in the old cache should be retained.
                     splice(groupNames, indexOf(groupNames, key), 1);
@@ -322,10 +316,15 @@ Ext.define('Ext.grid.feature.GroupStore', {
     // Find index of record in group store.
     // If it's in a collapsed group, then it's -1, not present
     indexOf: function(record) {
+        var ret = -1;
         if (!record.isCollapsedPlaceholder) {
-            return this.data.indexOf(record);
+            ret = this.data.indexOf(record);
         }
-        return -1;
+        return ret;
+    },
+
+    indexOfPlaceholder: function(record) {
+        return this.data.indexOf(record);
     },
 
     /**
@@ -402,45 +401,50 @@ Ext.define('Ext.grid.feature.GroupStore', {
         if (store.isGrouped()) {
             // Updating a single record, attach the group to the record for Grouping.setupRowData to use.
             group = record.group = groupingFeature.getGroup(record);
-            metaGroup = groupingFeature.getMetaGroup(record);
 
-            if (modifiedFieldNames && Ext.Array.contains(modifiedFieldNames, groupingFeature.getGroupField())) {
-                return me.onRefresh(me.store);
-            }
+            // Make sure that still we have a group and that the last member of it wasn't just filtered.
+            // See EXTJS-18083.
+            if (group) {
+                metaGroup = groupingFeature.getMetaGroup(record);
 
-            // Fire an update event on the collapsed metaGroup placeholder record
-            if (metaGroup.isCollapsed) {
-                me.fireEvent('update', me, metaGroup.placeholder);
-            }
-
-            // Not in a collapsed group, fire update event on the modified record
-            // and, if in a grouped store, on the first and last records in the group.
-            else {
-                Ext.suspendLayouts();
-
-                // Propagate the record's update event
-                me.fireEvent('update', me, record, operation, modifiedFieldNames);
-
-                // Fire update event on first and last record in group (only once if a single row group)
-                // So that custom header TPL is applied, and the summary row is updated
-                items = group.items;
-                firstRec = items[0];
-                lastRec = items[items.length - 1];
-
-                // Fire an update on the first and last row in the group (ensure we don't refire update on the modified record).
-                // This is to give interested Features the opportunity to update the first item (a wrapped group header + data row),
-                // and last item (a wrapped data row + group summary)
-                if (firstRec !== record) {
-                    firstRec.group = group;
-                    me.fireEvent('update', me, firstRec, 'edit', modifiedFieldNames);
-                    delete firstRec.group;
+                if (modifiedFieldNames && Ext.Array.contains(modifiedFieldNames, groupingFeature.getGroupField())) {
+                    return me.onRefresh(me.store);
                 }
-                if (lastRec !== record && lastRec !== firstRec && groupingFeature.showSummaryRow) {
-                    lastRec.group = group;
-                    me.fireEvent('update', me, lastRec, 'edit', modifiedFieldNames);
-                    delete lastRec.group;
+
+                // Fire an update event on the collapsed metaGroup placeholder record
+                if (metaGroup.isCollapsed) {
+                    me.fireEvent('update', me, metaGroup.placeholder);
                 }
-                Ext.resumeLayouts(true);
+
+                // Not in a collapsed group, fire update event on the modified record
+                // and, if in a grouped store, on the first and last records in the group.
+                else {
+                    Ext.suspendLayouts();
+
+                    // Propagate the record's update event
+                    me.fireEvent('update', me, record, operation, modifiedFieldNames);
+
+                    // Fire update event on first and last record in group (only once if a single row group)
+                    // So that custom header TPL is applied, and the summary row is updated
+                    items = group.items;
+                    firstRec = items[0];
+                    lastRec = items[items.length - 1];
+
+                    // Fire an update on the first and last row in the group (ensure we don't refire update on the modified record).
+                    // This is to give interested Features the opportunity to update the first item (a wrapped group header + data row),
+                    // and last item (a wrapped data row + group summary)
+                    if (firstRec !== record) {
+                        firstRec.group = group;
+                        me.fireEvent('update', me, firstRec, 'edit', modifiedFieldNames);
+                        delete firstRec.group;
+                    }
+                    if (lastRec !== record && lastRec !== firstRec && groupingFeature.showSummaryRow) {
+                        lastRec.group = group;
+                        me.fireEvent('update', me, lastRec, 'edit', modifiedFieldNames);
+                        delete lastRec.group;
+                    }
+                    Ext.resumeLayouts(true);
+                }
             }
 
             delete record.group;
@@ -467,3 +471,4 @@ Ext.define('Ext.grid.feature.GroupStore', {
         me.callParent();
     }
 });
+

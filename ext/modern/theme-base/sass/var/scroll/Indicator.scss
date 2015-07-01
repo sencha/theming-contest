@@ -9,28 +9,28 @@
  * @var {color}
  * The background color of scroll indicators when touch scrolling is enabled
  */
-$scroll-indicator-background-color: #000 !dynamic;
+$scroll-indicator-background-color: dynamic(#000);
 
 /**
  * @var {number}
  * The opacity of scroll indicators when touch scrolling is enabled
  */
-$scroll-indicator-opacity: .5 !dynamic;
+$scroll-indicator-opacity: dynamic(.5);
 
 /**
  * @var {number}
  * The border-radius of scroll indicators when touch scrolling is enabled
  */
-$scroll-indicator-border-radius: 3px !dynamic;
+$scroll-indicator-border-radius: dynamic(3px);
 
 /**
  * @var {color}
  * The background color of scroll indicators when touch scrolling is enabled
  */
-$scroll-indicator-size: 6px !dynamic;
+$scroll-indicator-size: dynamic(6px);
 
 /**
  * @var {number}
  * The space between scroll indicators and the edge of their container
  */
-$scroll-indicator-margin: 2px !dynamic;
+$scroll-indicator-margin: dynamic(2px);

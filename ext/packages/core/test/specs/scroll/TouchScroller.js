@@ -1,4 +1,4 @@
-describe('Ext.scroll.TouchScroller', function() {
+(Ext.isIE9m ? xdescribe : describe)('Ext.scroll.TouchScroller', function() {
     var el, scroller, innerElement;
 
     function makeScroller(config) {
@@ -514,6 +514,70 @@ describe('Ext.scroll.TouchScroller', function() {
         });
     });
 
+    describe("setSize", function() {
+        it("should set the size", function() {
+            makeScroller();
+            scroller.setSize({
+                x: 300,
+                y: 200
+            });
+
+            expect(scroller.getSize()).toEqual({
+                x: 300,
+                y: 200
+            });
+        });
+
+        it("should unset the size", function() {
+            makeScroller();
+            scroller.setSize({
+                x: 300,
+                y: 200
+            });
+
+            scroller.setSize(null);
+
+            expect(scroller.getSize()).toEqual({
+                x: 100,
+                y: 100
+            });
+        });
+
+        it("should set the size on both axes to a single number", function() {
+            makeScroller();
+            scroller.setSize(200);
+
+            expect(scroller.getSize()).toEqual({
+                x: 200,
+                y: 200
+            });
+        });
+
+        it("should set the x size", function() {
+            makeScroller();
+            scroller.setSize({
+                x: 200
+            });
+
+            expect(scroller.getSize()).toEqual({
+                x: 200,
+                y: 100
+            });
+        });
+
+        it("should set the y size", function() {
+            makeScroller();
+            scroller.setSize({
+                y: 200
+            });
+
+            expect(scroller.getSize()).toEqual({
+                x: 100,
+                y: 200
+            });
+        });
+    });
+
     describe("getClientSize", function() {
         beforeEach(function() {
             el.destroy();
@@ -571,24 +635,6 @@ describe('Ext.scroll.TouchScroller', function() {
             var size = scroller.getClientSize();
             expect(size.x).toBe(200 - (20 * 2));
             expect(size.y).toBe(200 - (10 * 2));
-        });
-    });
-
-    describe("container sizing", function()  {
-        it("should be able to shrink wrap around the inner element", function() {
-            var style = el.dom.style;
-            style.height = 'auto';
-            style.width = 'auto';
-            style.position = 'absolute';
-
-            el.appendChild({
-                style: 'height:400px;width:600px;'
-            });
-
-            makeScroller();
-
-            expect(el.getHeight()).toBe(400);
-            expect(el.getWidth()).toBe(600);
         });
     });
 

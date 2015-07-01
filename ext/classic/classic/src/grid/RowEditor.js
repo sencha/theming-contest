@@ -183,7 +183,6 @@ Ext.define('Ext.grid.RowEditor', {
 
     onValidityChange: function(form, valid) {
         this.updateButton(valid);
-        this.isValid = valid;
     },
 
     onErrorChange: function() {
@@ -919,6 +918,11 @@ Ext.define('Ext.grid.RowEditor', {
         } else if (me._buttonsOnTop !== false) {
             floatingButtons.setButtonPosition('bottom');
             me._buttonsOnTop = false;
+        }
+        // Ensure button Y position is synced with Editor height even if button
+        // orientation doesn't change
+        else {
+            floatingButtons.setButtonPosition(floatingButtons.position);
         }
 
         return scrollDelta;

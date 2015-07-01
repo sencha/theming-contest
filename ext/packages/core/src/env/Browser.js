@@ -59,7 +59,11 @@
             browserVersion = new Ext.Version(version);
         }
     }
-
+    
+    if (browserName && browserVersion) {
+        Ext.setVersion(browserName, browserVersion);
+    }
+    
     /**
      * @property chromeVersion
      * The current version of Chrome (0 if the browser is not Chrome).

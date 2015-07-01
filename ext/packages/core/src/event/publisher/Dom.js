@@ -428,7 +428,8 @@ Ext.define('Ext.event.publisher.Dom', {
     doDirectEvent: function(e, capture) {
         var me = this,
             currentTarget = e.currentTarget,
-            timeStamp = e.timeStamp;
+            timeStamp = e.timeStamp,
+            el;
 
         e = new Ext.event.Event(e);
 
@@ -439,12 +440,20 @@ Ext.define('Ext.event.publisher.Dom', {
         me.beforeEvent(e);
 
         Ext.frameStartTime = timeStamp;
-
-        // Since natural DOM propagation has occurred, no emulated propagation is needed.
-        // Simply dispatch the event on the currentTarget element
-        me.reEnterCount++;
-        me.fire(Ext.cache[currentTarget.id], e.type, e, true, capture);
-        me.reEnterCount--;
+        
+        el = Ext.cache[currentTarget.id];
+        
+        // Element can be removed from the cache by this time, with the node
+        // still lingering for some reason. This can happen for example when
+        // load event is fired on an iframe that we constructed when submitting
+        // a form for file uploads.
+        if (el) {
+            // Since natural DOM propagation has occurred, no emulated propagation is needed.
+            // Simply dispatch the event on the currentTarget element
+            me.reEnterCount++;
+            me.fire(el, e.type, e, true, capture);
+            me.reEnterCount--;
+        }
 
         me.afterEvent(e);
     },
@@ -519,6 +528,15 @@ Ext.define('Ext.event.publisher.Dom', {
             // both look for flags on the same object.
             self = Ext.event.publisher.Dom,
             now = Ext.now();
+
+        // Gecko has a bug where right clicking will trigger both a contextmenu
+        // and click event. This only occurs when delegating the event onto the window
+        // object like we do by default for delegated events.
+        // This is not possible to feature detect using synthetic events.
+        // Ticket logged: https://bugzilla.mozilla.org/show_bug.cgi?id=1156023
+        if (Ext.isGecko && e.type === 'click' && e.button === 2) {
+            return false;
+        }
 
         // prevent emulated pointerover, pointerout, pointerenter, and pointerleave
         // events from firing when triggered by touching the screen.

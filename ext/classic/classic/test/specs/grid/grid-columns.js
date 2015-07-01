@@ -3,7 +3,7 @@ describe("grid-columns", function() {
         describe(buffered ? "with buffered rendering" : "without buffered rendering", function() {
             var defaultColNum = 4,
                 totalWidth = 1000,
-                grid, colRef, store;
+                grid, colRef, store, column;
                 
             function makeGrid(numCols, gridCfg, hiddenFn, lockedFn){
                 var cols, col, i;
@@ -96,7 +96,8 @@ describe("grid-columns", function() {
             }
 
             function tearDown() {
-                grid = store = colRef = Ext.destroy(grid, store);
+                Ext.destroy(grid, store, column);
+                grid = store = colRef = column = null;
                 Ext.undefine('spec.TestModel');
                 Ext.data.Model.schema.clear();
             }
@@ -259,6 +260,10 @@ describe("grid-columns", function() {
                             }]
                         });
                         expect(grid.lockable).toBe(true);    
+
+                        // Top level grid should return columns from both sides
+                        expect(grid.getVisibleColumns().length).toBe(2);
+                        expect(grid.getColumns().length).toBe(2);
                     });
                 });
             });
@@ -344,7 +349,9 @@ describe("grid-columns", function() {
                             });
                             
                             it("should return -1 if the column doesn't exist", function(){
-                                expect(gam().getHeaderIndex(new Ext.grid.column.Column())).toBe(-1);
+                                column = new Ext.grid.column.Column();
+                                
+                                expect(gam().getHeaderIndex(column)).toBe(-1);
                             });
                         });    
                         
@@ -550,7 +557,9 @@ describe("grid-columns", function() {
                             });
                         
                             it("should return -1 if the column doesn't exist", function() {
-                                expect(gvm().getHeaderIndex(new Ext.grid.column.Column())).toBe(-1);
+                                column = new Ext.grid.column.Column();
+                                
+                                expect(gvm().getHeaderIndex(column)).toBe(-1);
                             });
 
                             it('should not return a hidden sub-header', function () {
@@ -1064,6 +1073,11 @@ describe("grid-columns", function() {
                 var baseCols;
 
                 function createGrid(cols, stateful) {
+                    if (grid) {
+                        grid.destroy();
+                        grid = null;
+                    }
+                    
                     makeGrid(cols, {
                         renderTo: null,
                         stateful: stateful,
@@ -1816,8 +1830,10 @@ describe("grid-columns", function() {
                                 itemId: 'col23'
                             }]
                         }];
+                        
                         createGrid(baseCols);
                     });
+                    
                     describe("before render", function() {
                         it("should destroy the group header when removing all columns", function() {
                             var headerCt = grid.headerCt,
@@ -2252,7 +2268,7 @@ describe("grid-columns", function() {
                             return i === 0;
                         });
 
-                        var borderWidth = 1;
+                        var borderWidth = grid.lockedGrid.el.getBorderWidth('lr');
 
                         // Default column width
                         expect(grid.lockedGrid.getWidth()).toBe(100 + borderWidth);
@@ -2265,6 +2281,31 @@ describe("grid-columns", function() {
                         }, {}, {}])
                         expect(grid.lockedGrid.getWidth()).toBe(120 + 170 + borderWidth);
                     });
+                });
+            });
+            
+            describe('column header borders', function() {
+                it('should show header borders by default, and turn them off dynamically', function() {
+                    makeGrid();
+                    expect(colRef[0].el.getBorderWidth('r')).toBe(1);
+                    expect(colRef[1].el.getBorderWidth('r')).toBe(1);
+                    expect(colRef[2].el.getBorderWidth('r')).toBe(1);
+                    grid.setHeaderBorders(false);
+                    expect(colRef[0].el.getBorderWidth('r')).toBe(0);
+                    expect(colRef[1].el.getBorderWidth('r')).toBe(0);
+                    expect(colRef[2].el.getBorderWidth('r')).toBe(0);
+                });
+                it('should have no borders if configured false, and should show them dynamically', function() {
+                    makeGrid(null, {
+                        headerBorders: false
+                    });
+                    expect(colRef[0].el.getBorderWidth('r')).toBe(0);
+                    expect(colRef[1].el.getBorderWidth('r')).toBe(0);
+                    expect(colRef[2].el.getBorderWidth('r')).toBe(0);
+                    grid.setHeaderBorders(true);
+                    expect(colRef[0].el.getBorderWidth('r')).toBe(1);
+                    expect(colRef[1].el.getBorderWidth('r')).toBe(1);
+                    expect(colRef[2].el.getBorderWidth('r')).toBe(1);
                 });
             });
         });

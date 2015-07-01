@@ -1960,7 +1960,7 @@ describe("Ext", function() {
             it("should call the elevateFunction when Ext.interval() is called", function() {
                 var args, interval;
 
-                Ext.Function.createSequence(fn, function () {
+                fn = Ext.Function.createSequence(fn, function () {
                     clearInterval(interval);
                 });
 

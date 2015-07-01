@@ -18,7 +18,12 @@ Ext.define('Ext.grid.plugin.HeaderReorderer', {
     destroy: function() {
         var me = this;
         
-        me.dragZone = me.dropZone = Ext.destroy(me.dragZone, me.dropZone);
+        // The grid may happen to never render
+        me.headerCt.un('boxready', me.onHeaderCtRender, me);
+        
+        Ext.destroy(me.dragZone, me.dropZone);
+        me.headerCt = me.dragZone = me.dropZone = null;
+        
         me.callParent();
     },
 

@@ -464,6 +464,7 @@ function () {
     /**
      * Destroys this instance, stopping this task's execution.
      * @method destroy
+     * @member Ext.util.TaskRunner.Task
      */
     proto.destroy = proto.stop;
 });

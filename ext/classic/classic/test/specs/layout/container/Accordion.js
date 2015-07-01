@@ -995,7 +995,7 @@ describe("Ext.layout.container.Accordion", function() {
                         });
                 
                         it("should not have tabindex", function() {
-                            expectNoAria(foo.body, 'tabindex');
+                            expectNoAria(foo.body, 'tabIndex');
                         });
                     });
                 });
@@ -1063,7 +1063,7 @@ describe("Ext.layout.container.Accordion", function() {
                         });
                 
                         it("should not have tabindex", function() {
-                            expectNoAria(bar.body, 'tabindex');
+                            expectNoAria(bar.body, 'tabIndex');
                         });
                     });
                 });

@@ -360,6 +360,8 @@ describe("Ext.tab.Bar", function() {
                     expectVisible(item);
                     tabBar.ensureTabVisible(c);
                     expectVisible(item);
+                    
+                    c.destroy();
                 });
             });
         });

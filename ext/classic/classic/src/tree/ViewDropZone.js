@@ -296,9 +296,6 @@ Ext.define('Ext.tree.ViewDropZone', {
                 }
                 argList[0] = record;
                 insertionMethod.apply(targetNode, argList);
-
-                // Focus the dropped node.
-                targetView.getNavigationModel().setPosition(record);
             }
 
             // If configured to sort on drop, do it according to the TreeStore's comparator
@@ -307,6 +304,11 @@ Ext.define('Ext.tree.ViewDropZone', {
             }
             
             Ext.resumeLayouts(true);
+            
+            // Focus the dropped node.
+            record = data.records[0];
+            targetView.ownerGrid.ensureVisible(record);
+            targetView.getNavigationModel().setPosition(record);
 
             // Kick off highlights after everything's been inserted, so they are
             // more in sync without insertion/render overhead.

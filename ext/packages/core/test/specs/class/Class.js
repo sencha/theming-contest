@@ -2668,8 +2668,10 @@ describe("Ext.Class", function() {
                 });
 
             Ext.undefine('Foo');
+            
+            delete Ext.ClassManager.nameCreatedListeners['Foo.Nothing'];
 
-            obj = null;
+            obj = createFnsCalled = null;
         });
 
         it("should call the createdFn", function () {

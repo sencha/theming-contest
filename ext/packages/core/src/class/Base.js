@@ -1598,7 +1598,9 @@ var noArgs = [],
         destroy: function() {
             var me = this,
                 links = me.$links;
-
+            
+            me.initialConfig = me.config = null;
+            
             me.destroy = Ext.emptyFn;
             // isDestroyed added for compat reasons
             me.isDestroyed = me.destroyed = true;

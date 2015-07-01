@@ -101,15 +101,21 @@ Ext.define('Ext.selection.CheckboxModel', {
     
     tdCls: Ext.baseCSSPrefix + 'grid-cell-special ' + Ext.baseCSSPrefix + 'grid-cell-row-checker',
     
+
     constructor: function() {
         var me = this;
-        me.callParent(arguments);   
-        
+        me.callParent(arguments);
+
         // If mode is single and showHeaderCheck isn't explicity set to
         // true, hide it.
-        if (me.mode === 'SINGLE' && me.showHeaderCheckbox !== true) {
+        if (me.mode === 'SINGLE') {
+            //<debug>
+            if (me.showHeaderCheckbox) {
+                Ext.Error.raise('The header checkbox is not supported for SINGLE mode selection models.');
+            }
+            //</debug>
             me.showHeaderCheckbox = false;
-        } 
+        }
     },
 
     beforeViewRender: function(view) {
@@ -216,10 +222,12 @@ Ext.define('Ext.selection.CheckboxModel', {
      * a checkbox header.
      */
     onHeaderClick: function(headerCt, header, e) {
-        if (header === this.column) {
+        var me = this,
+            isChecked;
+
+        if (header === me.column && me.mode !== 'SINGLE') {
             e.stopEvent();
-            var me = this,
-                isChecked = header.el.hasCls(Ext.baseCSSPrefix + 'grid-hd-checker-on');
+            isChecked = header.el.hasCls(Ext.baseCSSPrefix + 'grid-hd-checker-on');
 
             if (isChecked) {
                 me.deselectAll();
@@ -235,10 +243,11 @@ Ext.define('Ext.selection.CheckboxModel', {
      */
     getHeaderConfig: function() {
         var me = this,
-            showCheck = me.showHeaderCheckbox !== false;     
+            showCheck = me.showHeaderCheckbox !== false;
 
         return {
             xtype: 'gridcolumn',
+            ignoreExport: true,
             isCheckerHd: showCheck,
             text : '&#160;',
             clickTargetName: 'el',

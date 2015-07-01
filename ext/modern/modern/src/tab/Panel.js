@@ -63,14 +63,6 @@ Ext.define('Ext.tab.Panel', {
 
     config: {
         /**
-         * @cfg {String} ui
-         * Sets the UI of this component.
-         * Available values are: `light` and `dark`.
-         * @accessor
-         */
-        ui: 'dark',
-
-        /**
          * @cfg {Object} tabBar
          * An Ext.tab.Bar configuration.
          * @accessor

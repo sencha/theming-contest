@@ -1,13 +1,19 @@
 describe('Ext.Button', function() {
-    var button,
-        createButton = function(config) {
-            button = Ext.create('Ext.Button', config || {});
-        };
+    var button;
+    
+    function createButton(config) {
+        config = Ext.apply({
+        }, config);
+        
+        button = new Ext.Button(config);
+    };
 
     afterEach(function() {
         if (button) {
             button.destroy();
         }
+        
+        button = null;
     });
 
     describe("configurations", function() {
@@ -605,7 +611,7 @@ describe('Ext.Button', function() {
             });
         });
 
-        describe("touchstart", function() {
+        (Ext.supports.Touch ? describe : xdescribe)("touchstart", function() {
             it("should call onPress", function() {
                 spyOn(button, "onPress");
 
@@ -615,7 +621,7 @@ describe('Ext.Button', function() {
             });
         });
 
-        describe("touchend", function() {
+        (Ext.supports.Touch ? describe : xdescribe)("touchend", function() {
             it("should call onRelease", function() {
                 spyOn(button, "onRelease");
 
@@ -625,5 +631,4 @@ describe('Ext.Button', function() {
             });
         });
     });
-
 });

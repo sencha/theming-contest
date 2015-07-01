@@ -31,59 +31,55 @@ describe("Ext.view.AbstractView", function(){
         store = view = null;
     });
 
-    describe("without any select config", function(){
-
-        it("should give selection model mode 'SINGLE'", function(){
-            var c = new Ext.view.AbstractView({
+    describe("without any select config", function() {
+        it("should give selection model mode 'SINGLE'", function() {
+            view = new Ext.view.AbstractView({
                 tpl: null,
                 store: store,
                 itemSelector: null
             });
-            expect(c.getSelectionModel().mode).toEqual('SINGLE');
+            
+            expect(view.getSelectionModel().mode).toEqual('SINGLE');
         });
-
     });
 
-    describe("with single select config", function(){
-
-        it("should give selection model mode 'SINGLE'", function(){
-            var c = new Ext.view.AbstractView({
+    describe("with single select config", function() {
+        it("should give selection model mode 'SINGLE'", function() {
+            view = new Ext.view.AbstractView({
                 tpl: null,
                 store: store,
                 itemSelector: null,
                 singleSelect: true
             });
-            expect(c.getSelectionModel().mode).toEqual('SINGLE');
+            
+            expect(view.getSelectionModel().mode).toEqual('SINGLE');
         });
-
     });
 
-    describe("with simple select config", function(){
-
-        it("should give selection model mode 'SIMPLE'", function(){
-            var c = new Ext.view.AbstractView({
+    describe("with simple select config", function() {
+        it("should give selection model mode 'SIMPLE'", function() {
+            view = new Ext.view.AbstractView({
                 tpl: null,
                 store: store,
                 itemSelector: null,
                 simpleSelect: true
             });
-            expect(c.getSelectionModel().mode).toEqual('SIMPLE');
+            
+            expect(view.getSelectionModel().mode).toEqual('SIMPLE');
         });
-
     });
 
-    describe("with multi select config", function(){
-
-        it("should give selection model mode 'MULTI'", function(){
-            var c = new Ext.view.AbstractView({
+    describe("with multi select config", function() {
+        it("should give selection model mode 'MULTI'", function() {
+            view = new Ext.view.AbstractView({
                 tpl: null,
                 store: store,
                 itemSelector: null,
                 multiSelect: true
             });
-            expect(c.getSelectionModel().mode).toEqual('MULTI');
+            
+            expect(view.getSelectionModel().mode).toEqual('MULTI');
         });
-
     });
 
     describe("Initial layout call", function(){

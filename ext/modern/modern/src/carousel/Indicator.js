@@ -4,8 +4,7 @@
  */
 Ext.define('Ext.carousel.Indicator', {
     extend: 'Ext.Component',
-    xtype : 'carouselindicator',
-    alternateClassName: 'Ext.Carousel.Indicator',
+    xtype: 'carouselindicator',
 
     config: {
         /**

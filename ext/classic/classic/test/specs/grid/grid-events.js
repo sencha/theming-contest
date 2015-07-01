@@ -1,7 +1,23 @@
 describe("grid-events", function() {
     function createSuite(buffered) {
         describe(buffered ? "with buffered rendering" : "without buffered rendering", function() {
-            var grid, view, store, args, called;
+            var grid, view, store, selModel, args, called,
+                GridEventModel = Ext.define(null, {
+                    extend: 'Ext.data.Model',
+                    fields: [
+                        'field1',
+                        'field2',
+                        'field3',
+                        'field4',
+                        'field5',
+                        'field6',
+                        'field7',
+                        'field8',
+                        'field9',
+                        'field10',
+                        'group'
+                    ]
+                });
             
             function triggerCellMouseEvent(type, rowIdx, cellIdx, button, x, y) {
                 var target = findCell(rowIdx, cellIdx);
@@ -48,23 +64,6 @@ describe("grid-events", function() {
             }
             
             function makeGrid(columns, grouped, gridCfg) {
-                Ext.define('spec.GridEventModel', {
-                    extend: 'Ext.data.Model',
-                    fields: [
-                        'field1',
-                        'field2',
-                        'field3',
-                        'field4',
-                        'field5',
-                        'field6',
-                        'field7',
-                        'field8',
-                        'field9',
-                        'field10',
-                        'group'
-                    ]
-                });
-
                 var data = [],
                     defaultCols = [],
                     i;
@@ -93,7 +92,7 @@ describe("grid-events", function() {
                 }
 
                 store = {
-                    model: spec.GridEventModel,
+                    model: GridEventModel,
                     data: data
                 };
 
@@ -125,13 +124,13 @@ describe("grid-events", function() {
 
                 grid = new Ext.grid.Panel(grid);
                 view = grid.getView();
+                selModel = view.getSelectionModel();
             }
             
             afterEach(function(){
                 Ext.destroy(grid, store);
                 grid = store = view = args = null;
                 called = false;
-                Ext.undefine('spec.GridEventModel');
                 Ext.data.Model.schema.clear();
             });
             
@@ -1123,6 +1122,33 @@ describe("grid-events", function() {
                             text: 'F10',
                             dataIndex: 'field10'
                         }]);
+                    });
+
+                    describe('selection events', function() {
+                        var callCount;
+
+                        function countEvent(eventName) {
+                            grid.on(eventName, function() {
+                                callCount++;
+                            });
+                        }
+                        function createTest(eventName) {
+                            it('should fire the ' + eventName + ' event once', function() {
+                                selModel.select(0);
+                                countEvent(eventName);
+                                selModel.select(1);
+                                expect(callCount).toBe(1);
+                            });
+                        }
+
+                        beforeEach(function() {
+                            callCount = 0;
+                        });
+                        createTest('deselect');
+                        createTest('select');
+                        createTest('beforeselect');
+                        createTest('beforedeselect');
+                        createTest('selectionchange');
                     });
 
                     describe('row events', function () {

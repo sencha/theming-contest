@@ -404,6 +404,7 @@ describe("Ext.util.Floating", function() {
         });
 
         afterEach(function() {
+            Ext.un('scroll', spy);
             count = c = floater = spy = Ext.destroy(floater, c);
         });
 
@@ -520,6 +521,7 @@ describe("Ext.util.Floating", function() {
         });
 
         afterEach(function() {
+            Ext.un('scroll', spy);
             count = c = floater = spy = Ext.destroy(floater, c);
         });
 

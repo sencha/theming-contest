@@ -40,9 +40,16 @@ Ext.define('Ext.fx.Queue', {
     stopAnimation: function(targetId) {
         var me = this,
             queue = me.getFxQueue(targetId),
-            ln = queue.length;
+            ln = queue.length,
+            item;
+        
         while (ln) {
-            queue[ln - 1].end();
+            item = queue[ln - 1];
+            
+            if (item) {
+                item.end();
+            }
+            
             ln--;
         }
     },

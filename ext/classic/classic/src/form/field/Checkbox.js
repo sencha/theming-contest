@@ -109,18 +109,18 @@ Ext.define('Ext.form.field.Checkbox', {
     // note: {id} here is really {inputId}, but {cmpId} is available
     fieldSubTpl: [
         '<div id="{cmpId}-innerWrapEl" data-ref="innerWrapEl" role="presentation"',
-            ' class="{wrapInnerCls} {noBoxLabelCls}">',
+            ' class="{wrapInnerCls}">',
             '<tpl if="labelAlignedBefore">',
                 '{beforeBoxLabelTpl}',
                 '<label id="{cmpId}-boxLabelEl" data-ref="boxLabelEl" {boxLabelAttrTpl} class="{boxLabelCls} ',
-                        '{boxLabelCls}-{ui} {boxLabelCls}-{boxLabelAlign} {childElCls}" for="{id}">',
+                        '{boxLabelCls}-{ui} {boxLabelCls}-{boxLabelAlign} {noBoxLabelCls} {childElCls}" for="{id}">',
                     '{beforeBoxLabelTextTpl}',
                     '{boxLabel}',
                     '{afterBoxLabelTextTpl}',
                 '</label>',
                 '{afterBoxLabelTpl}',
             '</tpl>',
-            '<input type="{type}" id="{id}" data-ref="inputEl" {inputAttrTpl}',
+            '<input type="button" id="{id}" name="{inputName}" data-ref="inputEl" {inputAttrTpl}',
                 '<tpl if="tabIdx != null"> tabindex="{tabIdx}"</tpl>',
                 '<tpl if="disabled"> disabled="disabled"</tpl>',
                 '<tpl if="fieldStyle"> style="{fieldStyle}"</tpl>',
@@ -132,7 +132,7 @@ Ext.define('Ext.form.field.Checkbox', {
             '<tpl if="!labelAlignedBefore">',
                 '{beforeBoxLabelTpl}',
                 '<label id="{cmpId}-boxLabelEl" data-ref="boxLabelEl" {boxLabelAttrTpl} class="{boxLabelCls} ',
-                        '{boxLabelCls}-{ui} {boxLabelCls}-{boxLabelAlign} {childElCls}" for="{id}">',
+                        '{boxLabelCls}-{ui} {boxLabelCls}-{boxLabelAlign} {noBoxLabelCls} {childElCls}" for="{id}">',
                     '{beforeBoxLabelTextTpl}',
                     '{boxLabel}',
                     '{afterBoxLabelTextTpl}',
@@ -191,7 +191,6 @@ Ext.define('Ext.form.field.Checkbox', {
          */
         'boxLabelAttrTpl',
 
-        // inherited
         'inputAttrTpl'
     ],
 
@@ -254,11 +253,7 @@ Ext.define('Ext.form.field.Checkbox', {
 
     wrapInnerCls: Ext.baseCSSPrefix + 'form-cb-wrap-inner',
 
-    // This is to work around lack of min-width support in older IE browsers.
-    // If it's determined that there is no box label, apply the following class to the
-    // wrapper around the inputEl and all browsers will get width from its theme's CSS rule.
-    // See EXTJSIV-10302 and EXTJSIV-10977.
-    noBoxLabelCls: Ext.baseCSSPrefix + 'form-cb-wrap-inner-no-box-label',
+    noBoxLabelCls: Ext.baseCSSPrefix + 'form-cb-no-box-label',
 
     /**
      * @cfg {String} inputValue
@@ -316,9 +311,14 @@ Ext.define('Ext.form.field.Checkbox', {
             me.checked = me.isChecked(value, me.inputValue);
         }
         
-        me.callParent(arguments);
+        me.callParent();
+        
         me.getManager().add(me);
     },
+    
+    // Checkboxes and Radio buttons may have their names managed by their respective group.
+    // This happens in CheckboxGroup.onAdd() so we skip default name assignment here.
+    initDefaultName: Ext.emptyFn,
 
     initValue: function() {
         var me = this,
@@ -363,7 +363,15 @@ Ext.define('Ext.form.field.Checkbox', {
             boxLabelAlign: boxLabelAlign,
             labelAlignedBefore: labelAlignedBefore,
             afterLabelCls: labelAlignedBefore ? me.afterLabelCls : '',
-            noBoxLabelCls: !boxLabel ? me.noBoxLabelCls : ''
+            noBoxLabelCls: !boxLabel ? me.noBoxLabelCls : '',
+            
+            // We need to have name attribute on the <input> element
+            // even if it wasn't specified in component config;
+            // some browsers (Chrome, Safari) will treat missing name
+            // as empty, grouping all radio buttons with empty name
+            // together. This causes funky but unwanted effects
+            // with regards to keyboard navigation.
+            inputName: me.name || me.id
         });
         
         inputElAttr = data.inputElAriaAttributes;
@@ -404,7 +412,7 @@ Ext.define('Ext.form.field.Checkbox', {
         me.boxLabel = boxLabel;
         if (me.rendered) {
             me.boxLabelEl.setHtml(boxLabel);
-            me.innerWrapEl[boxLabel ? 'removeCls' : 'addCls'](me.noBoxLabelCls);
+            me.boxLabelEl[boxLabel ? 'removeCls' : 'addCls'](me.noBoxLabelCls);
             me.updateLayout();
         }
     },
@@ -462,6 +470,7 @@ Ext.define('Ext.form.field.Checkbox', {
     setRawValue: function(value) {
         var me = this,
             inputEl = me.inputEl,
+            displayEl = me.displayEl,
             checked = me.isChecked(value, me.inputValue);
 
         if (inputEl) {
@@ -470,6 +479,11 @@ Ext.define('Ext.form.field.Checkbox', {
             if (me.ariaRole) {
                 me.ariaEl.dom.setAttribute('aria-checked', checked);
             }
+        }
+        
+        // IE8 has a bug with font icons and pseudo-elements, see below in onFocus override
+        if (Ext.isIE8 && displayEl && checked !== me.lastValue) {
+            displayEl.repaint();
         }
 
         me.checked = me.rawValue = checked;
@@ -565,13 +579,11 @@ Ext.define('Ext.form.field.Checkbox', {
         me.callParent();
     },
 
-    // inherit docs
     beforeDestroy: function(){
         this.callParent();
         this.getManager().removeAtKey(this.id);
     },
 
-    // inherit docs
     getManager: function() {
         return Ext.form.CheckboxManager;
     },
@@ -614,7 +626,12 @@ Ext.define('Ext.form.field.Checkbox', {
     },
 
     privates: {
-        _onDisplayElMouseDown: function() {
+        _onDisplayElMouseDown: function(e) {
+            // The preventDefault here is due to an issue in iOS where the
+            // inputEl still receives tap events, which means we check, then
+            // immediately uncheck. Don't need to conditionalize this, other
+            // browsers don't receive the event on the checkbox
+            e.preventDefault();
             this.inputEl.focus(1);
         }
     }

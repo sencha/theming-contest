@@ -1,5 +1,4 @@
 describe('Ext.selection.CheckboxModel', function() {
-
     var grid, view, store, checkboxModel, data,
         donRec, evanRec, nigeRec;
 
@@ -45,7 +44,7 @@ describe('Ext.selection.CheckboxModel', function() {
                 name: 'Nige'
             }]
         });
-        
+
         donRec = store.getById(1);
         evanRec = store.getById(2);
         nigeRec = store.getById(3);
@@ -65,7 +64,7 @@ describe('Ext.selection.CheckboxModel', function() {
         expect(headerCheckbox.hasCls(checkboxModel.checkerOnCls)).toBe(checked);
     }
 
-    function clickOnHeaderCheckbox(checkboxModel) {
+    function clickOnHeaderCheckbox() {
         jasmine.fireMouseEvent(checkboxModel.getHeaderCheckbox().el.dom, 'click', 10, 10);
     }
 
@@ -310,16 +309,16 @@ describe('Ext.selection.CheckboxModel', function() {
             it('should select unselected records on ctrl+SPACE, and deselect selected records on ctrl+SPACE', function() {
                 grid.view.getNavigationModel().setPosition(0);
                 expect(checkboxModel.getSelection().length).toBe(0);
-                keyCheckbox(0, Ext.EventObject.SPACE);
+                keyCheckbox(0, Ext.event.Event.SPACE);
                 expect(checkboxModel.getSelection().length).toBe(1);
-                keyCheckbox(0, Ext.EventObject.DOWN, false, true);
+                keyCheckbox(0, Ext.event.Event.DOWN, false, true);
                 expect(checkboxModel.getSelection().length).toBe(1);
-                keyCheckbox(1, Ext.EventObject.DOWN, false, true);
-                keyCheckbox(2, Ext.EventObject.SPACE);
+                keyCheckbox(1, Ext.event.Event.DOWN, false, true);
+                keyCheckbox(2, Ext.event.Event.SPACE);
                 expect(checkboxModel.getSelection().length).toBe(2);
-                keyCheckbox(2, Ext.EventObject.UP, false, true);
-                keyCheckbox(1, Ext.EventObject.UP, false, true);
-                keyCheckbox(0, Ext.EventObject.SPACE);
+                keyCheckbox(2, Ext.event.Event.UP, false, true);
+                keyCheckbox(1, Ext.event.Event.UP, false, true);
+                keyCheckbox(0, Ext.event.Event.SPACE);
                 expect(checkboxModel.getSelection().length).toBe(1);
             });
         });
@@ -443,34 +442,55 @@ describe('Ext.selection.CheckboxModel', function() {
     });
 
     describe("check all", function() {
-        beforeEach(function() {
-            makeGrid();
-        });
-        it("should check all when no record is checked", function() {    
-            expectHeaderChecked(checkboxModel, false);
+        describe('mode="SINGLE"', function () {
+            it('should not render the header checkbox by default', function () {
+                makeGrid({
+                    mode: 'SINGLE'
+                });
 
-            clickOnHeaderCheckbox(checkboxModel);
-            expectHeaderChecked(checkboxModel, true);
+                expect(checkboxModel.getHeaderCheckbox()).toBe(null);
+            });
 
-            expect(checkboxModel.isSelected(donRec)).toBe(true);
-            expect(checkboxModel.isSelected(evanRec)).toBe(true);
-            expect(checkboxModel.isSelected(nigeRec)).toBe(true);
-        });
-
-        it("should check all when some records are checked", function() {
-            expectHeaderChecked(checkboxModel, false);
-
-            checkboxModel.select(donRec, true);
-            checkboxModel.select(nigeRec, true);
-
-            clickOnHeaderCheckbox(checkboxModel);
-            expectHeaderChecked(checkboxModel, true);
-
-            expect(checkboxModel.isSelected(donRec)).toBe(true);
-            expect(checkboxModel.isSelected(evanRec)).toBe(true);
-            expect(checkboxModel.isSelected(nigeRec)).toBe(true);
+            it('should not render the header checkbox by config', function () {
+                expect(function () {
+                    makeGrid({
+                        mode: 'SINGLE',
+                        showHeaderCheckbox: true
+                    });
+                }).toThrow('The header checkbox is not supported for SINGLE mode selection models.')
+            });
         });
 
+        describe('mode="MULTI"', function () {
+            beforeEach(function() {
+                makeGrid();
+            });
+
+            it("should check all when no record is checked", function() {
+                expectHeaderChecked(checkboxModel, false);
+
+                clickOnHeaderCheckbox();
+                expectHeaderChecked(checkboxModel, true);
+
+                expect(checkboxModel.isSelected(donRec)).toBe(true);
+                expect(checkboxModel.isSelected(evanRec)).toBe(true);
+                expect(checkboxModel.isSelected(nigeRec)).toBe(true);
+            });
+
+            it("should check all when some records are checked", function() {
+                expectHeaderChecked(checkboxModel, false);
+
+                checkboxModel.select(donRec, true);
+                checkboxModel.select(nigeRec, true);
+
+                clickOnHeaderCheckbox();
+                expectHeaderChecked(checkboxModel, true);
+
+                expect(checkboxModel.isSelected(donRec)).toBe(true);
+                expect(checkboxModel.isSelected(evanRec)).toBe(true);
+                expect(checkboxModel.isSelected(nigeRec)).toBe(true);
+            });
+        });
     });
 
     describe("uncheck all", function() {
@@ -483,8 +503,8 @@ describe('Ext.selection.CheckboxModel', function() {
             checkboxModel.select(evanRec, true);
             checkboxModel.select(nigeRec, true);
             expectHeaderChecked(checkboxModel, true);
-    
-            clickOnHeaderCheckbox(checkboxModel);
+
+            clickOnHeaderCheckbox();
             expectHeaderChecked(checkboxModel, false);
             expect(checkboxModel.isSelected(donRec)).toBe(false);
             expect(checkboxModel.isSelected(evanRec)).toBe(false);

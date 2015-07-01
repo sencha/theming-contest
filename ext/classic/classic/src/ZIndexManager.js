@@ -1,13 +1,16 @@
 /**
- * A class that manages a group of {@link Ext.Component#floating} Components and provides z-order management,
- * and Component activation behavior, including masking below the active (topmost) Component.
+ * A class that manages a group of {@link Ext.Component#cfg-floating} Components and 
+ * provides z-order management, and Component activation behavior, including masking 
+ * below the active (topmost) Component.
  *
- * {@link Ext.Component#floating Floating} Components which are rendered directly into the document (such as
- * {@link Ext.window.Window Window}s) which are {@link Ext.Component#method-show show}n are managed by a
+ * {@link Ext.Component#cfg-floating Floating} Components which are rendered directly 
+ * into the document (such as {@link Ext.window.Window Window}s) which are 
+ * {@link Ext.Component#method-show show}n are managed by a
  * {@link Ext.WindowManager global instance}.
  *
- * {@link Ext.Component#floating Floating} Components which are descendants of {@link Ext.Component#floating floating}
- * *Containers* (for example a {@link Ext.view.BoundList BoundList} within an {@link Ext.window.Window Window},
+ * {@link Ext.Component#cfg-floating Floating} Components which are descendants of 
+ * {@link Ext.Component#cfg-floating floating} *Containers* (for example a 
+ * {@link Ext.view.BoundList BoundList} within an {@link Ext.window.Window Window},
  * or a {@link Ext.menu.Menu Menu}), are managed by a ZIndexManager owned by that floating Container. Therefore
  * ComboBox dropdowns within Windows will have managed z-indices guaranteed to be correct, relative to the Window.
  */
@@ -463,6 +466,13 @@ Ext.define('Ext.ZIndexManager', {
 
         for (i = 0; i < len; i++) {
             Ext.destroy(stack[i]);
+        }
+        
+        if (me.container) {
+            me.container.un('resize', me.onContainerResize, me);
+        }
+        else if (me.targetEl) {
+            Ext.un('resize', me.onContainerResize, me);
         }
 
         Ext.destroy(me.mask, me.maskShim, me.zIndexStack, me.globalListeners);

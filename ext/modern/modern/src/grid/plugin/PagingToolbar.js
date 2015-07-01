@@ -25,10 +25,8 @@ Ext.define('Ext.grid.plugin.PagingToolbar', {
             items: [{
                 xtype: 'button',
                 ui: 'plain',
-                iconCls: 'arrow_left',
-                action: 'previouspage',
-                left: 0,
-                top: 5
+                iconCls: Ext.baseCSSPrefix + 'grid-pagingtoolbar-prev',
+                action: 'previouspage'
             }, {
                 xtype: 'component',
                 role: 'currentpage',
@@ -40,7 +38,7 @@ Ext.define('Ext.grid.plugin.PagingToolbar', {
                 width: 50,
                 tpl: '&nbsp;/ {totalPages}'
             }, {
-                xtype: 'sliderfield',
+                xtype: 'singlesliderfield',
                 value: 1,
                 flex: 1,
                 minValue: 1,
@@ -48,70 +46,71 @@ Ext.define('Ext.grid.plugin.PagingToolbar', {
             }, {
                 xtype: 'button',
                 ui: 'plain',
-                iconCls: 'arrow_right',
-                action: 'nextpage',
-                right: 0,
-                top: 5
+                iconCls: Ext.baseCSSPrefix + 'grid-pagingtoolbar-next',
+                action: 'nextpage'
             }]
         }
     },
 
     init: function(grid) {
-        this.setGrid(grid);
-        grid.container.add(this.getToolbar());
+        var me = this;
+
+        me.setGrid(grid);
+        grid.container.add(me.getToolbar());
         if (grid.getStore().getCount()) {
-            this.updateCurrentPage(this.getCurrentPage());
+            me.updatePageInfo(me.getCurrentPage());
         }
     },
 
     updateGrid: function(grid, oldGrid) {
+        var me = this;
+
         if (oldGrid) {
             oldGrid.un({
                 updatevisiblecount: 'onUpdateVisibleCount',
-                scope: this
+                scope: me
             });
 
             oldGrid.getStore().un({
-                addrecords: 'onTotalCountChange',
-                removerecords: 'onTotalCountChange',
+                add: 'onTotalCountChange',
+                remove: 'onTotalCountChange',
                 refresh: 'onTotalCountChange',
-                scope: this
+                scope: me
             });
+
+            me.unbindHook(grid, 'onScrollBinder', 'checkPageChange');
         }
 
         if (grid) {
             grid.on({
                 updatevisiblecount: 'onUpdateVisibleCount',
-                scope: this
+                scope: me
             });
 
             grid.getStore().on({
-                addrecords: 'onTotalCountChange',
-                removerecords: 'onTotalCountChange',
+                add: 'onTotalCountChange',
+                remove: 'onTotalCountChange',
                 refresh: 'onTotalCountChange',
-                scope: this
+                scope: me
             });
 
-            this.bindHook(grid, 'onScrollBinder', 'checkPageChange');
+            me.bindHook(grid, 'onScrollBinder', 'checkPageChange');
         }
     },
 
     checkPageChange: function() {
-        var grid = this.getGrid(),
-            pageSize = this.getPageSize(),
-            currentPage = this.getCurrentPage(),
-            totalCount = this.getTotalCount(),
+        var me = this,
+            grid = me.getGrid(),
+            pageSize = me.getPageSize(),
+            currentPage = me.getCurrentPage(),
+            totalCount = me.getTotalCount(),
             topVisibleIndex = grid.topVisibleIndex,
             newPage = Math.floor(grid.topVisibleIndex / pageSize) + 1;
 
-        if (topVisibleIndex + pageSize >= totalCount) {
-            newPage++;
-        }
-
         if (topVisibleIndex && newPage !== currentPage) {
-            this.preventGridScroll = true;
-            this.setCurrentPage(newPage);
-            this.preventGridScroll = false;
+            me.preventGridScroll = true;
+            me.setCurrentPage(newPage);
+            me.preventGridScroll = false;
         }
     },
 
@@ -124,46 +123,44 @@ Ext.define('Ext.grid.plugin.PagingToolbar', {
     },
 
     updateToolbar: function(toolbar) {
+        var me = this;
+
         if (toolbar) {
-            this.currentPage = toolbar.down('component[role=currentpage]');
-            this.totalPages = toolbar.down('component[role=totalpages]');
-            this.pageSlider = toolbar.down('sliderfield[role=pageslider]');
+            me.currentPage = toolbar.down('component[role=currentpage]');
+            me.totalPages = toolbar.down('component[role=totalpages]');
+            me.pageSlider = toolbar.down('sliderfield[role=pageslider]');
 
-            this.nextPageButton = toolbar.down('button[action=nextpage]');
-            this.previousPageButton = toolbar.down('button[action=previouspage]');
+            me.nextPageButton = toolbar.down('button[action=nextpage]');
+            me.previousPageButton = toolbar.down('button[action=previouspage]');
 
-            this.pageSlider.on({
+            me.pageSlider.on({
                 change: 'onPageChange',
                 drag: 'onPageSliderDrag',
-                scope: this
+                scope: me
             });
 
-            this.nextPageButton.on({
+            me.nextPageButton.on({
                 tap: 'onNextPageTap',
-                scope: this
+                scope: me
             });
 
-            this.previousPageButton.on({
+            me.previousPageButton.on({
                 tap: 'onPreviousPageTap',
-                scope: this
+                scope: me
             });
 
-            this.currentPage.element.createChild({
+            me.currentPage.element.createChild({
                 tag: 'span'
             });
         }
     },
 
-    onPageChange: function(field, slider, thumb, page) {
-        if (page !== this.getCurrentPage()) {
-            this.setCurrentPage(page);
-        }
+    onPageChange: function(field, value) {
+        this.setCurrentPage(value);
     },
 
-    onPageSliderDrag: function(field, slider, thumb, page) {
-        if (page[0] !== this.getCurrentPage()) {
-            this.setCurrentPage(page[0]);
-        }
+    onPageSliderDrag: function(field, slider, value) {
+        this.setCurrentPage(value);
     },
 
     onNextPageTap: function() {
@@ -196,37 +193,22 @@ Ext.define('Ext.grid.plugin.PagingToolbar', {
     },
 
     updateTotalPages: function(totalPages) {
-        // Ensure the references are set
-        this.getToolbar();
+        var me = this;
 
-        this.totalPages.setData({
+        // Ensure the references are set
+        me.getToolbar();
+
+        me.totalPages.setData({
             totalPages: totalPages
         });
 
-        this.pageSlider.setMaxValue(totalPages || 1);
+        me.pageSlider.setMaxValue(totalPages || 1);
 
-        this.updateCurrentPage(this.getCurrentPage());
+        me.updatePageInfo(me.getCurrentPage());
     },
 
     updateCurrentPage: function(currentPage) {
-        var grid = this.getGrid(),
-            pageTopRecord;
-
-        // Ensure the references are set
-        this.getToolbar();
-
-        this.currentPage.element.dom.firstChild.innerHTML = currentPage;
-
-        if (this.pageSlider.getValue() !== currentPage) {
-            this.pageSlider.setValue(currentPage);
-        }
-
-        pageTopRecord = this.getPageTopRecord(currentPage);
-        if (grid && !this.preventGridScroll && pageTopRecord) {
-            grid.scrollToRecord(pageTopRecord);
-        }
-
-        this.updatePageButtons();
+        this.updatePageInfo(currentPage);
     },
 
     updateTotalCount: function(totalCount) {
@@ -243,17 +225,11 @@ Ext.define('Ext.grid.plugin.PagingToolbar', {
     },
 
     updatePageButtons: function() {
-        var currentPage = this.getCurrentPage();
+        var me = this,
+            currentPage = me.getCurrentPage();
 
-        this.previousPageButton.enable();
-        this.nextPageButton.enable();
-
-        if (currentPage == this.getTotalPages()) {
-            this.nextPageButton.disable();
-        }
-        if (currentPage == 1) {
-            this.previousPageButton.disable();
-        }
+        me.previousPageButton.setDisabled(currentPage === me.getTotalPages());
+        me.nextPageButton.enable(currentPage === 1);
     },
 
     getPageTopRecord: function(page) {
@@ -264,5 +240,29 @@ Ext.define('Ext.grid.plugin.PagingToolbar', {
             pageTopRecord = store && store.getAt(pageTopRecordIndex);
 
         return pageTopRecord;
+    },
+
+    privates: {
+        updatePageInfo: function(currentPage) {
+            var me = this,
+                grid = me.getGrid(),
+                pageTopRecord;
+
+            // Ensure the references are set
+            me.getToolbar();
+
+            // TODO: Calling setHtml causes a performance issue while live scrolling,
+            // this might be worth looking into.
+            me.currentPage.element.dom.lastChild.innerHTML = currentPage;
+
+            me.pageSlider.setValue(currentPage);
+
+            pageTopRecord = me.getPageTopRecord(currentPage);
+            if (grid && !me.preventGridScroll && pageTopRecord) {
+                grid.scrollToRecord(pageTopRecord);
+            }
+
+            me.updatePageButtons();
+        }
     }
 });

@@ -720,12 +720,7 @@ Ext.define('Ext.util.Collection', {
      */
     replaceAll: function() {
         var me = this,
-            len = me.length,
             ret, items;
-
-        if (len === 0) {
-            return me.add.apply(me, arguments);
-        }
         
         items = me.decodeItems(arguments, 0);
         ret = items;
@@ -1101,7 +1096,7 @@ Ext.define('Ext.util.Collection', {
      * the beginning.
      *
      * @param {Boolean} [caseSensitive=false] True for case sensitive comparison.
-     * 
+     *
      * @param {Boolean} [exactMatch=false] `true` to force exact match (^ and $ characters added to the regex).
      *
      * @return {Ext.util.Collection} The new, filtered collection.
@@ -1157,7 +1152,7 @@ Ext.define('Ext.util.Collection', {
 
         return ret;
     },
-    
+
     /**
      * Filter by a function. Returns a <i>new</i> collection that has been filtered.
      * The passed function will be called with each object in the collection.
@@ -1611,13 +1606,11 @@ Ext.define('Ext.util.Collection', {
                                                                 // A TreeStore can call afterEdit on a hidden root before
                                                                 // any child nodes exist in the store.
             source = me.getSource(),
-            toAdd,
             toRemove = 0,
-            index,
             itemFiltered = false,
-            newIndex,
             wasFiltered = false,
-            details, newKey, sortFn;
+            details, newKey, sortFn,
+            toAdd, index, newIndex;
 
         // We are owned, we cannot react, inform owning collection.
         if (source && !source.updating) {
@@ -1658,29 +1651,30 @@ Ext.define('Ext.util.Collection', {
 
                 sortFn = me.getSortFn();
 
-                if (index && sortFn(items[index - 1], items[index]) > 0) {
-                    // If this item is not the first and the item before it compares as
-                    // greater-than then item needs to move left since it is less-than
-                    // item[index - 1].
-                    itemMovement = -1;
+                if (index !== -1) {
+                    if (index && sortFn(items[index - 1], items[index]) > 0) {
+                        // If this item is not the first and the item before it compares as
+                        // greater-than then item needs to move left since it is less-than
+                        // item[index - 1].
+                        itemMovement = -1;
 
-                    // We have to bound the binarySearch or else the presence of the
-                    // out-of-order "item" would break it.
-                    newIndex = Ext.Array.binarySearch(items, item, 0, index, sortFn);
-                }
-                else if (index < last && sortFn(items[index], items[index + 1]) > 0) {
-                    // If this item is not the last and the item after it compares as
-                    // less-than then item needs to move right since it is greater-than
-                    // item[index + 1].
-                    itemMovement = 1;
+                        // We have to bound the binarySearch or else the presence of the
+                        // out-of-order "item" would break it.
+                        newIndex = Ext.Array.binarySearch(items, item, 0, index, sortFn);
+                    } else if (index < last && sortFn(items[index], items[index + 1]) > 0) {
+                        // If this item is not the last and the item after it compares as
+                        // less-than then item needs to move right since it is greater-than
+                        // item[index + 1].
+                        itemMovement = 1;
 
-                    // We have to bound the binarySearch or else the presence of the
-                    // out-of-order "item" would break it.
-                    newIndex = Ext.Array.binarySearch(items, item, index + 1, sortFn);
-                }
+                        // We have to bound the binarySearch or else the presence of the
+                        // out-of-order "item" would break it.
+                        newIndex = Ext.Array.binarySearch(items, item, index + 1, sortFn);
+                    }
 
-                if (itemMovement) {
-                    toAdd = [ item ];
+                    if (itemMovement) {
+                        toAdd = [ item ];
+                    }
                 }
             }
 
@@ -1896,7 +1890,7 @@ Ext.define('Ext.util.Collection', {
             newKeys = null,
             source = me.getSource(),
             chunk, chunkItems, chunks, i, item, itemIndex, k, key, keys, n, duplicates,
-            sorters;
+            sorters, end;
 
         if (source && !source.updating) {
             // Modifying the content of a child collection has to be translated into a
@@ -2156,8 +2150,12 @@ Ext.define('Ext.util.Collection', {
                 }
 
                 if (insertAt === length) {
-                    // appending
-                    items.push.apply(items, addItems);
+                    end = insertAt;
+                    // Inser items backwards. This way, when the first item is pushed the
+                    // array is sized to as large as we're going to need it to be.
+                    for (i = addItems.length - 1; i >= 0; --i) {
+                        items[end + i] = addItems[i];
+                    }
                     // The indices may have been regenerated, so we need to check if they have been
                     // and update them 
                     indices = me.indices;

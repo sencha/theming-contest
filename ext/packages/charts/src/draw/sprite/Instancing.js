@@ -9,6 +9,7 @@ Ext.define('Ext.draw.sprite.Instancing', {
     alias: 'sprite.instancing',
     type: 'instancing',
     isInstancing: true,
+
     config: {
         
         /**
@@ -16,6 +17,7 @@ Ext.define('Ext.draw.sprite.Instancing', {
          */
         template: null
     },
+
     instances: null,
 
     applyTemplate: function (template) {
@@ -49,8 +51,8 @@ Ext.define('Ext.draw.sprite.Instancing', {
         // when one of the instances is rendering, as at that moment the template's
         // attributes (template.attr) are the instance's attributes.
         template.ownAttr = template.attr;
-        template.attr.children = this.instances = [];
-        this.position = 0;
+
+        this.clearAll();
     },
 
     updateSurface: function (surface) {
@@ -70,7 +72,9 @@ Ext.define('Ext.draw.sprite.Instancing', {
     },
 
     clearAll: function () {
-        this.instances.length = 0;
+        var template = this.getTemplate();
+
+        template.attr.children = this.instances = [];
         this.position = 0;
     },
 
@@ -185,7 +189,7 @@ Ext.define('Ext.draw.sprite.Instancing', {
             template = me.getTemplate();
 
         me.callParent();
-        me.instances.length = 0;
+
         me.instances = null;
         if (template) {
             template.destroy();

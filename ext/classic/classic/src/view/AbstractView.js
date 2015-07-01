@@ -450,9 +450,9 @@ Ext.define('Ext.view.AbstractView', {
     /**
      * @event itemremove
      * Fires when the node associated with an individual record is removed
-     * @param {Ext.data.Model} record The model instance
-     * @param {Number} index The index from which the record was removed
-     * @param {HTMLElement} item The view item removed
+     * @param {Ext.data.Model[]} records The model instances removed
+     * @param {Number} index The index from which the records wer removed
+     * @param {HTMLElement[]} item The view items removed
      * @param {Ext.view.View} view The view removing the item
      */
 
@@ -782,7 +782,7 @@ Ext.define('Ext.view.AbstractView', {
         // which will then bounce it back to the last focused item.
         // That would effectively make Shift-Tab unusable.
         if (me.itemFocused) {
-            this.el.dom.setAttribute('tabindex', '-1');
+            this.el.dom.setAttribute('tabIndex', '-1');
         }
 
         me.callParent([e]);
@@ -791,14 +791,15 @@ Ext.define('Ext.view.AbstractView', {
     onFocusLeave: function(e) {
         var me = this;
 
-        // Ignore this event if we do not actually contain focus.
-        if (me.itemFocused) {
+        // Ignore this event if we do not actually contain focus,
+        // or if the reason for focus exiting was that we are refreshing.
+        if (me.itemFocused && !me.refreshing) {
 
             // Blur the focused cell
             me.getNavigationModel().setPosition(null, e.event, null, true);
 
             me.itemFocused = false;
-            me.el.dom.setAttribute('tabindex', 0);
+            me.el.dom.setAttribute('tabIndex', 0);
         }
 
         me.callParent([e]);
@@ -824,7 +825,9 @@ Ext.define('Ext.view.AbstractView', {
         this.callParent([isDestroying]);
 
         // IE does not fire focusleave on removal from DOM
-        this.onFocusLeave({});
+        if (!isDestroying) {
+            this.onFocusLeave({});
+        }
     },
     
     /**
@@ -841,12 +844,11 @@ Ext.define('Ext.view.AbstractView', {
             records,
             selModel = me.getSelectionModel(),
             navModel = me.getNavigationModel(),
-
             // If there are items in the view, then honour preserveScrollOnRefresh
             scroller = refreshCounter && items.getCount() && me.preserveScrollOnRefresh && me.getScrollable(),
             scrollPos;
 
-        if (!me.rendered || me.isDestroyed || me.preventRefresh) {
+        if (!me.rendered || me.destroyed || me.preventRefresh) {
             return;
         }
 
@@ -916,14 +918,19 @@ Ext.define('Ext.view.AbstractView', {
                 me.viewReady = true;
                 me.fireEvent('viewready', me);
             }
+            
             me.refreshing = false;
             me.refreshScroll();
+            
+            me.cleanupData();
         }
     },
 
-    addEmptyText: function() {
-        var me = this;
-        if (me.emptyText && !me.getStore().isLoading() && (!me.deferEmptyText || me.refreshCounter > 1)) {
+    addEmptyText: function() {       
+        var me = this,
+            store = me.getStore();
+
+        if (me.emptyText && !store.isLoading() && (!me.deferEmptyText || me.refreshCounter > 1 || store.isLoaded())) {
             me.emptyEl = Ext.core.DomHelper.insertHtml('beforeEnd', me.getTargetEl().dom, me.emptyText);
         }
     },
@@ -972,6 +979,7 @@ Ext.define('Ext.view.AbstractView', {
         if (scroller && !me._hasScrollListener) {
             scroller.on({
                 scroll: me.onViewScroll,
+                scrollend: me.onViewScrollEnd,
                 scope: me,
                 onFrame: !!Ext.global.requestAnimationFrame
             });
@@ -1007,6 +1015,10 @@ Ext.define('Ext.view.AbstractView', {
 
     onViewScroll: function(scroller, x, y) {
         this.fireEvent('scroll', this, x, y);
+    },
+
+    onViewScrollEnd: function(scroller, x, y) {
+        this.fireEvent('scrollend', this, x, y);
     },
 
     /**
@@ -1096,6 +1108,8 @@ Ext.define('Ext.view.AbstractView', {
         }
         return data;
     },
+    
+    cleanupData: Ext.emptyFn,
 
     bufferRender: function(records, index) {
         var me = this,
@@ -1190,7 +1204,7 @@ Ext.define('Ext.view.AbstractView', {
             all = me.all,
             selModel = me.getSelectionModel(),
             origStart = startIndex,
-            result, item, i, j, fragment, children, items, endIndex;
+            result, item, fragment, children, oldItems, endIndex;
 
         if (me.rendered) {
 
@@ -1210,7 +1224,7 @@ Ext.define('Ext.view.AbstractView', {
             endIndex = startIndex + oldRecords.length - 1;
 
             // Remove the items which correspond to old records
-            items = all.removeRange(startIndex, endIndex, true);
+            oldItems = all.removeRange(startIndex, endIndex, true);
 
             // Some subclasses do not need to do this. TableView does not need to do this.
             if (me.refreshSelmodelOnRefresh !== false) {
@@ -1221,14 +1235,11 @@ Ext.define('Ext.view.AbstractView', {
             me.updateIndexes(startIndex);
 
             if (me.hasListeners.itemremove) {
-                endIndex = origStart + oldRecords.length - 1;
-                for (i = oldRecords.length - 1, j = endIndex; i >= 0; --i, --j) {
-                    me.fireEvent('itemremove', oldRecords[i], j, items[i], me);
-                }
+                me.fireEvent('itemremove', oldRecords, origStart, oldItems, me);
             }
 
             if (me.hasListeners.itemadd) {
-                me.fireEvent('itemadd', newRecords, startIndex, children);
+                me.fireEvent('itemadd', newRecords, origStart, children);
             }
             me.refreshSize();
         }
@@ -1515,15 +1526,18 @@ Ext.define('Ext.view.AbstractView', {
      * Calls this.refresh if this.blockRefresh is not true
      * @since 3.4.0
      */
-    onDataRefresh: function() {
+    onDataRefresh: function(store) {
         var me = this,
             preserveScrollOnRefresh = me.preserveScrollOnRefresh;
 
-        // This refresh, caused by a Store declaring that its data has all changed
-        // must obey the preserveScrollOnLoad setting.
-        me.preserveScrollOnRefresh = me.preserveScrollOnReload;
+        // If this refresh event is fire from a store load, then use the 
+        // preserveScrollOnReLoad setting to decide whether to preserve scroll position
+        if (store.loadCount > me.lastRefreshLoadCount) {
+            me.preserveScrollOnRefresh = me.preserveScrollOnReLoad;
+        }
         me.refreshView();
         me.preserveScrollOnRefresh = preserveScrollOnRefresh;
+        me.lastRefreshLoadCount = store.loadCount;
     },
 
     refreshView: function() {
@@ -1725,9 +1739,21 @@ Ext.define('Ext.view.AbstractView', {
 
         me.all.clear();
         me.emptyEl = null;
+        
         me.callParent();
         me.bindStore(null);
+        
+        me.store = me.dataSource = me.storeListeners = null;
+        
+        if (me.selModelRelayer) {
+            me.selModelRelayer.destroy();
+            me.selModelRelayer = null;
+        }
+        
         Ext.destroy(me.navigationModel, me.selectionModel);
+        me.navigationModel = me.selectionModel = me.selModel = null;
+        
+        me.loadMask = null;
 
         // We have been destroyed during a begin/end update, which means we're
         // suspending layouts, must forcibly do it here.

@@ -256,7 +256,7 @@ Ext.define('Ext.draw.Container', {
     },
 
     applySprites: function (sprites) {
-        // Never update
+        // Never update.
         if (!sprites) {
             return;
         }
@@ -264,18 +264,24 @@ Ext.define('Ext.draw.Container', {
         sprites = Ext.Array.from(sprites);
 
         var ln = sprites.length,
-            i, surface;
+            result = [],
+            i, surface, sprite;
 
         for (i = 0; i < ln; i++) {
-            if (sprites[i].surface instanceof Ext.draw.Surface) {
-                surface = sprites[i].surface;
-            } else if (Ext.isString(sprites[i].surface)) {
-                surface = this.getSurface(sprites[i].surface);
-            } else {
-                surface = this.getSurface('main');
+            sprite = sprites[i];
+            surface = sprite.surface;
+            if (!(surface && surface.isSurface)) {
+                if (Ext.isString(surface)) {
+                    surface = this.getSurface(surface);
+                } else {
+                    surface = this.getSurface('main');
+                }
             }
-            surface.add(sprites[i]);
+            sprite = surface.add(sprite);
+            result.push(sprite);
         }
+
+        return result;
     },
 
     onBodyResize: function () {
@@ -320,9 +326,11 @@ Ext.define('Ext.draw.Container', {
      */
     getSurface: function (id) {
         id = this.getId() + '-' + (id || 'main');
+
         var me = this,
             surfaces = me.getItems(),
             surface = surfaces.get(id);
+
         if (!surface) {
             surface = me.add({xclass: me.engine, id: id});
             me.onBodyResize();

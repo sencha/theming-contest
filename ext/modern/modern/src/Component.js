@@ -1,5 +1,3 @@
-(function(clsPrefix) {
-
 /**
  * Most of the visual classes you interact with are Components. Every Component is a
  * subclass of Ext.Component, which means they can all:
@@ -302,13 +300,13 @@ Ext.define('Ext.Component', {
          * @cfg {String} [floatingCls="x-floating"] The CSS class to add to this component when it is floatable.
          * @accessor
          */
-        floatingCls: clsPrefix + 'floating',
+        floatingCls: Ext.baseCSSPrefix + 'floating',
 
         /**
          * @cfg {String} [hiddenCls="x-item-hidden"] The CSS class to add to the component when it is hidden
          * @accessor
          */
-        hiddenCls: clsPrefix + 'item-hidden',
+        hiddenCls: Ext.baseCSSPrefix + 'item-hidden',
 
         /**
          * @cfg {String} ui The ui to be used on this Component
@@ -330,12 +328,16 @@ Ext.define('Ext.Component', {
         padding: null,
 
         /**
-         * @cfg {Number/String} border The border width to use on this Component. Can be specified as a number (in which
-         * case all edges get the same border width) or a CSS string like '5 10 10 10'.
+         * @cfg {Boolean} border Enables or disables bordering on this component.
+         * The following values are accepted:
          *
-         * Please note that this will not add
-         * a `border-color` or `border-style` CSS property to the component; you must do that manually using either CSS or
-         * the {@link #style} configuration.
+         * - `null` or `true (default): Do nothing and allow the border to be specified by the theme.
+         * - `false`: suppress the default border provided by the theme.
+         *
+         * Please note that enabling bordering via this config will not add a `border-color`
+         * or `border-style` CSS property to the component; you provide the `border-color`
+         * and `border-style` via CSS rule or {@link #style} configuration
+         * (if not already provide by the theme).
          *
          * ## Using {@link #style}:
          *
@@ -344,8 +346,7 @@ Ext.define('Ext.Component', {
          *         width: 100,
          *         height: 100,
          *
-         *         border: 3,
-         *         style: 'border-color: blue; border-style: solid;'
+         *         style: 'border: 1px solid blue;'
          *         // ...
          *     });
          *
@@ -356,7 +357,6 @@ Ext.define('Ext.Component', {
          *         width: 100,
          *         height: 100,
          *
-         *         border: 3,
          *         cls: 'my-component'
          *         // ...
          *     });
@@ -364,8 +364,7 @@ Ext.define('Ext.Component', {
          * And your CSS file:
          *
          *     .my-component {
-         *         border-color: red;
-         *         border-style: solid;
+         *         border: 1px solid red;
          *     }
          *
          * @accessor
@@ -377,7 +376,7 @@ Ext.define('Ext.Component', {
          * The class that is added to the content target when you set `styleHtmlContent` to `true`.
          * @accessor
          */
-        styleHtmlCls: clsPrefix + 'html',
+        styleHtmlCls: Ext.baseCSSPrefix + 'html',
 
         /**
          * @cfg {Boolean} [styleHtmlContent=false]
@@ -388,16 +387,6 @@ Ext.define('Ext.Component', {
     },
 
     eventedConfig: {
-        /**
-         * @cfg {Number} flex
-         * The flex of this item *if* this item item is inside a {@link Ext.layout.HBox} or {@link Ext.layout.VBox}
-         * layout.
-         *
-         * You can also update the flex of a component dynamically using the {@link Ext.layout.FlexBox#setItemFlex}
-         * method.
-         */
-        flex: null,
-
         /**
          * @cfg {Number/String} left
          * The absolute left position of this Component; must be a valid CSS length value, e.g: `300`, `100px`, `30%`, etc.
@@ -549,32 +538,6 @@ Ext.define('Ext.Component', {
 
     config: {
         /**
-         * @cfg {String/Object} style Optional CSS styles that will be rendered into an inline style attribute when the
-         * Component is rendered.
-         *
-         * You can pass either a string syntax:
-         *
-         *     style: 'background:red'
-         *
-         * Or by using an object:
-         *
-         *     style: {
-         *         background: 'red'
-         *     }
-         *
-         * When using the object syntax, you can define CSS Properties by using a string:
-         *
-         *     style: {
-         *         'border-left': '1px solid red'
-         *     }
-         *
-         * Although the object syntax is much easier to read, we suggest you to use the string syntax for better performance.
-         *
-         * @accessor
-         */
-        style: null,
-
-        /**
          * @cfg {String/Ext.Element/HTMLElement} html Optional HTML content to render inside this Component, or a reference
          * to an existing element on the page.
          * @accessor
@@ -678,7 +641,7 @@ Ext.define('Ext.Component', {
          * @cfg {String} [disabledCls="x-item-disabled"] The CSS class to add to the component when it is disabled
          * @accessor
          */
-        disabledCls: clsPrefix + 'item-disabled',
+        disabledCls: Ext.baseCSSPrefix + 'item-disabled',
 
         /**
          * @cfg {Ext.Element/HTMLElement/String} contentEl The configured element will automatically be
@@ -1120,23 +1083,6 @@ Ext.define('Ext.Component', {
         }
     },
 
-    renderTo: function(container, insertBeforeElement) {
-        var dom = this.renderElement.dom,
-            containerDom = Ext.getDom(container),
-            insertBeforeChildDom = Ext.getDom(insertBeforeElement);
-
-        if (containerDom) {
-            if (insertBeforeChildDom) {
-                containerDom.insertBefore(dom, insertBeforeChildDom);
-            }
-            else {
-                containerDom.appendChild(dom);
-            }
-
-            this.setRendered(Boolean(dom.offsetParent));
-        }
-    },
-
     applyPlugins: function(plugins) {
         var ln, i, plugin;
 
@@ -1201,7 +1147,7 @@ Ext.define('Ext.Component', {
                 if (!scrollable.translatable) {
                     scrollable.translatable = {
                         translationMethod: (supports.touchScroll === 1) ? 'scrollparent' :
-                            (Ext.browser.is.AndroidStock2 || Ext.browser.is.IE) ? 'scrollposition' :
+                            (Ext.browser.is.IE) ? 'scrollposition' :
                                 'csstransform'
                     };
                 }
@@ -1289,12 +1235,8 @@ Ext.define('Ext.Component', {
         this.renderTo(newContainer);
     },
 
-    updateStyle: function(style) {
-        this.element.applyStyles(style);
-    },
-
     updateBorder: function(border) {
-        this.element.setBorder(border);
+        this.element.setStyle('border-width', border ? '' : '0');
     },
 
     updatePadding: function(padding) {
@@ -1333,7 +1275,7 @@ Ext.define('Ext.Component', {
     },
 
     applyBaseCls: function(baseCls) {
-        return baseCls || clsPrefix + this.xtype;
+        return baseCls || Ext.baseCSSPrefix + this.xtype;
     },
 
     updateBaseCls: function(newBaseCls, oldBaseCls) {
@@ -1691,21 +1633,6 @@ Ext.define('Ext.Component', {
     updateHeight: function(height) {
         this.element.setHeight(height);
         this.refreshSizeState();
-    },
-
-    applyFlex: function(flex) {
-        if (flex) {
-            flex = Number(flex);
-
-            if (isNaN(flex)) {
-                flex = null;
-            }
-        }
-        else {
-            flex = null;
-        }
-
-        return flex;
     },
 
     updateFlex: Ext.emptyFn,
@@ -2209,7 +2136,7 @@ Ext.define('Ext.Component', {
      * @private
      */
     setVisibility: function(isVisible) {
-        this.renderElement.setVisibility(isVisible);
+        this.renderElement.setVisible(isVisible);
     },
 
     /**
@@ -2689,7 +2616,11 @@ Ext.define('Ext.Component', {
         
         // isDestroying added for compat reasons
         me.isDestroying = me.destroying = true;
-        
+
+        if (me.hasListeners.destroy) {
+            me.fireEvent('destroy', me);
+        }
+
         Ext.destroy(
             me.getTranslatable(),
             me.getPlugins(),
@@ -2723,6 +2654,8 @@ Ext.define('Ext.Component', {
         }
     }
 }, function() {
+    Ext.isModern = true;
+
     //<debug>
     var metaTags = document.getElementsByTagName('head')[0].getElementsByTagName('meta'),
         len = metaTags.length,
@@ -2739,5 +2672,3 @@ Ext.define('Ext.Component', {
     }
     //</debug>
 });
-
-})(Ext.baseCSSPrefix);

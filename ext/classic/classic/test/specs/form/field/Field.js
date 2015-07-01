@@ -1,5 +1,5 @@
 describe('Ext.form.field.Field', function () {
-    var ajaxRequestCfg, ct, action;
+    var ajaxRequestCfg, ct, action, form;
 
     function makeContainer(items) {
         ct = new Ext.container.Container({
@@ -23,8 +23,8 @@ describe('Ext.form.field.Field', function () {
     }
 
     afterEach(function () {
-        Ext.destroy(ct);
-        ct = action = ajaxRequestCfg = null;
+        Ext.destroy(ct, action, form);
+        ct = action = form = ajaxRequestCfg = null;
     });
 
     describe("data binding", function() {
@@ -214,6 +214,8 @@ describe('Ext.form.field.Field', function () {
 
             expect(field1.getModelData()).toEqual({field1: 'foo'});
             expect(field2.getModelData()).toEqual({field2: ''});
+            
+            Ext.destroy(field1, field2);
         });
 
         describe('in a form with jsonSubmit', function () {
@@ -244,8 +246,15 @@ describe('Ext.form.field.Field', function () {
     });
 
     describe('getSubmitData', function () {
+        var file;
+        
+        afterEach(function() {
+            Ext.destroy(file);
+            file = null;
+        });
+        
         it('should not be able to get the submit data for a filefield by default, non-submission', function () {
-            var file = new Ext.form.field.File({
+            file = new Ext.form.field.File({
                 name: 'foo'
             });
 
@@ -253,7 +262,7 @@ describe('Ext.form.field.Field', function () {
         });
 
         it('should be able to get the submit data for a filefield when configured with submitValue: true, non-submission', function () {
-            var file = new Ext.form.field.File({
+            file = new Ext.form.field.File({
                 name: 'foo',
                 submitValue: true
             });
@@ -303,12 +312,12 @@ describe('Ext.form.field.Field', function () {
                     value: 'bar'
                 })
             ]);
-
-            createAction({
-                form: new Ext.form.Basic(ct, {
-                    jsonSubmit: true
-                })
+            
+            form = new Ext.form.Basic(ct, {
+                jsonSubmit: true
             });
+            
+            createAction({ form: form });
 
             action.run();
             expect(ajaxRequestCfg.jsonData).toEqual({field1: 'foo', field2: 'bar'});
@@ -328,11 +337,11 @@ describe('Ext.form.field.Field', function () {
                 })
             ]);
 
-            createAction({
-                form: new Ext.form.Basic(ct, {
-                    jsonSubmit: true
-                })
+            form = new Ext.form.Basic(ct, {
+                jsonSubmit: true
             });
+            
+            createAction({ form: form });
 
             action.run();
             expect(ajaxRequestCfg.jsonData).toEqual({field1: 'foo'});
@@ -351,11 +360,11 @@ describe('Ext.form.field.Field', function () {
                 })
             ]);
 
-            createAction({
-                form: new Ext.form.Basic(ct, {
-                    jsonSubmit: true
-                })
+            form = new Ext.form.Basic(ct, {
+                jsonSubmit: true
             });
+            
+            createAction({ form: form });
 
             action.run();
             expect(ajaxRequestCfg.jsonData).toEqual({field1: 'foo'});
@@ -378,11 +387,11 @@ describe('Ext.form.field.Field', function () {
                 })
             ]);
 
-            createAction({
-                form: new Ext.form.Basic(ct, {
-                    jsonSubmit: true
-                })
+            form = new Ext.form.Basic(ct, {
+                jsonSubmit: true
             });
+            
+            createAction({ form: form });
 
             action.run();
             expect(ajaxRequestCfg.jsonData).toEqual({field1: 'foo', field3: 'baz'});

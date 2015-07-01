@@ -1,6 +1,8 @@
 /**
- * This class specifies the definition for a column inside a {@link Ext.grid.Grid}. It encompasses
- * both the grid header configuration as well as displaying data within the grid itself.
+ * This class specifies the definition for a column inside a {@link Ext.grid.Grid}. It
+ * encompasses both the grid header configuration as well as displaying data within the
+ * grid itself.
+ *
  * In general an array of column configurations will be passed to the grid:
  *
  *     @example
@@ -36,29 +38,51 @@
  *  - {@link Ext.grid.column.Boolean}: Renders for boolean values
  *  - {@link Ext.grid.column.Date}: Renders for date values
  *  - {@link Ext.grid.column.Number}: Renders for numeric values
- *  - {@link Ext.grid.column.Template}: Renders a value using an {@link Ext.XTemplate} using the record data
+ *
+ * For more information about configuring cell content, see {@link Ext.grid.Grid}.
  *
  * # Setting Sizes
  *
- * The columns can be only be given an explicit width value. If no width is specified the grid will
- * automatically the size the column to 20px.
+ * The columns can be only be given an explicit width value. If no width is specified the
+ * grid will automatically the size the column to 20px.
  *
  * # Header Options
  *
  *  - {@link #text}: Sets the header text for the column
- *  - {@link #sortable}: Specifies whether the column can be sorted by clicking the header or using the column menu
+ *  - {@link #sortable}: Specifies whether the column can be sorted by clicking the header
+ *    or using the column menu
  *
  * # Data Options
  *
- *  - {@link #dataIndex}: The dataIndex is the field in the underlying {@link Ext.data.Store} to use as the value for the column.
- *  - {@link #renderer}: Allows the underlying store value to be transformed before being displayed in the grid
+ *  - {@link #dataIndex}: The dataIndex is the field in the underlying {@link Ext.data.Store}
+ *    to use as the value for the column.
+ *  - {@link #renderer}: Allows the underlying store value to be transformed before being
+ *    displayed in the grid.
  */
 Ext.define('Ext.grid.column.Column', {
     extend: 'Ext.Component',
+    alternateClassName: 'Ext.grid.column.Template',
 
-    xtype: 'column',
+    xtype: [ 'column', 'templatecolumn' ],
 
     config: {
+        /**
+         * @cfg {String} align
+         * Sets the alignment of the header and rendered columns.
+         * Possible values are: `'left'`, `'center'`, and `'right'`.
+         */
+        align: 'left',
+
+        /**
+         * @cfg {Object} cell
+         * The config object used to create {@link Ext.grid.cell.Base cells} for this column.
+         * By default, cells use the {@link Ext.grid.cell.Cell gridcell} `xtype`. To create
+         * a different type of cell, simply provide this config and the desired `xtype`.
+         */
+        cell: {
+            xtype: 'gridcell'
+        },
+
         /**
          * @cfg {String} dataIndex
          * The name of the field in the grid's {@link Ext.data.Store}'s {@link Ext.data.Model} definition from
@@ -106,21 +130,37 @@ Ext.define('Ext.grid.column.Column', {
 
         /**
          * @cfg {Function/String} renderer
-         * A renderer is an 'interceptor' method which can be used to transform data (value, appearance, etc.)
-         * before it is rendered. Example:
+         * A renderer is a method which can be used to transform data (value, appearance, etc.)
+         * before it is rendered.
          *
-         *     {
-         *         renderer: function(value, record){
-         *             if (value === 1) {
-         *                 return '1 person';
-         *             }
-         *             return value + ' people';
-         *         }
-         *     }
+         * For example:
+         *
+         *      {
+         *          text: 'Some column',
+         *          dataIndex: 'fieldName',
+         *
+         *          renderer: function (value, record) {
+         *              if (value === 1) {
+         *                  return '1 person';
+         *              }
+         *              return value + ' people';
+         *          }
+         *      }
+         *
+         * If a string is supplied, it should be the name of a renderer method from the
+         * appropriate {@link Ext.app.ViewController}.
+         *
+         * This config is only processed if the {@link #cell} type is the default of
+         * {@link Ext.grid.cell.Cell gridcell}.
+         *
+         * **Note** See {@link Ext.grid.Grid} documentation for other, better alternatives
+         * to rendering cell content.
          *
          * @cfg {Object} renderer.value The data value for the current cell.
          * @cfg {Ext.data.Model} renderer.record The record for the current row.
-         * @cfg {Number} renderer.colIndex The dataIndex of the current column.
+         * @cfg {Number} renderer.dataIndex The dataIndex of the current column.
+         * @cfg {Ext.grid.cell.Base} renderer.cell The current cell.
+         * @cfg {Ext.grid.column.Column} renderer.column The current column.
          * @cfg {String} renderer.return The HTML string to be rendered.
          */
         renderer: false,
@@ -130,13 +170,6 @@ Ext.define('Ext.grid.column.Column', {
          * The scope to use when calling the {@link #renderer} function.
          */
         scope: null,
-
-        /**
-         * @cfg {String} align
-         * Sets the alignment of the header and rendered columns.
-         * Possible values are: `'left'`, `'center'`, and `'right'`.
-         */
-        align: 'left',
 
         /**
          * @cfg {Boolean} editable
@@ -175,9 +208,9 @@ Ext.define('Ext.grid.column.Column', {
         ignore: false,
 
         /**
-         * @cfg {String} summaryType
-         * This configuration specifies the type of summary. There are several built in summary types.
-         * These call underlying methods on the store:
+         * @cfg {String/Function} summaryType
+         * This configuration specifies the type of summary. There are several built in
+         * summary types. These call underlying methods on the store:
          *
          *  - {@link Ext.data.Store#count count}
          *  - {@link Ext.data.Store#sum sum}
@@ -185,35 +218,91 @@ Ext.define('Ext.grid.column.Column', {
          *  - {@link Ext.data.Store#max max}
          *  - {@link Ext.data.Store#average average}
          *
-         * Note that this configuration only works when the grid has the {@link Ext.grid.plugin.SummaryRow SummaryRow}
-         * plugin enabled.
+         * Any other name is assumed to be the name of a method on the associated
+         * {@link Ext.app.ViewController view controller}.
+         *
+         * Note that this configuration only works when the grid has the
+         * {@link Ext.grid.plugin.SummaryRow SummaryRow} plugin enabled.
          */
         summaryType: null,
 
         /**
-         * @cfg {Function} summaryRenderer
-         * This summaryRenderer is called before displaying a value in the SummaryRow. The function is optional,
-         * if not specified the default calculated value is shown. The summaryRenderer is called with:
+         * @cfg {String/Function} summaryRenderer
+         * This summaryRenderer is called before displaying a value in the SummaryRow. The
+         * function is optional, if not specified the default calculated value is shown. The
+         * summaryRenderer is called with:
+         *
          *  - value {Object} - The calculated value.
          *
-         * Note that this configuration only works when the grid has the {@link Ext.grid.plugin.SummaryRow SummaryRow}
-         * plugin enabled.
+         * Note that this configuration only works when the grid has the
+         * {@link Ext.grid.plugin.SummaryRow SummaryRow} plugin enabled.
          */
         summaryRenderer: null,
 
         minWidth: 20,
         baseCls: Ext.baseCSSPrefix + 'grid-column',
-        cellCls: null,
         sortedCls: Ext.baseCSSPrefix + 'column-sorted',
-        sortDirection: null
+        sortDirection: null,
+
+        /**
+         * @cfg {String/String[]/Ext.XTemplate} tpl
+         * An {@link Ext.XTemplate XTemplate}, or an XTemplate *definition string* to use
+         * to process a {@link Ext.data.Model records} data to produce a cell's rendered
+         * value.
+         *
+         *     @example
+         *     Ext.create('Ext.data.Store', {
+         *         storeId:'employeeStore',
+         *         fields:['firstname', 'lastname', 'seniority', 'department'],
+         *         groupField: 'department',
+         *         data:[
+         *             { firstname: "Michael", lastname: "Scott",   seniority: 7, department: "Management" },
+         *             { firstname: "Dwight",  lastname: "Schrute", seniority: 2, department: "Sales" },
+         *             { firstname: "Jim",     lastname: "Halpert", seniority: 3, department: "Sales" },
+         *             { firstname: "Kevin",   lastname: "Malone",  seniority: 4, department: "Accounting" },
+         *             { firstname: "Angela",  lastname: "Martin",  seniority: 5, department: "Accounting" }
+         *         ]
+         *     });
+         *
+         *     Ext.create('Ext.grid.Panel', {
+         *         title: 'Column Template Demo',
+         *         store: Ext.data.StoreManager.lookup('employeeStore'),
+         *         columns: [{
+         *             text: 'Full Name',
+         *             tpl: '{firstname} {lastname}'
+         *         }, {
+         *             text: 'Department (Yrs)',
+         *             tpl: '{department} ({seniority})'
+         *         }],
+         *         height: 200,
+         *         width: 300,
+         *         renderTo: Ext.getBody()
+         *     });
+         *
+         * This config is only processed if the {@link #cell} type is the default of
+         * {@link Ext.grid.cell.Cell gridcell}.
+         *
+         * **Note** See {@link Ext.grid.Grid} documentation for other, better alternatives
+         * to rendering cell content.
+         */
+        tpl: null
+    },
+
+    applyTpl: function (tpl) {
+        if (!tpl || !tpl.isXTemplate) {
+            tpl = new Ext.XTemplate(tpl);
+        }
+
+        return tpl;
     },
 
     updateAlign: function(align, oldAlign) {
+        var prefix = Ext.baseCSSPrefix + 'grid-column-align-';
         if (oldAlign) {
-            this.removeCls(Ext.baseCSSPrefix + 'grid-column-align-' + align);
+            this.removeCls(prefix + align);
         }
         if (align) {
-            this.addCls(Ext.baseCSSPrefix + 'grid-column-align-' + align);
+            this.addCls(prefix + align);
         }
     },
 
@@ -236,11 +325,11 @@ Ext.define('Ext.grid.column.Column', {
     },
 
     updateText: function(text) {
-        this.setHtml(text);
+        this.setHtml(text || '&#160;');
     },
 
-    updateWidth: function(width) {
-        this.callParent(arguments);
+    updateWidth: function(width, oldWidth) {
+        this.callParent([width, oldWidth]);
         this.fireEvent('columnresize', this, width);
     },
 
@@ -269,32 +358,5 @@ Ext.define('Ext.grid.column.Column', {
         }
 
         this.fireEvent('sort', this, direction, oldDirection);
-    },
-
-    getCellContent: function(record) {
-        var me = this,
-            dataIndex = me.getDataIndex(),
-            renderer = me.getRenderer(),
-            scope = me.getScope(),
-            value = dataIndex && record.get(dataIndex);
-
-        return renderer ? renderer.call(scope || me, value, record, dataIndex) : me.defaultRenderer(value, record);
-    },
-
-    /**
-     * @method defaultRenderer
-     * When defined this will take precedence over the {@link Ext.grid.column.Column#renderer renderer} config.
-     * This is meant to be defined in subclasses that wish to supply their own renderer.
-     * @protected
-     * @template
-     */
-    defaultRenderer: function(value) {
-        return value;
-    },
-
-    updateCell: function(cell, record, content) {
-        if (cell && (record || content)) {
-            cell.firstChild.nodeValue = content || this.getCellContent(record);
-        }
     }
 });

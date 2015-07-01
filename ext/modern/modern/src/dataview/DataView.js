@@ -428,9 +428,10 @@ Ext.define('Ext.dataview.DataView', {
         scrollToTopOnRefresh: true
     },
 
+    defaultBindProperty: 'store',
+
     constructor: function(config) {
-        var me = this,
-            layout;
+        var me = this;
 
         me.hasLoadedStore = false;
 
@@ -441,11 +442,13 @@ Ext.define('Ext.dataview.DataView', {
         me.callParent(arguments);
 
         //<debug>
-        layout = this.getLayout();
+        var layout = this.getLayout();
         if (layout && !layout.isAuto) {
             Ext.Logger.error('The base layout for a DataView must always be an Auto Layout');
         }
         //</debug>
+
+        me.initSelectable();
     },
 
     updateItemCls: function(newCls, oldCls) {
@@ -462,6 +465,7 @@ Ext.define('Ext.dataview.DataView', {
 
     storeEventHooks: {
         beforeload: 'onBeforeLoad',
+        groupchange: 'onStoreGroupChange',
         load: 'onLoad',
         refresh: 'refresh',
         add: 'onStoreAdd',
@@ -857,7 +861,7 @@ Ext.define('Ext.dataview.DataView', {
             });
             store = me.getStore();
             if (store && me.hasLoadedStore && !store.getCount()) {
-                this.showEmptyText();
+                me.showEmptyText();
             }
         }
     },
@@ -1014,6 +1018,13 @@ Ext.define('Ext.dataview.DataView', {
         container.moveItemsToCache(0, items.length - 1);
         this.showEmptyText();
     },
+
+    /**
+     * @private
+     * @param {Ext.data.Store} store
+     * @param {Ext.util.Grouper} grouper
+     */
+    onStoreGroupChange: Ext.emptyFn,
 
     /**
      * @private

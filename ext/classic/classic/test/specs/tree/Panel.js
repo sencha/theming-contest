@@ -1800,6 +1800,7 @@ describe("Ext.tree.Panel", function(){
 
         afterEach(function () {
             Ext.undefine('spec.Foo');
+            Ext.data.Model.schema.clear(true);
         });
 
         function getData() {
@@ -2438,25 +2439,24 @@ describe("Ext.tree.Panel", function(){
 
     describe('Changing root node', function() {
         it('should remove all listeners from old root node', function() {
-            var oldRoot,
-                tree = new Ext.tree.Panel({
-                    title: 'Test',
-                    height: 200,
-                    width: 400,
-                    root: {
-                        text: 'Root',
-                        expanded: true,
-                        children: [{
-                            text: 'A',
-                            leaf: true
-                        }, {
-                            text: 'B',
-                            leaf: true
-                        }]
-                    }
-                });
+            tree = new Ext.tree.Panel({
+                title: 'Test',
+                height: 200,
+                width: 400,
+                root: {
+                    text: 'Root',
+                    expanded: true,
+                    children: [{
+                        text: 'A',
+                        leaf: true
+                    }, {
+                        text: 'B',
+                        leaf: true
+                    }]
+                }
+            });
 
-            oldRoot = tree.getRootNode();
+            var oldRoot = tree.getRootNode();
 
             // The old root should have some listeners
             expect(Ext.Object.getKeys(oldRoot.hasListeners).length).toBeGreaterThan(0);

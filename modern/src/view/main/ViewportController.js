@@ -141,8 +141,6 @@ Ext.define('FeedViewer.view.main.ViewportController', {
                                 select: 'onFeedListItemSelect'
                             }
                         });
-
-                        //list.setStore(record.entries());
                     }
                 }}
         );

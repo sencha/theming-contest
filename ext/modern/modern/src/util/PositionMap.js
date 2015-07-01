@@ -3,21 +3,33 @@
  */
 Ext.define('Ext.util.PositionMap', {
     config: {
-        minimumHeight: 50
+        minimumHeight: null
     },
 
     constructor: function(config) {
-        this.map = [];
-        this.adjustments = {};
-        this.offset = 0;
+        var me = this;
 
-        this.initConfig(config);
+        me.map = [];
+        me.adjustments = {};
+        me.offset = 0;
+
+        me.initConfig(config);
     },
 
     populate: function(count, offset) {
-        var map = this.map = this.map || [],
-            minimumHeight = this.getMinimumHeight(),
+        var me = this,
+            map = me.map = me.map || [],
+            minimumHeight = me.getMinimumHeight(),
             i, previousIndex, ln;
+
+        me.adjustments = {
+            indices: [],
+            heights: {}
+        };
+
+        if (minimumHeight === null) {
+            return;
+        }
 
         offset = offset || 0;
 
@@ -31,11 +43,7 @@ Ext.define('Ext.util.PositionMap', {
             map[i] = map[previousIndex] + minimumHeight;
         }
 
-        this.adjustments = {
-            indices: [],
-            heights: {}
-        };
-        this.offset = 0;
+        me.offset = 0;
         for (i = 1, ln = count - 1; i <= ln; i++) {
             previousIndex = i - 1;
             this.offset += map[i] - map[previousIndex] - minimumHeight;

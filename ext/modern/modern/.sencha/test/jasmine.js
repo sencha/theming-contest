@@ -112,7 +112,17 @@ jasmine.ExpectationResult = function(params) {
   this.message = this.passed_ ? 'Passed.' : params.message;
 
   var trace = (params.trace || new Error(this.message));
-  this.trace = this.passed_ ? '' : trace;
+  this.trace = this.passed_ ? '' : trace + '';
+  
+  // If the test passed, there's a negligible chance that anybody will look
+  // into the expected and actual results. However there is a non-zero chance
+  // that somebody would want to investigate a failure.
+  // Considering that both actual and expected properties are often closures
+  // that retain A LOT of componentry, we clean 'em up automatically when
+  // the test passed, but only clean up failures when we're running in TC.
+  if (window.Cmd || this.passed_) {
+    this.expected = this.actual = null;
+  }
 };
 
 jasmine.ExpectationResult.prototype.toString = function () {
@@ -2200,7 +2210,7 @@ jasmine.Matchers.prototype.toBePositionedAt = function(x, y) {
                     }
                     Ext.Object.each(value, function (prop, expected) {
                         var actual = elementPropGetters[prop](el, root || comp.el),
-                            pfx = path + '.' + name + '.' + prop + '=';
+                            pfx = (path ? path + '.' : '') + name + '.' + prop + '=';
 
                         if (Ext.isArray(expected)) {
                             if (actual < expected[0] || actual > expected[1]) {
@@ -2733,9 +2743,36 @@ jasmine.Queue.prototype.next_ = function() {
             if (self.onComplete) {
                 self.onComplete();
             }
+            
+            self.finish();
         }
     }
 };
+
+jasmine.Queue.prototype.finish = function() {
+    var me = this,
+        blocks = me.blocks,
+        i, len, block;
+    
+    // Block functions are closures that keep a lot of test objects retained.
+    // We don't want all this cruft hanging around when the queue is finished.
+    for (i = 0, len = blocks.length; i < len; i++) {
+        block = blocks[i];
+        
+        block.func = null;
+        
+        if (block.latchFunction) {
+            block.latchFunction = null;
+        }
+        
+        if (block.timeout) {
+            block.timeout = null;
+        }
+    }
+    
+    me.finished = true;
+}
+
 /**
  * Runner
  *
@@ -2813,6 +2850,7 @@ jasmine.Runner.prototype.topLevelSuites = function() {
 jasmine.Runner.prototype.results = function() {
   return this.queue.results();
 };
+
 jasmine.Runner.prototype.filter = function (suiteIds, specIds) {
     // convert [1, 2] into { 1: true, 2: true }
     //
@@ -2847,8 +2885,42 @@ jasmine.Runner.prototype.filter = function (suiteIds, specIds) {
     }
 
     if (blocks.length) {
-        this.queue.blocks = blocks;
-    } else {
+        this.queue.blocks = this.queue.ensured = blocks;
+        
+        // Kill the specs that are never going to run
+        var runningSuites = {};
+        
+        for (i = 0, length = blocks.length; i < length; i++) {
+            suites = blocks[i].allSuites();
+            
+            for (var j = 0, jlen = suites.length; j < jlen; j++) {
+                suite = suites[j];
+                
+                runningSuites[suite.id] = true;
+            }
+        }
+        
+        suites = this.suites();
+        
+        for (i = suites.length - 1; i >= 0; i--) {
+            suite = suites[i];
+            
+            if (!runningSuites[suite.id]) {
+                suites[i] = null;
+            }
+        }
+    }
+    // If suiteIds or specIds are provided, that means the user wanted to run
+    // only the specs or suites specified. If these can't be found, most probably
+    // that means there was a typo in a spec name, or recent changes to the spec code
+    // changed the hash and it's no longer valid. Either way that is something that
+    // happens only when debugging and is going to be corrected soon.
+    // So instead of defaulting to run the whole nine yars, just bail out.
+    else if (specs.length || suites.length) {
+        this.queue.blocks = [];
+        Ext.log.error('No suites or specs found!');
+    }
+    else {
         blocks = this.queue.blocks;
     }
 
@@ -2857,6 +2929,9 @@ jasmine.Runner.prototype.filter = function (suiteIds, specIds) {
         this.env.totalSpecs += blocks[i].totalSpecs;
     }
     this.env.remainingSpecs = this.env.totalSpecs;
+    
+    // We also no longer need hashes
+    jasmine.hashes = null;
 
     return this;
 };
@@ -3012,6 +3087,9 @@ jasmine.Spec.prototype.finish = function(onComplete) {
   if (onComplete) {
     onComplete();
   }
+  
+  this.finished = true;
+  this.env = this.afterCallbacks_ = this.spies_ = this.spy = this.matchersClass = null;
 };
 
 jasmine.Spec.prototype.after = function(doAfter) {
@@ -3107,6 +3185,7 @@ jasmine.Spec.prototype.removeAllSpies = function() {
     var _Spec = jasmine.Spec,
         proto = _Spec.prototype,
         allowedGlobals = {},
+        allowedComponents = {},
         prop;
 
     // Any properties already in the window object when we are loading jasmine are ok
@@ -3135,6 +3214,47 @@ jasmine.Spec.prototype.removeAllSpies = function() {
     // we're going to add the addGlobal function to the window object, so specs can call it
     allowedGlobals.addGlobal =
     allowedGlobals.id = true; // In Ext JS 4 Ext.get(window) adds an id property
+    
+    // Ext.sparkline.Base puts this tooltip on its prototype
+    if (Ext.toolkit === 'classic') {
+        allowedComponents['sparklines-tooltip'] = true;
+    }
+    else {
+        // Modern MessageBox owns a modal mask component
+        allowedComponents[Ext.Msg.id] = true;
+        allowedComponents[Ext.Msg.getModal().id] = true;
+    }
+    
+    // Ext.MessageBox and its children are going to be present in all tests.
+    // The reason why we don't just add allow everything that is already present
+    // in Ext.ComponentMgr collection is that sometimes components can be created
+    // by mistake in spec definition. We want to catch these as well.
+    (function() {
+        var msgbox = Ext.MessageBox,
+            leaks = [],
+            components = Ext.ComponentMgr.getAll();
+        
+        for (var i = 0; i < components.length; i++) {
+            var cmp = components[i];
+            
+            if (cmp === msgbox || (cmp.up && cmp.up('window') === msgbox)) {
+                allowedComponents[cmp.id] = true;
+            }
+            else if (!allowedComponents[cmp.id]) {
+                leaks.push(cmp);
+            }
+        }
+        
+        if (leaks.length) {
+            Ext.log({
+                dump: leaks,
+                level: 'error',
+                msg: 'COMPONENTS EXIST BEFORE TEST SUITE START'
+            });
+        }
+        
+        Ext.ComponentManager.clearAll();
+    })();
 
     window.addGlobal = function(property) {
         var len;
@@ -3175,6 +3295,11 @@ jasmine.Spec.prototype.removeAllSpies = function() {
     proto.finishCallback = function() {
         this.checkDomLeak();
         this.checkGlobalsLeak();
+        this.checkComponentLeak();
+        
+        if (Ext.toolkit === 'classic') {
+            this.checkLayoutSuspension();
+        }
 
         // TODO: this causes too many failures so is disabled for now.
         // clean up orphan elements and re-enable this at some point.
@@ -3216,7 +3341,38 @@ jasmine.Spec.prototype.removeAllSpies = function() {
                 msg: 'CLEAN UP YOUR DOM LEAKS!! --> ' + ids
             });
 
-            this.fail('document.body contains childNodes after spec execution --> ' + ids);
+            this.fail('document.body contains childNodes after spec execution --> ' + this.getFullName());
+        }
+    };
+    
+    proto.checkComponentLeak = function(spec) {
+        var leaks = [],
+            components, i, len, cmp;
+        
+        components = Ext.ComponentMgr.getAll();
+        
+        for (i = 0, len = components.length; i < len; i++) {
+            cmp = components[i];
+            
+            // Allow QuickTips by default, they're mostly harmless
+            if (!allowedComponents[cmp.id] &&
+                !(cmp.isQuickTip || (cmp.up && cmp.up('[isQuickTip]')))) {
+                leaks.push(cmp);
+            }
+        }
+        
+        // We don't destroy the leaked components so that they could be examined,
+        // just clearing them from ComponentManager cache is enough
+        Ext.ComponentMgr.clearAll();
+        
+        if (leaks.length) {
+            Ext.log({
+                dump: leaks,
+                level: 'error',
+                msg: 'CLEAN UP YOUR COMPONENT LEAKS IN SPEC: ' + this.getFullName()
+            });
+            
+            this.fail('Ext.ComponentMgr reports undestroyed components after spec execution');
         }
     };
 
@@ -3243,6 +3399,14 @@ jasmine.Spec.prototype.removeAllSpies = function() {
                 // add the bad global to allowed globals so that it only fails this one spec
                 allowedGlobals[property] = true;
             }
+        }
+    };
+
+    proto.checkLayoutSuspension = function(spec) {
+        var count = Ext.Component.layoutSuspendCount;
+        if (count !== 0) {
+            this.fail('Spec completed with layouts suspended: count=' + count);
+            Ext.Component.layoutSuspendCount = 0;
         }
     };
 
@@ -3314,6 +3478,9 @@ jasmine.Spec.prototype.removeAllSpies = function() {
 
     proto.disable = function() {
         this.enabled = false;
+        
+        // Release bound contexts and closures
+        this.queue.finish();
 
         return this;
     };
@@ -3361,6 +3528,9 @@ function waitsForAnimation() {
  */
 function waitsForSpy(spy, timeoutMessage, timeout) {
     var currentSpec = jasmine.getEnv().currentSpec;
+    
+    timeoutMessage = timeoutMessage || spy.identity + ' to fire';
+    timeout = timeout != null ? timeout : 1000;
 
     currentSpec.waitsFor.call(currentSpec, function() { return !!spy.callCount }, timeoutMessage, timeout);
 };
@@ -3404,6 +3574,9 @@ jasmine.Suite.prototype.finish = function(onComplete) {
   if (typeof(onComplete) == 'function') {
     onComplete();
   }
+  
+  this.env = this.before_ = this.after_ = this.children_ = null;
+  this.suites_ = this.specs_ = null;
 };
 
 jasmine.Suite.prototype.beforeEach = function(beforeEachFunction) {
@@ -3507,6 +3680,7 @@ jasmine.Suite.prototype.execute = function(onComplete) {
     proto.forceSkippedResults = function() {
         var results = this.queue.results();
         results.skipped = true;
+        
         return results;
     };
 
@@ -3581,7 +3755,25 @@ jasmine.Suite.prototype.execute = function(onComplete) {
             p.totalSpecs += suiteOrSpec.totalSpecs;
         }
     };
-
+    
+    proto.allSuites = function() {
+        var all = [],
+            suites, subSuites, i, len;
+        
+        suites = this.suites();
+        
+        for (i = 0, len = suites.length; i < len; i++) {
+            all.push(suites[i]);
+            
+            subSuites = suites[i].allSuites();
+            
+            if (subSuites.length) {
+                all.push(subSuites);
+            }
+        }
+        
+        return all.length ? Ext.Array.flatten(all) : all;
+    }
 })();
 jasmine.WaitsBlock = function(env, timeout, spec) {
   this.timeout = timeout;
@@ -4115,26 +4307,64 @@ jasmine.fireKeyEvent = function(target, type, key, shiftKey, ctrlKey, altKey) {
     }
 };
 
-// This implementation is very naïve but since it's not easy to simulate
-// real Tab key presses (if at all possible), it doesn't make sense
-// to go any further than this.
+// This implementation is pretty naïve but since it's not easy to simulate
+// real Tab key presses (if at all possible), it doesn't make sense to go
+// any further than this.
 jasmine.simulateTabKey = jasmine.syncPressTabKey = function(from, forward) {
     function getNextTabTarget(currentlyFocused, forward) {
-        var body = Ext.getBody(),
-            currentDom, tabbables, idx, lastIdx, next;
-
+        var selector = 'a[href],button,iframe,input,select,textarea,[tabindex],[contenteditable="true"]',
+            body = Ext.getBody(),
+            currentDom, focusables, node, next,
+            len, lastIdx, currIdx, i, to, step;
+        
         currentDom = Ext.getDom(currentlyFocused);
-        tabbables  = body.findTabbableElements(/* skipSelf = */ true);
-        lastIdx    = tabbables.length - 1;
-        idx        = Ext.Array.indexOf(tabbables, currentDom);
-
-        // If the currently focused element is not itself tababble,
-        // go to first (or last) tababble element
-        if (forward) {
-            next = idx < 0 ? tabbables[0] : tabbables[idx + 1];
+        focusables = body.dom.querySelectorAll(selector);
+        len        = focusables.length;
+        lastIdx    = focusables.length - 1;
+        currIdx    = Ext.Array.indexOf(focusables, currentDom);
+        
+        // If the currently focused element is not present in the list,
+        // it must be the body itself. Just focus the first or last
+        // tabbable element.
+        if (currIdx < 0) {
+            if (forward) {
+                i    = 0;
+                to   = len - 1;
+                step = 1;
+            }
+            else {
+                i    = len - 1;
+                to   = 0;
+                step = -1;
+            }
         }
         else {
-            next = idx < 0 ? tabbables[lastIdx] : tabbables[idx - 1];
+            if (forward) {
+                i    = currIdx + 1;
+                to   = len - 1;
+                step = 1;
+            }
+            else {
+                i    = currIdx - 1;
+                to   = 0;
+                step = -1;
+            }
+        }
+        
+        // We're only interested in the elements that an user can *tab into*,
+        // not all programmatically focusable elements. So we have to filter
+        // these out.
+        for (;; i += step) {
+            if ((step > 0 && i > to) || (step < 0 && i < to)) {
+                break;
+            }
+            
+            node = focusables[i];
+            
+            if (Ext.fly(node).isTabbable()) {
+                next = node;
+                break;
+            }
         }
 
         return Ext.get(next || body);
@@ -4188,7 +4418,7 @@ jasmine.waitForFocus = jasmine.waitsForFocus = function(cmp, desc, timeout) {
     var isComponent = cmp.isComponent,
         dom = isComponent   ? cmp.getFocusEl().dom
             : cmp.isElement ? cmp.dom
-            :                 Ext.get(cmp),
+            :                 cmp,
         id = isComponent ? (cmp.itemId || cmp.id) : dom.id;
     
     if (!desc) {
@@ -4266,8 +4496,13 @@ jasmine.focusAndWait = function(cmp, waitFor) {
 
 jasmine.blurAndWait = function(cmp, waitFor) {
     runs(function() {
-        // Programmatic blur fails on IEs. Focus then remove an input field
-        Ext.getBody().createChild({tag: 'input', type: 'text'}).focus().remove();
+        // Programmatic blur fails on IEs, so just focus the body element instead.
+        if (Ext.isIE) {
+            Ext.getBody().focus();
+        }
+        else {
+            cmp.blur();
+        }
     });
 
     jasmine.waitForBlur(waitFor || cmp);
@@ -4319,7 +4554,7 @@ jasmine.expectTabIndex = jasmine.expectsTabIndex = function(wantIndex, el) {
             el = el.getFocusEl();
         }
 
-        var haveIndex = el.dom.getAttribute('tabindex');
+        var haveIndex = el.dom.getAttribute('tabIndex');
 
         expect(haveIndex - 0).toBe(wantIndex);
     });
@@ -4385,27 +4620,29 @@ var fakeScope = {
     id: "fakeScope",
     fakeScope: true
 };
+
 /**
- * Class to act as a bridge between the MockAjax class and Ext.data.Connection
+ * Class to act as a bridge between the MockAjax class and Ext.data.Request
  */
 var MockAjaxManager = {
     
     getXhrInstance: null,
     
     /**
-     * Pushes methods onto the Connection prototype to make it easier to deal with
+     * Pushes methods onto the Request prototype to make it easier to deal with
      */
     addMethods: function(){
         var Connection = Ext.data.Connection,
-            proto = Connection.prototype;
+            connectionProto = Connection.prototype,
+            requestProto = Ext.data.request.Ajax.prototype;
             
         Connection.requestId = 0;
-        MockAjaxManager.getXhrInstance = proto.getXhrInstance;
+        MockAjaxManager.getXhrInstance = requestProto.getXhrInstance;
         
         /**
          * Template method to create the AJAX request
          */
-        proto.getXhrInstance = function(){
+        requestProto.getXhrInstance = function() {
             return new MockAjax();    
         };
         
@@ -4414,15 +4651,19 @@ var MockAjaxManager = {
          * @param {Object} response The response
          * @param {String} id (optional) The id of the completed request
          */
-        proto.mockComplete = function(response, id){
-            this.mockGetRequestXHR(id).xhr.complete(response);
+        connectionProto.mockComplete = function(response, id) {
+            var request = this.mockGetRequestXHR(id);
+            
+            if (request) {
+                request.xhr.complete(response);
+            }
         };
         
         /**
          * Get a particular request
          * @param {String} id (optional) The id of the request
          */
-        proto.mockGetRequestXHR = function(id){
+        connectionProto.mockGetRequestXHR = function(id) {
             var request;
                 
             if (id) {
@@ -4437,7 +4678,7 @@ var MockAjaxManager = {
         /**
          * Gets all the requests from the Connection
          */
-        proto.mockGetAllRequests = function(){
+        connectionProto.mockGetAllRequests = function(){
             var requests = this.requests,
                 id,
                 request,
@@ -4452,18 +4693,20 @@ var MockAjaxManager = {
         };
 
         this.originalExtAjax = Ext.Ajax;
-        Ext.Ajax = new Connection({autoAbort : false});
+        Ext.Ajax = new Connection({ autoAbort : false });
     },
     
     /**
      * Restore any changes made by addMethods
      */
-    removeMethods: function(){
+    removeMethods: function() {
         var proto = Ext.data.Connection.prototype;
         delete proto.mockComplete;
         delete proto.mockGetRequestXHR;
-        proto.getXhrInstance = MockAjaxManager.getXhrInstance;
         Ext.Ajax = this.originalExtAjax;
+        
+        Ext.data.request.Ajax.prototype.getXhrInstance = MockAjaxManager.getXhrInstance;
+        MockAjaxManager.getXhrInstance = null;
     }
 };
 

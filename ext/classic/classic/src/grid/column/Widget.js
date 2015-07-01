@@ -155,6 +155,12 @@ Ext.define('Ext.grid.column.Widget', {
     },
 
     /**
+     * @cfg {Boolean} ignoreExport
+     * @inheritdoc
+     */
+    ignoreExport: true,
+
+    /**
      * @cfg
      * @inheritdoc
      */
@@ -525,6 +531,10 @@ Ext.define('Ext.grid.column.Widget', {
                             if (focusEl.isTabbable()) {
                                 focusEl.saveTabbableState();
                             }
+
+                            // Some browsers do not deliver a focus change upon DOM removal.
+                            // Force the issue here.
+                            focusEl.blur();
                         }
 
                         widget.detachFromBody();

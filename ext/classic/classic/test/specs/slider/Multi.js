@@ -417,32 +417,40 @@ describe("Ext.slider.Multi", function() {
                                 jasmine.fireMouseEvent(slider.el, 'click', xy[0] + 8, xy[1] + offset);
                             });
                             
+                            it("should fire the focus event", function() {
+                                expect(slider.fireEvent.calls[0].args[0]).toBe("focus");
+                            });
+
+                            it("should fire the focusenter event", function() {
+                                expect(slider.fireEvent.calls[1].args[0]).toBe("focusenter");
+                            });
+                            
                             it("should fire beforechange event", function() {
-                                expect(slider.fireEvent.calls[0].args[0]).toBe("beforechange");
-                                expect(slider.fireEvent.calls[0].args[1].id).toBe(slider.id);
-                                expect(slider.fireEvent.calls[0].args[2]).toBe(50);
-                                expect(slider.fireEvent.calls[0].args[3]).toBe(60);
-                                expect(slider.fireEvent.calls[0].args[4].el.id).toBe(thumb60.el.id);
+                                expect(slider.fireEvent.calls[2].args[0]).toBe("beforechange");
+                                expect(slider.fireEvent.calls[2].args[1].id).toBe(slider.id);
+                                expect(slider.fireEvent.calls[2].args[2]).toBe(50);
+                                expect(slider.fireEvent.calls[2].args[3]).toBe(60);
+                                expect(slider.fireEvent.calls[2].args[4].el.id).toBe(thumb60.el.id);
                             });
                             
                             it("should fire change event", function() {
-                                expect(slider.fireEvent.calls[1].args[0]).toBe("change");
-                                expect(slider.fireEvent.calls[1].args[1].id).toBe(slider.id);
-                                expect(slider.fireEvent.calls[1].args[2]).toBe(50);
-                                expect(slider.fireEvent.calls[1].args[3].el.id).toBe(thumb60.el.id);
-                            });
-                            
-                            it("should fire dirtychange event", function() {
-                                expect(slider.fireEvent.calls[2].args[0]).toBe("dirtychange");
-                                expect(slider.fireEvent.calls[2].args[1].id).toBe(slider.id);
-                                expect(slider.fireEvent.calls[2].args[2]).toBe(true);
-                            });
-
-                            it("should fire changecomplete event", function() {
-                                expect(slider.fireEvent.calls[3].args[0]).toBe("changecomplete");
+                                expect(slider.fireEvent.calls[3].args[0]).toBe("change");
                                 expect(slider.fireEvent.calls[3].args[1].id).toBe(slider.id);
                                 expect(slider.fireEvent.calls[3].args[2]).toBe(50);
                                 expect(slider.fireEvent.calls[3].args[3].el.id).toBe(thumb60.el.id);
+                            });
+                            
+                            it("should fire dirtychange event", function() {
+                                expect(slider.fireEvent.calls[4].args[0]).toBe("dirtychange");
+                                expect(slider.fireEvent.calls[4].args[1].id).toBe(slider.id);
+                                expect(slider.fireEvent.calls[4].args[2]).toBe(true);
+                            });
+
+                            it("should fire changecomplete event", function() {
+                                expect(slider.fireEvent.calls[5].args[0]).toBe("changecomplete");
+                                expect(slider.fireEvent.calls[5].args[1].id).toBe(slider.id);
+                                expect(slider.fireEvent.calls[5].args[2]).toBe(50);
+                                expect(slider.fireEvent.calls[5].args[3].el.id).toBe(thumb60.el.id);
                             });
 
                             it("should change the thumb value", function() {

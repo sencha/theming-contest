@@ -11,6 +11,11 @@ describe("Ext.form.field.TextArea", function() {
             Ext.applyIf(config, {
                 name: 'test'
             });
+            
+            if (component) {
+                component.destroy();
+            }
+            
             component = new Ext.form.field.TextArea(config);
         };
     });
@@ -114,7 +119,7 @@ describe("Ext.form.field.TextArea", function() {
             });
 
             it("should have tabindex set to the tabIndex config", function() {
-                expect('' + component.inputEl.dom.getAttribute("tabindex")).toEqual('5');
+                expect('' + component.inputEl.dom.getAttribute("tabIndex")).toEqual('5');
             });
         });
         

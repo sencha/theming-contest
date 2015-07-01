@@ -9,14 +9,6 @@
         width: 100% !important;
     }
 
-    &.x-list-indexed .x-list-disclosure {
-        margin-right: 50px;
-    }
-
-    .x-item-selected .x-list-disclosure {
-        background-color: #fff;
-    }
-
     .x-list-scrolldock-hidden {
         display: none;
     }
@@ -35,22 +27,7 @@
             border-top: 1px solid #ccc;
         }
 
-        &.x-item-selected .x-dock-horizontal,
-        &.x-item-selected.x-list-item-tpl {
-            background-color: #ccc;
-        }
 
-				&.x-item-pressed {
-					&.x-list-item-tpl,
-					.x-dock-horizontal {
-						background-color: #ddd;
-					}
-				}
-
-        .x-list-item-body,
-        &.x-list-item-tpl .x-innerhtml {
-            padding: 5px;
-        }
 
         &.x-list-item-relative {
             position: relative !important;
@@ -58,29 +35,9 @@
     }
 
     .x-list-header {
-        background-color: #eee;
-        border-top: 1px solid #ccc;
-        border-bottom: 1px solid #ccc;
-        font-weight: bold;
-
         &.x-list-item-relative {
             position:  relative !important;
         }
-    }
-
-    .x-list-disclosure {
-        margin: 5px 15px 5px 0;
-        overflow: visible;
-        width: 20px;
-        height: 20px;
-        border: 1px solid #ccc;
-        background-color: #eee;
-    }
-
-    .x-list-item-tpl .x-list-disclosure {
-        position: absolute;
-        right: 0px;
-        top: 0px;
     }
 
     .x-list-emptytext {
@@ -90,10 +47,6 @@
         @include st-box();
         @include st-box-orient(vertical);
         @include st-box-pack(center);
-    }
-
-    &.x-list-indexed .x-list-disclosure {
-        margin-right: 35px;
     }
 
     .x-list-scrolldockitem {

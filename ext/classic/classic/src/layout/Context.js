@@ -1079,6 +1079,7 @@ Ext.define('Ext.layout.Context', {
                 // back into the mahem with this one:
                 ++me.remainingLayouts;
                 layout.running = true;
+                layout.ownerContext = ownerContext;
 
                 if (layout.isComponentLayout) {
                     // this one is fun... if we call setProp('done', false) that would still

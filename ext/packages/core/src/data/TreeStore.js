@@ -1098,11 +1098,6 @@ Ext.define('Ext.data.TreeStore', {
 
             // Specify that the data object is raw, and converters will need to be called
             newRoot = new Model(newRoot);
-
-            // The root node is the only node bound to the TreeStore by a reference.
-            // All descendant nodes acquire a reference to their TreeStore by interrogating the parentNode axis.
-            // The rootNode never joins this Store. It is bound and unbound in applyRoot and updateRoot
-            newRoot.store = newRoot.treeStore = me;
         }
         return newRoot;
     },
@@ -1170,6 +1165,11 @@ Ext.define('Ext.data.TreeStore', {
                     oldOwner.setRoot(null);
                 }
 
+                // The root node is the only node bound to the TreeStore by a reference.
+                // All descendant nodes acquire a reference to their TreeStore by interrogating the parentNode axis.
+                // The rootNode never joins this store.
+                newRoot.store = newRoot.treeStore = me;
+
                 newRoot.set('root', true);
                 // root node should never be phantom or dirty, so commit it
                 newRoot.updateInfo(true, {
@@ -1224,8 +1224,6 @@ Ext.define('Ext.data.TreeStore', {
 
         // Inform views that the entire structure has changed.
         me.resumeEvent('add', 'remove');
-
-        return newRoot;
     },
     
     /**

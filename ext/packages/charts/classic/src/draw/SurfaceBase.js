@@ -7,5 +7,15 @@ Ext.define('Ext.draw.SurfaceBase', {
 
     getOwnerBody: function() {
         return this.ownerCt.body;
+    },
+
+    destroy: function () {
+        var me = this;
+
+        if (me.hasListeners.destroy) {
+            me.fireEvent('destroy', me);
+        }
+        me.callParent();
     }
+
 });

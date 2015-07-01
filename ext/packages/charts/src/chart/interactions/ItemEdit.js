@@ -112,7 +112,7 @@ Ext.define('Ext.chart.interactions.ItemEdit', {
         return tooltip;
     },
 
-    defaultTooltipRenderer: function (tooltip, target, e) {
+    defaultTooltipRenderer: function (tooltip, item, target, e) {
         var parts = [];
 
         if (target.xField) {

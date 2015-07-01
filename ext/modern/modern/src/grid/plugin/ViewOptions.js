@@ -1,7 +1,42 @@
 /**
- * @class Ext.grid.plugin.ViewOptions
- * @extends Ext.Component
- * Description
+ * The Modern Grid's ViewOptions plugin produces a menu that slides in from the right (by default)
+ * when you drag your finger or cursor right-to-left over the grid's column headers. The
+ * menu displays the column header names which represents the order of the grid's columns.
+ * This allows users to easily reorder the grid's columns by reordering the rows. Items may
+ * be dragged by grabbing the furthest left side of the row and moving the item vertically.
+ *
+ * Once the columns are ordered to your liking, you may then close the menu by tapping the
+ * "Done" button.
+ *
+ *     @example
+ *     var store = Ext.create('Ext.data.Store', {
+ *        fields: ['name', 'email', 'phone'],
+ *        data: [
+ *            { 'name': 'Lisa',  "email":"lisa@simpsons.com",  "phone":"555-111-1224"  },
+ *            { 'name': 'Bart',  "email":"bart@simpsons.com",  "phone":"555-222-1234" },
+ *            { 'name': 'Homer', "email":"home@simpsons.com",  "phone":"555-222-1244"  },
+ *            { 'name': 'Marge', "email":"marge@simpsons.com", "phone":"555-222-1254"  }
+ *        ]
+ *     );
+ *
+ *     Ext.create('Ext.grid.Grid', {
+ *        store: store,
+ *        plugins: [{
+ *            type: 'gridviewoptions'
+ *        }],
+ *        columns: [
+ *            { text: 'Name',  dataIndex: 'name', width: 200},
+ *            { text: 'Email', dataIndex: 'email', width: 250},
+ *            { text: 'Phone', dataIndex: 'phone', width: 120}
+ *        ],
+ *        height: 200,
+ *        layout: 'fit',
+ *        fullscreen: true
+ *     );
+ *
+ * Developers may modify the menu and its contents by overriding {@link #sheet} and
+ * {@link #columnList} respectively.
+ *
  */
 Ext.define('Ext.grid.plugin.ViewOptions', {
     extend: 'Ext.Component',
@@ -19,8 +54,14 @@ Ext.define('Ext.grid.plugin.ViewOptions', {
          */
         grid: null,
 
+        /**
+         * The width of the menu
+         */
         sheetWidth: 320,
 
+        /**
+         * The configuration of the menu
+         */
         sheet: {
             baseCls: Ext.baseCSSPrefix + 'grid-viewoptions',
             xtype: 'sheet',
@@ -48,30 +89,33 @@ Ext.define('Ext.grid.plugin.ViewOptions', {
             stretchY: true
         },
 
+        /**
+         * The column's configuration
+         */
         columnList: {
             xtype: 'nestedlist',
             title: 'Column',
             listConfig: {
                 plugins: [{
                     type: 'sortablelist',
-                    handleSelector: '.x-column-options-sortablehandle'
+                    handleSelector: '.' + Ext.baseCSSPrefix + 'column-options-sortablehandle'
                 }],
                 mode: 'MULTI',
                 infinite: true,
                 itemTpl: [
-                    '<div class="x-column-options-itemwrap<tpl if="hidden"> {hiddenCls}</tpl>',
+                    '<div class="' + Ext.baseCSSPrefix + 'column-options-itemwrap<tpl if="hidden"> {hiddenCls}</tpl>',
                             '<tpl if="grouped"> {groupedCls}</tpl>">',
-                        '<div class="x-column-options-sortablehandle"></div>',
+                        '<div class="' + Ext.baseCSSPrefix + 'column-options-sortablehandle"></div>',
                         '<tpl if="header">',
-                            '<div class="x-column-options-folder"></div>',
+                            '<div class="' + Ext.baseCSSPrefix + 'column-options-folder"></div>',
                         '<tpl else>',
-                            '<div class="x-column-options-leaf"></div>',
+                            '<div class="' + Ext.baseCSSPrefix + 'column-options-leaf"></div>',
                         '</tpl>',
-                        '<div class="x-column-options-text">{text}</div>',
-                        '<tpl if="groupable">',
-                            '<div class="x-column-options-groupindicator"></div>',
+                        '<div class="' + Ext.baseCSSPrefix + 'column-options-text">{text}</div>',
+                        '<tpl if="groupable && dataIndex">',
+                            '<div class="' + Ext.baseCSSPrefix + 'column-options-groupindicator"></div>',
                         '</tpl>',
-                        '<div class="x-column-options-visibleindicator"></div>',
+                        '<div class="' + Ext.baseCSSPrefix + 'column-options-visibleindicator"></div>',
                     '</div>'
                 ],
                 triggerEvent: null,
@@ -98,16 +142,30 @@ Ext.define('Ext.grid.plugin.ViewOptions', {
             clearSelectionOnListChange: false
         },
 
-        visibleIndicatorSelector: '.x-column-options-visibleindicator',
-        groupIndicatorSelector: '.x-column-options-groupindicator'
+        /**
+         * The CSS class responsible for displaying the visibility indicator.
+         */
+        visibleIndicatorSelector: '.' + Ext.baseCSSPrefix + 'column-options-visibleindicator',
+
+        /**
+         * The CSS class responsible for displaying the grouping indicator.
+         */
+        groupIndicatorSelector: '.' + Ext.baseCSSPrefix + 'column-options-groupindicator'
     },
 
     /**
      * @private
      */
-    _hiddenColumnCls: 'x-column-options-hidden',
-    _groupedColumnCls: 'x-column-options-grouped',
+    _hiddenColumnCls:  Ext.baseCSSPrefix + 'column-options-hidden',
 
+    /**
+     * @private
+     */
+    _groupedColumnCls: Ext.baseCSSPrefix + 'column-options-grouped',
+
+    /**
+     * Determines the menu's visibility when the grid is loaded.
+     */
     sheetVisible: false,
 
     init: function(grid) {
@@ -132,6 +190,7 @@ Ext.define('Ext.grid.plugin.ViewOptions', {
             });
             oldGrid.getHeaderContainer().un({
                 columnadd: 'onColumnAdd',
+                columnmove: 'onColumnMove',
                 columnremove: 'onColumnRemove',
                 scope: this
             });
@@ -147,6 +206,7 @@ Ext.define('Ext.grid.plugin.ViewOptions', {
             });
             grid.getHeaderContainer().on({
                 columnadd: 'onColumnAdd',
+                columnmove: 'onColumnMove',
                 columnremove: 'onColumnRemove',
                 columnhide: 'onColumnHide',
                 columnshow: 'onColumnShow',
@@ -213,7 +273,6 @@ Ext.define('Ext.grid.plugin.ViewOptions', {
         }
 
         this.isMoving = true;
-        parent.remove(column, false);
         parent.insert(newIndex, column);
         this.isMoving = false;
     },
@@ -331,34 +390,44 @@ Ext.define('Ext.grid.plugin.ViewOptions', {
             hiddenCls = me._hiddenColumnCls,
             grid = me.getGrid(),
             isGridGrouped = grid.getGrouped(),
+            grouper = grid.getStore().getGrouper(),
+            dataIndex = column.getDataIndex(),
             data = {
                 id: column.getId(),
                 text: column.getText(),
                 groupable: isGridGrouped && column.getGroupable(),
                 hidden: column.isHidden(),
                 hiddenCls: hiddenCls,
-                grouped: !!(isGridGrouped && grid.getStore().getGrouper()),
+                grouped: !!(isGridGrouped && grouper && grouper.getProperty() === dataIndex),
                 groupedCls: me._groupedColumnCls,
                 dataIndex: column.getDataIndex(),
                 leaf: true
-            };
+            }, idx, headerNode;
 
         if (header) {
-            if (header.innerIndexOf(column) === 0) {
-                parentNode = parentNode.appendChild({
+            headerNode = parentNode.findChild('id', header.getId());
+            if (!headerNode) {
+                idx = header.getParent().indexOf(header);
+                headerNode = parentNode.insertChild(idx, {
                     header: true,
                     hidden: header.isHidden(),
                     hiddenCls: hiddenCls,
                     id: header.getId(),
                     text: header.getText()
                 });
-
-            } else {
-                parentNode = parentNode.findChild('id', header.getId());
             }
+            idx = header.indexOf(column);
+            parentNode = headerNode;
+        } else {
+            idx = headerContainer.indexOf(column);
         }
 
-        parentNode.appendChild(data);
+        parentNode.insertChild(idx, data);
+    },
+
+    onColumnMove: function(headerContainer, column, header) {
+        this.onColumnRemove(headerContainer, column);
+        this.onColumnAdd(headerContainer, column, header);
     },
 
     onColumnRemove: function(headerContainer, column) {
@@ -417,20 +486,26 @@ Ext.define('Ext.grid.plugin.ViewOptions', {
                 sheet.getModal().destroy();
                 sheet.setModal(null);
             }
+            sheet.hide();
         }, this, {single: true});
 
         this.sheetVisible = false;
     },
 
     showViewOptions: function() {
-        if (!this.sheetVisible) {
-            var sheet = this.getSheet(),
-                modal = null;
+        var me = this,
+            sheet = me.getSheet(),
+            modal = null;
 
+        if (!me.sheetVisible) {
             // Since we may have shown the header in response to a longpress we don't
             // want the succeeeding "tap" to trigger column sorting, so we temporarily
             // disable sort-on-tap while the ViewOptions are shown
-            this.getGrid().getHeaderContainer().setSortable(false);
+            me.getGrid().getHeaderContainer().setSortable(false);
+
+            me.updateListInfo();
+
+            sheet.show();
 
             sheet.translate(0, 0, {duration: 100});
             sheet.getTranslatable().on('animationend', function() {
@@ -442,11 +517,26 @@ Ext.define('Ext.grid.plugin.ViewOptions', {
                     dragstart: 'onDragStart',
                     drag: 'onDrag',
                     dragend: 'onDragEnd',
-                    scope: this
+                    scope: me
                 });
-            }, this, {single: true});
+            }, me, {single: true});
 
-            this.sheetVisible = true;
+            me.sheetVisible = true;
+        }
+    },
+
+    privates: {
+        updateListInfo: function() {
+            var grid = this.getGrid(),
+                store = grid.getStore(),
+                grouper = store.getGrouper(),
+                grouperProp = grouper && grouper.getProperty(),
+                headerContainer = grid.getHeaderContainer();
+
+            this.getColumnList().getStore().getRoot().cascadeBy(function(node) {
+                var dataIndex = node.get('dataIndex');
+                node.set('grouped', dataIndex && dataIndex === grouperProp);
+            });
         }
     }
 });

@@ -19,8 +19,8 @@
  */
 Ext.define('Ext.picker.Slot', {
     extend: 'Ext.dataview.DataView',
-    xtype : 'pickerslot',
-    alternateClassName: 'Ext.Picker.Slot',
+    xtype: 'pickerslot',
+    
     requires: [
         'Ext.XTemplate',
         'Ext.data.Store',

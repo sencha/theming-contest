@@ -287,19 +287,19 @@ describe('Ext.overrides.dom.Element', function() {
         function createStandardSuite(wantFocusable) {
             createFocusableSpecs(
                 "with tabIndex < 0",
-                function() { dom.setAttribute('tabindex', -1) },
+                function() { dom.setAttribute('tabIndex', -1) },
                 wantFocusable
             );
             
             createFocusableSpecs(
                 "with tabIndex = 0",
-                function() { dom.setAttribute('tabindex', 0) },
+                function() { dom.setAttribute('tabIndex', 0) },
                 wantFocusable
             );
             
             createFocusableSpecs(
                 "with tabIndex > 0",
-                function() { dom.setAttribute('tabindex', 1) },
+                function() { dom.setAttribute('tabIndex', 1) },
                 wantFocusable
             );
         }
@@ -401,7 +401,7 @@ describe('Ext.overrides.dom.Element', function() {
                                 });
                                 
                                 it("is false with tabIndex = 0", function() {
-                                    dom.setAttribute('tabindex', 0);
+                                    dom.setAttribute('tabIndex', 0);
                                     
                                     expect(el.isFocusable()).toBe(false);
                                 });
@@ -508,7 +508,7 @@ describe('Ext.overrides.dom.Element', function() {
                             });
                             
                             it("is true with tabIndex < 0", function() {
-                                dom.setAttribute('tabindex', '-1');
+                                dom.setAttribute('tabIndex', '-1');
                                 
                                 expect(el.isFocusable()).toBe(true);
                             });
@@ -520,7 +520,7 @@ describe('Ext.overrides.dom.Element', function() {
                             });
                             
                             it("is true with tabIndex > 0", function() {
-                                dom.setAttribute('tabindex', 10);
+                                dom.setAttribute('tabIndex', 10);
                                 
                                 expect(el.isFocusable()).toBe(true);
                             });
@@ -599,19 +599,19 @@ describe('Ext.overrides.dom.Element', function() {
                     
                     // tabindex < 0 makes an element always untabbable
                     it("is false with tabIndex < 0", function() {
-                        el.set({ tabindex: -1 });
+                        el.set({ tabIndex: -1 });
                     
                         expect(el.isTabbable()).toBe(false);
                     });
                     
                     it("is " + wantTabbable + " with tabIndex = 0", function() {
-                        el.set({ tabindex: 0 });
+                        el.set({ tabIndex: 0 });
                         
                         expect(el.isTabbable()).toBe(wantTabbable);
                     });
                 
                     it("is " + wantTabbable + " with tabIndex > 0", function() {
-                        el.set({ tabindex: 1 });
+                        el.set({ tabIndex: 1 });
                         
                         expect(el.isTabbable()).toBe(wantTabbable);
                     });
@@ -637,25 +637,25 @@ describe('Ext.overrides.dom.Element', function() {
                         });
                         
                         it("should be non-tabbable with tabIndex < 0", function() {
-                            dom.setAttribute('tabindex', -1);
+                            dom.setAttribute('tabIndex', -1);
                             
                             expect(el.isTabbable()).toBeFalsy();
                         });
                         
                         it("should be non-tabbable with tabIndex = 0", function() {
-                            dom.setAttribute('tabindex', 0);
+                            dom.setAttribute('tabIndex', 0);
                             
                             expect(el.isTabbable()).toBeFalsy();
                         });
                         
                         it("should be non-tabbable with tabIndex > 0", function() {
-                            dom.setAttribute('tabindex', 1);
+                            dom.setAttribute('tabIndex', 1);
                             
                             expect(el.isTabbable()).toBeFalsy();
                         });
                         
                         it("should be non-tabbable with contentEditable", function() {
-                            dom.setAttribute('tabindex', 0);
+                            dom.setAttribute('tabIndex', 0);
                             dom.setAttribute('contenteditable', true);
                             
                             expect(el.isTabbable()).toBeFalsy();
@@ -720,7 +720,7 @@ describe('Ext.overrides.dom.Element', function() {
                                 });
                                 
                                 it("is false with tabIndex = 0", function() {
-                                    dom.setAttribute('tabindex', 0);
+                                    dom.setAttribute('tabIndex', 0);
                                     
                                     expect(el.isTabbable()).toBe(false);
                                 });
@@ -802,7 +802,7 @@ describe('Ext.overrides.dom.Element', function() {
                             });
                         
                             it("is false with tabIndex < 0", function() {
-                                dom.setAttribute('tabindex', '-1');
+                                dom.setAttribute('tabIndex', '-1');
                             
                                 expect(el.isTabbable()).toBe(false);
                             });
@@ -814,7 +814,7 @@ describe('Ext.overrides.dom.Element', function() {
                             });
                         
                             it("is true with tabIndex > 0", function() {
-                                dom.setAttribute('tabindex', 10);
+                                dom.setAttribute('tabIndex', 10);
                             
                                 expect(el.isTabbable()).toBe(true);
                             });
@@ -1201,7 +1201,7 @@ describe('Ext.overrides.dom.Element', function() {
                         
                         describe(name + " element saved", function() {
                             beforeEach(function() {
-                                saved = dom.getAttribute('tabindex');
+                                saved = dom.getAttribute('tabIndex');
                                 el.saveTabbableState();
                             });
                             
@@ -1215,7 +1215,7 @@ describe('Ext.overrides.dom.Element', function() {
                                 });
                                 
                                 it("should have the tabIndex attribute restored", function() {
-                                    var idx = dom.getAttribute('tabindex');
+                                    var idx = dom.getAttribute('tabIndex');
                                     
                                     expect(idx).toBe(saved);
                                 });

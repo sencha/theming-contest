@@ -171,7 +171,7 @@ Ext.define('Ext.grid.plugin.RowEditing', {
     activateCell: function(pos) {
         // Only activate editing if there are no readily activatable elements in the activate position.
         // We defer to those focusables. Editing may be started on other columns.
-        if (!pos.getCell().query('[' + Ext.Element.tabIndexAttributeName + '="-1"]').length) {
+        if (!pos.getCell().query('[tabIndex="-1"]').length) {
             this.startEdit(pos.record, pos.column);
             return true ;
         }

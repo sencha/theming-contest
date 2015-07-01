@@ -278,8 +278,8 @@ describe("Ext.grid.selection.SpreadsheetModel", function() {
             expect(view.el.query('.'+view.selectedCellCls).length).toBe(view.el.query(colRef[2].getCellSelector()).length);
             expect(isColumnSelected(2)).toBe(true);
 
-            jasmine.fireKeyEvent(colRef[2].el.dom, 'keydown', Ext.EventObject.RIGHT);
-            jasmine.fireKeyEvent(colRef[3].el.dom, 'keydown', Ext.EventObject.SPACE);
+            jasmine.fireKeyEvent(colRef[2].el.dom, 'keydown', Ext.event.Event.RIGHT);
+            jasmine.fireKeyEvent(colRef[3].el.dom, 'keydown', Ext.event.Event.SPACE);
 
             // Should have selected all cells under column 3
             expect(view.el.query('.'+view.selectedCellCls).length).toBe(view.el.query(colRef[3].getCellSelector()).length);
@@ -305,8 +305,8 @@ describe("Ext.grid.selection.SpreadsheetModel", function() {
             expect(isColumnSelected(1)).toBe(true);
             expect(isColumnSelected(2)).toBe(true);
 
-            jasmine.fireKeyEvent(colRef[2].el.dom, 'keydown', Ext.EventObject.RIGHT);
-            jasmine.fireKeyEvent(colRef[3].el.dom, 'keydown', Ext.EventObject.SPACE, false, true);
+            jasmine.fireKeyEvent(colRef[2].el.dom, 'keydown', Ext.event.Event.RIGHT);
+            jasmine.fireKeyEvent(colRef[3].el.dom, 'keydown', Ext.event.Event.SPACE, false, true);
 
             // Should have selected all cells under column 3
             expect(view.el.query('.'+view.selectedCellCls).length).toBe(view.el.query(colRef[1].getCellSelector()).length + view.el.query(colRef[2].getCellSelector()).length + view.el.query(colRef[3].getCellSelector()).length);
@@ -320,7 +320,7 @@ describe("Ext.grid.selection.SpreadsheetModel", function() {
     }); 
 
     smDescribe("Row selection", function() {
-        it("should select a column on click of a rownumberer", function() {
+        it("should select a row on click of a rownumberer", function() {
             makeGrid();
             clickRowNumberer(1);
 
@@ -347,14 +347,14 @@ describe("Ext.grid.selection.SpreadsheetModel", function() {
             expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
             expect(isRowSelected(2)).toBe(true);
 
-            jasmine.fireKeyEvent(findCell(2, 0), 'keydown', Ext.EventObject.DOWN, null, true);
-            jasmine.fireKeyEvent(findCell(3, 0), 'keydown', Ext.EventObject.SPACE);
+            jasmine.fireKeyEvent(findCell(2, 0), 'keydown', Ext.event.Event.DOWN, null, true);
+            jasmine.fireKeyEvent(findCell(3, 0), 'keydown', Ext.event.Event.SPACE);
 
             // Should have selected row 3
             expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
             expect(isRowSelected(3)).toBe(true);
         });
-        it("should select a rownumberer on CTRL/click of a rownumberer and not deselect previous rows", function() {
+        it("should select a rown on CTRL/click of a rownumberer and not deselect previous rows", function() {
             makeGrid();
             clickRowNumberer(1);
 
@@ -371,8 +371,8 @@ describe("Ext.grid.selection.SpreadsheetModel", function() {
             expect(isRowSelected(2)).toBe(true);
 
             // CTRL/DOWN
-            jasmine.fireKeyEvent(findCell(2, 0), 'keydown', Ext.EventObject.DOWN, null, true);
-            jasmine.fireKeyEvent(findCell(3, 0), 'keydown', Ext.EventObject.SPACE, null, true);
+            jasmine.fireKeyEvent(findCell(2, 0), 'keydown', Ext.event.Event.DOWN, null, true);
+            jasmine.fireKeyEvent(findCell(3, 0), 'keydown', Ext.event.Event.SPACE, null, true);
 
             // Should have selected row 3
             expect(view.el.query('.'+view.selectedItemCls).length).toBe(3);
@@ -398,6 +398,129 @@ describe("Ext.grid.selection.SpreadsheetModel", function() {
 
             // Should have deselected the selection
             expect(selChangeSpy).toHaveBeenCalled();
+        });
+        it("should not copy the rownumberer column", function() {
+            makeGrid(null, {
+                plugins: 'clipboard'
+            });
+            var clipboard = grid.findPlugin('clipboard'),
+                data;
+
+            clickRowNumberer(1);
+
+            // Should have selected row 1
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
+            expect(isRowSelected(1)).toBe(true);
+
+            data = clipboard.getData(false, {
+                text: 1
+            });
+
+            // Only the data should be here, NOT the row number
+            expect(data.text).toBe('2.1\t2.2\t2.3\t2.4\t2.5')
+        });
+    });
+    
+    describe('Row selection using selectRows', function() {
+        it("should select a row and clear previous non-row selections", function() {
+            makeGrid();
+
+            // Select a cell rage first.
+            // It should drop this selection when we call selectRows
+            selModel.selectCells(new Ext.grid.CellContext(view).setPosition(2, 2), new Ext.grid.CellContext(view).setPosition(2, 4));
+
+            // Should have selected the 3 cells spanned
+            expect(view.el.query('.'+view.selectedCellCls).length).toBe(3);
+
+            expect( isCellSelected(2, 2) &&
+                    isCellSelected(2, 3) &&
+                    isCellSelected(2, 4)).toBe(true);
+
+            selModel.selectRows(store.getAt(1));
+
+            // No cells should be selected
+            expect(view.el.query('.'+view.selectedCellCls).length).toBe(0);
+
+            // Should have selected row 1
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
+            expect(isRowSelected(1)).toBe(true);
+
+            jasmine.fireMouseEvent(colRef[1].el.dom, 'click');
+
+            // Should have deselected all rows
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(0);
+        });
+        it("should select a row and deselect previous rows", function() {
+            makeGrid();
+
+            selModel.selectRows(store.getAt(1));
+
+            // Should have selected row 1
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
+            expect(isRowSelected(1)).toBe(true);
+
+            selModel.selectRows(store.getAt(2));
+
+            // Should have selected row 2
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
+            expect(isRowSelected(2)).toBe(true);
+        });
+        it("should select a row and not deselect previous rows", function() {
+            makeGrid();
+
+            selModel.selectRows(store.getAt(1));
+
+            // Should have selected row 1
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
+            expect(isRowSelected(1)).toBe(true);
+
+            // keepSelection
+
+            selModel.selectRows(store.getAt(2), true);
+
+            // Should have selected row 2
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(2);
+            expect(isRowSelected(1)).toBe(true);
+            expect(isRowSelected(2)).toBe(true);
+        });
+        it("should fire the selectionchange event when rows are selected and rowSelect is set to false", function() {
+            makeGrid();
+            selModel.selectRows(store.getAt(1));
+
+            // Should have selected row 1
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
+            expect(isRowSelected(1)).toBe(true);
+            
+            var selChangeSpy = spyOnEvent(grid, 'selectionchange');
+
+            // Disable row selection.
+            selModel.setRowSelect(false);
+
+            // Should have deselected all rows
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(0);
+
+            // Should have deselected the selection
+            expect(selChangeSpy).toHaveBeenCalled();
+        });
+        it("should not copy the rownumberer column", function() {
+            makeGrid(null, {
+                plugins: 'clipboard'
+            });
+            var clipboard = grid.findPlugin('clipboard'),
+                data;
+
+            selModel.selectRows(store.getAt(1));
+
+            // Should have selected row 1
+            expect(view.el.query('.'+view.selectedItemCls).length).toBe(1);
+            expect(isRowSelected(1)).toBe(true);
+
+            data = clipboard.getData(false, {
+                text: 1
+            });
+
+            // Only the data should be here, NOT the row number
+            expect(data.text).toBe('2.1\t2.2\t2.3\t2.4\t2.5')
         });
     });
     
@@ -468,6 +591,32 @@ describe("Ext.grid.selection.SpreadsheetModel", function() {
                 expect( isCellSelected(2, 2) &&
                         isCellSelected(3, 2) &&
                         isCellSelected(4, 2)).toBe(true);
+            });
+        });
+        it('should not wrap when SHIFT+RIGHT on last cell', function() {
+            makeGrid();
+            var c5 = findCell(2, 5),
+                c4Position;
+
+            jasmine.fireMouseEvent(c5, 'click');
+
+            // Wait for the NavigationModel to focus the last cell
+            waitsFor(function() {
+                c4Position = view.getNavigationModel().getPosition();
+
+                return c4Position && c4Position.getCell(true) === c5.dom;
+            });
+
+            runs(function() {
+                jasmine.fireKeyEvent(c5, 'keydown', Ext.event.Event.RIGHT, true)
+            });
+
+            // We expect nothing to happen
+            waits(100);
+
+            // Should not have moved
+            runs(function() {
+                expect(view.getNavigationModel().getCell().dom).toBe(c5.dom);
             });
         });
     });
@@ -1033,6 +1182,20 @@ describe("Ext.grid.selection.SpreadsheetModel", function() {
             r5Data = Ext.clone(store.getAt(5).data);
             r6Data = Ext.clone(store.getAt(6).data);
             r7Data = Ext.clone(store.getAt(7).data);
+        });
+        
+        it('should align the extend handle upon column resize', function() {
+            // Select cell 1, 1
+            jasmine.fireMouseEvent(findCell(1, 1), 'click');
+
+            // Get extender handle position
+            var handleX = selModel.extensible.handle.getX();
+
+            // Widen the selected column by 100px
+            colRef[1].setWidth(colRef[1].getWidth() + 100);
+
+            // Handle should have moved with it.
+            expect(selModel.extensible.handle.getX()).toBe(handleX + 100);
         });
 
         describe('multiple selection', function() {

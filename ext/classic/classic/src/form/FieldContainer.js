@@ -174,11 +174,11 @@ Ext.define('Ext.form.FieldContainer', {
      */
     onAdd: function(labelItem) {
         var me = this;
-        
-        // Fix for https://sencha.jira.com/browse/EXTJSIV-6424
-        // In FF, positioning absolutely within a TD positions relative to the TR!
+
+        // Fix for https://sencha.jira.com/browse/EXTJSIV-6424 Which was *sneakily* fixed fixed in version 37
+        // In FF < 37, positioning absolutely within a TD positions relative to the TR!
         // So we must add the width of a visible, left-aligned label cell to the x coordinate.
-        if (labelItem.isLabelable && Ext.isGecko && me.layout.type === 'absolute' && !me.hideLabel && me.labelAlign !== 'top') {
+        if (labelItem.isLabelable && Ext.isGecko && Ext.firefoxVersion < 37 && me.layout.type === 'absolute' && !me.hideLabel && me.labelAlign !== 'top') {
             labelItem.x += (me.labelWidth + me.labelPad);
         }
         me.callParent(arguments);
@@ -208,8 +208,9 @@ Ext.define('Ext.form.FieldContainer', {
         var me = this,
             data = me.callParent();
 
-        data.containerElCls = me.containerElCls;
-        return Ext.applyIf(data, me.getLabelableRenderData());
+        data = Ext.applyIf(data, me.getLabelableRenderData());
+        data.tipAnchorTarget = me.id + '-containerEl';
+        return data;
     },
 
     /**

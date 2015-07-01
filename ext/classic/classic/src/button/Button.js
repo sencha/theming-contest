@@ -131,17 +131,18 @@ Ext.define('Ext.button.Button', {
     /* Begin Definitions */
     alias: 'widget.button',
     extend: 'Ext.Component',
+    
     requires: [
         'Ext.dom.ButtonElement',
         'Ext.button.Manager',
         'Ext.menu.Manager',
         'Ext.util.ClickRepeater',
-        'Ext.util.TextMetrics',
-        'Ext.util.KeyMap'
+        'Ext.util.TextMetrics'
     ],
 
     mixins: [
-        'Ext.mixin.Queryable'
+        'Ext.mixin.Queryable',
+        'Ext.util.KeyboardInteractive'
     ],
 
     alternateClassName: 'Ext.Button',
@@ -435,15 +436,21 @@ Ext.define('Ext.button.Button', {
     
     focusable: true,
     ariaRole: 'button',
+    
+    keyHandlers: {
+        SPACE: 'onEnterKey',
+        ENTER: 'onEnterKey',
+        DOWN: 'onDownKey'
+    },
 
     defaultBindProperty: 'text',
 
     childEls: [
-        'btnEl', 'btnWrap', 'btnInnerEl', 'btnIconEl'
+        'btnEl', 'btnWrap', 'btnInnerEl', 'btnIconEl', 'arrowEl'
     ],
 
     publishes: {
-        pressed:1
+        pressed: 1
     },
 
     /**
@@ -461,10 +468,9 @@ Ext.define('Ext.button.Button', {
     overCls: Ext.baseCSSPrefix + 'btn-over',
     _disabledCls: Ext.baseCSSPrefix + 'btn-disabled',
     _menuActiveCls: Ext.baseCSSPrefix + 'btn-menu-active',
-    //<feature legacyBrowser>
-    // extra class to work around broken display:table impl in opera12
-    _operaArrowCls: Ext.baseCSSPrefix + 'opera12m-btn-arrow',
-    //</feature>
+    _arrowElCls: Ext.baseCSSPrefix + 'btn-arrow-el',
+    _focusCls: Ext.baseCSSPrefix + 'btn-focus',
+    _arrowFocusCls: Ext.baseCSSPrefix + 'arrow-focus',
 
     // We have to keep "unselectable" attribute on all elements because it's not inheritable.
     // Without it, clicking anywhere on a button disrupts current selection and cursor position
@@ -489,6 +495,14 @@ Ext.define('Ext.button.Button', {
                     ' {closeText}' +
                 '</tpl>' +
             '</span>' +
+        '</tpl>' +
+        // Split buttons have additional tab stop for the arrow element
+        '<tpl if="split">' +
+            '<span id="{id}-arrowEl" class="{arrowElCls}" data-ref="arrowEl" ' +
+                'role="button" hidefocus="on" unselectable="on"' +
+                '<tpl if="tabIndex != null"> tabindex="{tabIndex}"</tpl>' +
+                '<tpl foreach="arrowElAttributes"> {$}="{.}"</tpl>' +
+            '>{arrowElText}</span>' +
         '</tpl>',
 
     iconTpl:
@@ -699,7 +713,7 @@ Ext.define('Ext.button.Button', {
         // or click event listener, and warn the developer in that case.
         //<debug>
         // Don't check if we're under the slicer to avoid build failures
-        if (me.menu && Ext.enableAriaButtons && !Ext.theme) {
+        if (me.menu && Ext.enableAriaButtons && !Ext.slicer) {
             // When ARIA compatibility is enabled, force an error here.
             var logFn = Ext.enableAria ? Ext.log.error : Ext.log.warn;
             
@@ -708,7 +722,7 @@ Ext.define('Ext.button.Button', {
                     "According to WAI-ARIA 1.0 Authoring guide " +
                     "(http://www.w3.org/TR/wai-aria-practices/#menubutton), " +
                     "menu button '" + me.id + "' behavior will conflict with " +
-                    "toggling"
+                    "toggling."
                 );
             }
             
@@ -716,17 +730,17 @@ Ext.define('Ext.button.Button', {
                 logFn(
                     "According to WAI-ARIA 1.0 Authoring guide " +
                     "(http://www.w3.org/TR/wai-aria-practices/#menubutton), " +
-                    "menu button '" + me.id + "' cannot behave as a link"
+                    "menu button '" + me.id + "' cannot behave as a link."
                 );
             }
             
-            if (me.handler || (me.listeners && me.listeners.click)) {
+            if (me.handler || me.hasListeners.click) {
                 logFn(
                     "According to WAI-ARIA 1.0 Authoring guide " +
                     "(http://www.w3.org/TR/wai-aria-practices/#menubutton), " +
                     "menu button '" + me.id + "' should display the menu " +
                     "on SPACE and ENTER keys, which will conflict with the " +
-                    "button handler"
+                    "button handler."
                 );
             }
         }
@@ -734,12 +748,6 @@ Ext.define('Ext.button.Button', {
         
         // Ensure no selection happens
         me.addCls(Ext.baseCSSPrefix + 'unselectable');
-
-        //<feature legacyBrowser>
-        if (Ext.isOpera12m && (me.split || me.menu) && me.getArrowVisible()) {
-            me.addCls(me._operaArrowCls + '-' + me.arrowAlign);
-        }
-        //</feature>
 
         me.callParent();
 
@@ -794,7 +802,8 @@ Ext.define('Ext.button.Button', {
         }
         
         if (!me.ariaStaticRoles[me.ariaRole]) {
-            if (me.menu) {
+            // Split buttons render aria-haspopup into arrowEl
+            if (me.menu && !me.isSplitButton) {
                 config['aria-haspopup'] = true;
             }
             
@@ -837,8 +846,8 @@ Ext.define('Ext.button.Button', {
     setMenu: function (menu, destroyMenu, /* private */ initial) {
         var me = this,
             oldMenu = me.menu,
-            ariaDom = me.ariaEl.dom,
-            instanced;
+            ariaDom = me.isSplitButton ? me.arrowEl && me.arrowEl.dom : me.ariaEl.dom,
+            instanced, ariaAttr;
 
         if (oldMenu && !initial) {
             if (destroyMenu !== false && me.destroyMenu) {
@@ -890,9 +899,14 @@ Ext.define('Ext.button.Button', {
                 ariaDom.setAttribute('aria-owns', menu.id);
             }
             else {
-                me.ariaRenderAttributes = me.ariaRenderAttributes || {};
-                me.ariaRenderAttributes['aria-haspopup'] = true;
-                me.ariaRenderAttributes['aria-owns'] = menu.id;
+                // We use me.isSplitButton here because me.split can be set to true
+                // for ordinary menu buttons. We only render arrowEl for the true Split buttons.
+                ariaAttr = me.isSplitButton ? (me.ariaArrowElAttributes || (me.ariaArrowElAttributes = {}))
+                         :                    (me.ariaRenderAttributes  || (me.ariaRenderAttributes = {}))
+                         ;
+                
+                ariaAttr['aria-haspopup'] = true;
+                ariaAttr['aria-owns'] = menu.id;
             }
         }
         else {
@@ -903,9 +917,11 @@ Ext.define('Ext.button.Button', {
                 me.updateLayout();
             }
             else {
-                if (me.ariaRenderAttributes) {
-                    delete me.ariaRenderAttributes['aria-haspopup'];
-                    delete me.ariaRenderAttributes['aria-owns'];
+                ariaAttr = me.isSplitButton ? me.ariaArrowElAttributes : me.ariaRenderAttributes;
+                
+                if (ariaAttr) {
+                    delete ariaAttr['aria-haspopup'];
+                    delete ariaAttr['aria-owns'];
                 }
             }
 
@@ -952,16 +968,6 @@ Ext.define('Ext.button.Button', {
         // Touch start events must be preventDefaulted when in disabled state
         if (Ext.supports.Touch) {
             btnListeners.touchstart = me.onTouchStart;
-        }
-
-        // Check if the button has a menu
-        if (me.menu) {
-            me.keyMap = new Ext.util.KeyMap({
-                target: me.el,
-                key: Ext.event.Event.prototype.DOWN,
-                handler: me.onDownKey,
-                scope: me
-            });
         }
 
         // Check if it is a repeat button
@@ -1038,6 +1044,7 @@ Ext.define('Ext.button.Button', {
         }
 
         return {
+            split: me.isSplitButton,
             innerCls: me._innerCls,
             splitCls: me.getArrowVisible() ? me.getSplitCls() : '',
             iconUrl: me.icon,
@@ -1057,7 +1064,9 @@ Ext.define('Ext.button.Button', {
             baseIconCls: baseIconCls,
             iconBeforeText: iconAlign === 'left' || iconAlign === 'top',
             iconAlignCls: hasIcon ? (hasIconCls + '-' + iconAlign) : '',
-            textAlignCls: btnCls + '-' + me.getTextAlign()
+            textAlignCls: btnCls + '-' + me.getTextAlign(),
+            arrowElCls: me._arrowElCls,
+            tabIndex: me.tabIndex
         };
     },
 
@@ -1439,6 +1448,15 @@ Ext.define('Ext.button.Button', {
         var currentEmpty = Ext.isEmpty(current);
         return Ext.isEmpty(old) ? !currentEmpty : currentEmpty;
     },
+    
+    /**
+     * Programmatically activate the button.
+     *
+     * @param {Ext.event.Event} [e] Optional event to process.
+     */
+    click: function(e) {
+        return this.onClick(e);
+    },
 
     /**
      * Sets the `pressed` state of this button.
@@ -1563,6 +1581,18 @@ Ext.define('Ext.button.Button', {
 
     onTouchStart: function(e) {
         this.doPreventDefault(e);
+    },
+    
+    /**
+     * @private
+     */
+    onEnterKey: function(e) {
+        this.onClick(e);
+        
+        // Buttons always intercept Space and Enter keys
+        e.stopEvent();
+        
+        return false;
     },
 
     /**
@@ -1727,11 +1757,12 @@ Ext.define('Ext.button.Button', {
             arrowTip = me.arrowTooltip;
 
         me.overMenuTrigger = true;
-        // We don't have a separate arrow element, so we only add the tip attribute if
+        // We don't have a hoverable arrow element, so we only add the tip attribute if
         // we're over that part of the button
         if (me.split && arrowTip) {
             me.btnWrap.dom.setAttribute(me.getTipAttr(), arrowTip);
         }
+        
         me.fireEvent('menutriggerover', me, me.menu, e);
     },
 
@@ -1743,65 +1774,58 @@ Ext.define('Ext.button.Button', {
      */
     onMenuTriggerOut: function(e) {
         var me = this;
+        
         delete me.overMenuTrigger;
         // See onMenuTriggerOver
         if (me.split && me.arrowTooltip) {
             me.btnWrap.dom.setAttribute(me.getTipAttr(), '');
         }
+        
         me.fireEvent('menutriggerout', me, me.menu, e);
     },
 
-    enable: function(silent) {
+    onEnable: function() {
         var me = this,
             href = me.href,
             hrefTarget = me.hrefTarget,
-            dom;
+            dom = me.el.dom;
 
-        me.callParent(arguments);
+        me.callParent();
 
         me.removeCls(me._disabledCls);
-        if (me.rendered) {
-            dom = me.el.dom;
-            dom.setAttribute('tabindex', me.tabIndex);
+        dom.setAttribute('tabIndex', me.tabIndex);
 
-            // https://sencha.jira.com/browse/EXTJS-11964
-            // Disabled links are clickable on iPad, and right clickable on desktop browsers.
-            // The only way to completely disable navigation is removing the href
-            if (href) {
-                dom.href = href;
-            }
-            if (hrefTarget) {
-                dom.target = hrefTarget;
-            }
+        // https://sencha.jira.com/browse/EXTJS-11964
+        // Disabled links are clickable on iPad, and right clickable on desktop browsers.
+        // The only way to completely disable navigation is removing the href
+        if (href) {
+            dom.href = href;
         }
-
-        return me;
+        if (hrefTarget) {
+            dom.target = hrefTarget;
+        }
     },
 
-    disable: function(silent) {
+    onDisable: function() {
         var me = this,
-            dom;
+            dom = me.el.dom;
 
-        me.callParent(arguments);
+        me.callParent();
 
         me.addCls(me._disabledCls);
         me.removeCls(me.overCls);
-        if (me.rendered) {
-            dom = me.el.dom;
-            dom.removeAttribute('tabindex');
 
-            // https://sencha.jira.com/browse/EXTJS-11964
-            // Disabled links are clickable on iPad, and right clickable on desktop browsers.
-            // The only way to completely disable navigation is clearing the href
-            if (me.href) {
-                dom.removeAttribute('href');
-            }
-            if (me.hrefTarget) {
-                dom.removeAttribute('target');
-            }
+        dom.removeAttribute('tabIndex');
+
+        // https://sencha.jira.com/browse/EXTJS-11964
+        // Disabled links are clickable on iPad, and right clickable on desktop browsers.
+        // The only way to completely disable navigation is clearing the href
+        if (me.href) {
+            dom.removeAttribute('href');
         }
-
-        return me;
+        if (me.hrefTarget) {
+            dom.removeAttribute('target');
+        }
     },
 
     /**
@@ -1843,9 +1867,10 @@ Ext.define('Ext.button.Button', {
             // to not receive focus, even when it is directly clicked.
             // On Touch devices, we need to explicitly focus on touchstart.
             Ext.defer(function() {
+                var focusEl = me.getFocusEl();
                 // Deferred to give other mousedown handlers the chance to preventDefault
-                if (!e.defaultPrevented) {
-                    me.getFocusEl().focus();
+                if (focusEl && !e.defaultPrevented) {
+                    focusEl.focus();
                 }
             }, 1);
         }
@@ -1892,7 +1917,7 @@ Ext.define('Ext.button.Button', {
     /**
      * @private
      */
-    onDownKey: function(k, e) {
+    onDownKey: function(e) {
         var me = this;
 
         if (me.menu && !me.disabled) {
@@ -1931,12 +1956,6 @@ Ext.define('Ext.button.Button', {
             var me = this;
 
             me.btnWrap.addCls(me.getSplitCls());
-
-            //<feature legacyBrowser>
-            if (Ext.isOpera12m) {
-                me.addCls(me._operaArrowCls + '-' + me.arrowAlign);
-            }
-            //</feature>
         },
 
         /**
@@ -1958,12 +1977,6 @@ Ext.define('Ext.button.Button', {
             var me = this;
 
             me.btnWrap.removeCls(me.getSplitCls());
-
-            //<feature legacyBrowser>
-            if (Ext.isOpera12m) {
-                me.removeCls(me._operaArrowCls + '-' + me.arrowAlign);
-            }
-            //</feature>
         },
 
         _syncHasIconCls: function() {

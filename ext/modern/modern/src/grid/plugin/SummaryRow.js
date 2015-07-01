@@ -8,13 +8,14 @@ Ext.define('Ext.grid.plugin.SummaryRow', {
         'Ext.mixin.Hookable'
     ],
 
+    isSpecialRow: true,
+
     config: {
         grid: null,
         cls: Ext.baseCSSPrefix + 'grid-summaryrow',
         emptyText: '',
         emptyCls: Ext.baseCSSPrefix + 'grid-summaryrow-empty',
         docked: 'top',
-        height: 32,
         translatable: {
             translationMethod: 'csstransform'
         }
@@ -24,46 +25,51 @@ Ext.define('Ext.grid.plugin.SummaryRow', {
         this.setGrid(grid);
     },
 
-    updateGrid: function(grid) {
-        if (grid) {
-            var columns = grid.getColumns(),
-                ln = columns.length,
-                headerContainer = grid.getHeaderContainer(),
-                i;
+    updateGrid: function(grid, oldGrid) {
+        var me  = this,
+            columns, len, headerContainer, i;
 
-            grid.getStore().onAfter({
-                addrecords: 'doUpdateSummary',
-                removerecords: 'doUpdateSummary',
-                updaterecord: 'doUpdateSummary',
-                refresh: 'doUpdateSummary',
-                scope: this
+        me.storeListeners = Ext.destroy(me.storeListeners);
+
+        if (grid) {
+            columns = grid.getColumns();
+            len = columns.length;
+            headerContainer = grid.getHeaderContainer();
+
+            me.storeListeners = grid.getStore().onAfter({
+                destroyable: true,
+                scope: me,
+                add: 'doUpdateSummary',
+                remove: 'doUpdateSummary',
+                update: 'doUpdateSummary',
+                refresh: 'doUpdateSummary'
             });
 
             grid.getHeaderContainer().on({
                 columnadd: 'onColumnAdd',
+                columnmove: 'onColumnMove',
                 columnremove: 'onColumnRemove',
                 columnshow: 'onColumnShow',
                 columnhide: 'onColumnHide',
                 columnresize: 'onColumnResize',
-                scope: this
+                scope: me
             });
 
             if (grid.initialized) {
-                grid.container.insertAfter(this, grid.getHeaderContainer());
-            }
-            else {
+                grid.container.insertAfter(me, headerContainer);
+            } else {
                 grid.on('initialize', function() {
-                    grid.container.insertAfter(this, grid.getHeaderContainer());
-                }, this, {single: true});
+                    grid.container.insertAfter(me, headerContainer);
+                }, me, {single: true});
             }
 
             grid.addCls(Ext.baseCSSPrefix + 'grid-hassummaryrow');
 
-            for (i = 0; i < ln; i++) {
-                this.onColumnAdd(headerContainer, columns[i]);
+            for (i = 0; i < len; i++) {
+                me.onColumnAdd(headerContainer, columns[i]);
             }
 
-            this.bindHook(grid, 'onScrollBinder', 'onGridScroll');
+            me.bindHook(grid, 'onScrollBinder', 'onGridScroll');
         }
     },
 
@@ -77,6 +83,10 @@ Ext.define('Ext.grid.plugin.SummaryRow', {
     onColumnAdd: function(container, column) {
         this.insertColumn(container.getColumns().indexOf(column), column);
         this.updateRowWidth();
+    },
+
+    onColumnMove: function(container, column, header, fromIdx, toIdx) {
+        this.moveColumn(column, fromIdx, toIdx);
     },
 
     onColumnRemove: function(container, column) {
@@ -104,19 +114,19 @@ Ext.define('Ext.grid.plugin.SummaryRow', {
     },
 
     doUpdateSummary: function() {
-        var grid = this.getGrid(),
+        var me = this,
+            grid = me.getGrid(),
             store = grid.getStore(),
             columns = grid.getColumns(),
             ln = columns.length,
-            emptyText = this.getEmptyText(),
-            emptyCls = this.getEmptyCls(),
-            i, column, type, renderer, cell, value, field, cellEl;
+            emptyText = me.getEmptyText(),
+            emptyCls = me.getEmptyCls(),
+            i, column, type, renderer, cell, value, field;
 
         for (i = 0; i < ln; i++) {
             column = columns[i];
             type = column.getSummaryType();
-            cell = this.getCellByColumn(column);
-            cellEl = Ext.get(cell);
+            cell = me.getCellByColumn(column);
 
             if (!column.getIgnore() && type !== null) {
                 field = column.getDataIndex();
@@ -124,33 +134,62 @@ Ext.define('Ext.grid.plugin.SummaryRow', {
 
                 if (Ext.isFunction(type)) {
                     value = type.call(store, store.data.items.slice(), field);
-                }
-                else {
+                } else {
                     switch (type) {
+                        default:
+                            value = Ext.callback(type, null, [
+                                    store.data.items.slice(), field, store
+                                ], 0, me);
+
+                            break;
+
                         case 'sum':
                         case 'average':
                         case 'min':
                         case 'max':
-                                value = store[type](column.getDataIndex());
+                            value = store[type](column.getDataIndex());
                             break;
 
                         case 'count':
-                                value = store.getCount();
+                            value = store.getCount();
                             break;
                     }
                 }
 
                 if (renderer !== null) {
-                    value = renderer.call(store, value);
+                    type = typeof renderer;
+                    if (type === 'function') {
+                        value = renderer.call(store, value);
+                    } else if (type === 'string') {
+                        value = Ext.callback(renderer, null, [value, store], 0, me);
+                    }
                 }
 
-                cellEl.removeCls(emptyCls);
-                column.updateCell(cell, null, value);
+                cell.element.removeCls(emptyCls);
+                cell.setValue(value);
+            } else {
+                cell.element.addCls(emptyCls);
+                cell.setValue(emptyText);
             }
-            else {
-                cellEl.addCls(emptyCls);
-                column.updateCell(cell, null, emptyText);
-            }
+        }
+    },
+
+    destroy: function() {
+        this.setGrid(null);
+        this.callParent();
+    },
+
+    privates: {
+        // Don't create a viewmodel from defaults like a normal row might
+        applyViewModel: function() {
+            return undefined;
+        },
+
+        // Prevent summary row from binding like regular cells do.
+        getCellCfg: function(column) {
+            var cfg = Ext.apply({}, this.callParent([column]));
+            delete cfg.bind;
+            return cfg;
         }
     }
 });

@@ -10,7 +10,8 @@ describe("Ext.Widget", function() {
             // The spec wants to run in "not first" mode - this means we need to create
             // an instance and throw it away, so that the spec operates on the second
             // instance of the Widget ever created.
-            new spec.Widget();
+            var first = new spec.Widget();
+            first.destroy();
         }
     }
 
@@ -287,6 +288,8 @@ describe("Ext.Widget", function() {
             expect(SuperWidget.prototype._elementListeners).toEqual({});
             // SubWidget should have its own cache
             expect(SubWidget.prototype.hasOwnProperty('_elementListeners')).toBe(true);
+            
+            Ext.destroy(subWidget, superWidget);
         });
 
         it("should not allow listeners declared in a subclass to pollute the superclass cache (with listeners on superclass)", function() {
@@ -327,6 +330,8 @@ describe("Ext.Widget", function() {
             });
             // SubWidget should have its own cache
             expect(SubWidget.prototype.hasOwnProperty('_elementListeners')).toBe(true);
+            
+            Ext.destroy(subWidget, superWidget);
         });
 
         describe("when first instance of superclass has already been created", function() {

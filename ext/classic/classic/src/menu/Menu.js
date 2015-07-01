@@ -8,8 +8,9 @@
  * the icon column. To make a contained general {@link Ext.Component Component} left aligned configure the child
  * Component with `indent: false.
  *
- * By default, Menus are absolutely positioned, floating Components. By configuring a Menu with `{@link #floating}: false`,
- * a Menu may be used as a child of a {@link Ext.container.Container Container}.
+ * By default, Menus are absolutely positioned, floating Components. By configuring a 
+ * Menu with `{@link #cfg-floating}: false`, a Menu may be used as a child of a 
+ * {@link Ext.container.Container Container}.
  *
  *     @example
  *     Ext.create('Ext.menu.Menu', {
@@ -86,9 +87,11 @@ Ext.define('Ext.menu.Menu', {
 
     /**
      * @cfg {Boolean} [floating=true]
-     * A Menu configured as `floating: true` (the default) will be rendered as an absolutely positioned,
-     * {@link Ext.Component#floating floating} {@link Ext.Component Component}. If configured as `floating: false`, the Menu may be
-     * used as a child item of another {@link Ext.container.Container Container}.
+     * A Menu configured as `floating: true` (the default) will be rendered as an 
+     * absolutely positioned,
+     * {@link Ext.Component#cfg-floating floating} {@link Ext.Component Component}. If 
+     * configured as `floating: false`, the Menu may be used as a child item of another 
+     * {@link Ext.container.Container Container}.
      */
     floating: true,
 
@@ -135,7 +138,8 @@ Ext.define('Ext.menu.Menu', {
 
     /**
      * @cfg {Number} [minWidth=120]
-     * The minimum width of the Menu. The default minWidth only applies when the {@link #floating} config is true.
+     * The minimum width of the Menu. The default minWidth only applies when the 
+     * {@link #cfg-floating} config is true.
      */
     minWidth: undefined,
 
@@ -738,7 +742,7 @@ Ext.define('Ext.menu.Menu', {
 
     preventClick: function (e) {
         var item = this.getItemFromEvent(e);
-        if (item && !item.href) {
+        if (item && item.isMenuItem && !item.href) {
             e.preventDefault();
         }
     },

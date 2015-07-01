@@ -40,16 +40,19 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
     },
 
     destroy: function() {
-        var tracker = this.tracker;
+        var me = this,
+            tracker = me.tracker;
+        
         if (tracker) {
-            delete tracker.onBeforeStart;
-            delete tracker.onStart;
-            delete tracker.onDrag;
-            delete tracker.onEnd;
             tracker.destroy();
-            this.tracker = null;
+            me.tracker = null;
         }
-        this.callParent();
+        
+        // The grid may happen to never render
+        me.headerCt.un('render', me.afterHeaderRender, me);
+        me.headerCt = null;
+        
+        me.callParent();
     },
 
     afterHeaderRender: function() {
@@ -58,10 +61,7 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
             el = headerCt.el;
 
         headerCt.mon(el, 'mousemove', me.onHeaderCtMouseMove, me);
-        me.markerOwner = me.ownerGrid = me.headerCt.up('tablepanel');
-        if (me.markerOwner.ownerLockable) {
-            me.markerOwner = me.markerOwner.ownerLockable;
-        }
+        me.markerOwner = me.ownerGrid = me.headerCt.up('tablepanel').ownerGrid;
 
         me.tracker = new Ext.dd.DragTracker({
             disabled: me.disabled,
@@ -86,7 +86,7 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
                 me.activeHd.el.dom.style.cursor = '';
                 delete me.activeHd;
             }
-        } else {
+        } else if (e.pointerType !== 'touch') {
             me.findActiveHeader(e);
         }
     },
@@ -98,6 +98,7 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
             ownerLockable = ownerGrid.ownerLockable,
             overHeader, resizeHeader, headers, header;
 
+        me.activeHd = null;
         if (headerEl) {
             overHeader = Ext.getCmp(headerEl.id);
 
@@ -151,7 +152,6 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
                 if (overHeader.triggerEl) {
                     overHeader.triggerEl.dom.style.cursor = '';
                 }
-                me.activeHd = null;
             }
         }
         return me.activeHd;
@@ -162,11 +162,11 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
         var me = this;
 
         // If on touch, we will have received no mouseover, so we have to
-        // decide whether the touch is in a resize zone, and if so, which header is to be sized.
+        // decide whether the touchstart is in a resize zone, and if so, which header is to be sized.
         // Cache any activeHd because it will be cleared on subsequent mousemoves outside the resize zone.
-        me.dragHd = Ext.supports.Touch ? me.findActiveHeader(e) : me.activeHd;
+        me.dragHd = me.activeHd || e.pointerType === 'touch' && me.findActiveHeader(e);
 
-        if (!!me.dragHd && !me.headerCt.dragging) {
+        if (me.dragHd && !me.headerCt.dragging) {
 
             // Calculate how far off the right marker line the mouse pointer is.
             // This will be the xDelta during the following drag operation.
@@ -271,29 +271,31 @@ Ext.define('Ext.grid.plugin.HeaderResizer', {
 
     onEnd: function(e) {
         var me = this,
-            markerOwner;
+            markerOwner = me.markerOwner;
 
         me.headerCt.dragging = false;
         if (me.dragHd) {
             if (!me.dynamic) {
-                markerOwner = me.headerCt.up('tablepanel');
-
-                // hide markers
-                if (markerOwner.ownerLockable) {
-                    markerOwner = markerOwner.ownerLockable;
-                }
                 // If we had saved the gridOverflowSetting, restore it
                 if ('gridOverflowSetting' in me) {
                     markerOwner.el.dom.style.overflow = me.gridOverflowSetting;
                 }
 
+                // hide markers
                 me.setMarkerX(markerOwner.getLhsMarker(), -9999);
                 me.setMarkerX(markerOwner.getRhsMarker(), -9999);
             }
             me.doResize();
+            me.dragHd = me.activeHd = null;
         }
+
         // If the mouse is still within the handleWidth, then we must be ready to drag again
-        me.onHeaderCtMouseMove(e);
+        if (e.pointerType !== 'touch') {
+            me.onHeaderCtMouseMove(e);
+        }
+
+        // Do not process the upcoming click after this mouseup. It's not a click gesture
+        me.headerCt.blockNextEvent();
     },
 
     doResize: function() {

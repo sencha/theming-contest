@@ -1,7 +1,7 @@
 {
   "name": "ext",
   "format": "1",
-  "version": "6.0.0.415",
+  "version": "6.0.0.640",
   "compatVersion": "6.0.0",
   "creator": "Sencha",
   "summary": "Ext JS",
@@ -11,10 +11,48 @@
     "resources"
   ],
   "output": "${package.dir}/build",
+  "build": {
+    "dir": "${package.output.base}"
+  },
   "sass": {
     "fashion": true,
-    "src": "${package.dir}/sass/src",
+    "namespace": "Ext",
+    "etc": "${package.dir}/sass/etc/all.scss",
     "var": "${package.dir}/sass/var",
-    "etc": "${package.dir}/sass/etc/all.scss"
-  }
+    "src": "${package.dir}/sass/src"
+  },
+  "classpath": "${package.dir}/src",
+  "overrides": "${package.dir}/overrides",
+  "example": {
+    "path": [
+      "examples",
+      "templates"
+    ],
+    "apps": [
+      "admin-dashboard",
+      "executive-dashboard",
+      "kitchensink",
+      "classic/charts-kitchensink",
+      "classic/desktop",
+      "classic/ticket-app",
+      "classic/portal",
+      "classic/simple-tasks",
+      "classic/responsive-app",
+      "classic/aria",
+      "modern/addressbook",
+      "modern/energy",
+      "modern/stockapp",
+      "modern/states",
+      "modern/geocongress",
+      "modern/oreilly"
+    ]
+  },
+  "subpkgs": [
+    "classic/classic",
+    "modern/modern",
+    "packages/charts",
+    "packages/amf",
+    "packages/soap",
+    "packages/ux"
+  ]
 }

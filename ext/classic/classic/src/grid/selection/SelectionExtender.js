@@ -50,6 +50,11 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
             scope: me,
             destroyable: true
         });
+        me.gridListeners = me.view.ownerGrid.on({
+            columnResize: me.alignHandle,
+            scope: me,
+            destroyable: true
+        });
 
         me.extendX = !!(me.axes & 1);
         me.extendY = !!(me.axes & 2);
@@ -90,7 +95,7 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
 
     alignHandle: function() {
         var me = this,
-            lastCell = me.lastPos.getCell();
+            lastCell = me.lastPos && me.lastPos.getCell();
 
         // Cell corresponding to the position might not be rendered.
         // This will be called upon scroll
@@ -338,5 +343,11 @@ Ext.define('Ext.grid.selection.SelectionExtender', {
         } else {
             me.mask.hide();
         }
+    },
+
+    destroy: function() {
+        var me = this;
+        Ext.destroy(me.gridListeners, me.viewListeners, me.mask, me.handle);
+        me.callParent();
     }
 });

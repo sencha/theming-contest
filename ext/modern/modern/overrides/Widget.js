@@ -10,6 +10,19 @@ Ext.define('Ext.overrides.Widget', {
 
     config: {
         /**
+         * @cfg {Number} flex
+         * The flex of this item *if* this item item is inside a {@link Ext.layout.HBox} or {@link Ext.layout.VBox}
+         * layout.
+         *
+         * You can also update the flex of a component dynamically using the {@link Ext.layout.FlexBox#setItemFlex}
+         * method.
+         */
+        flex: {
+            evented: true,
+            $value: null
+        },
+
+        /**
          * @cfg {String} id
          * The **unique id of this component instance.**
          *
@@ -50,8 +63,49 @@ Ext.define('Ext.overrides.Widget', {
         this.initBindable();
     },
 
+    applyFlex: function(flex) {
+        if (flex) {
+            flex = Number(flex);
+
+            if (isNaN(flex)) {
+                flex = null;
+            }
+        }
+        else {
+            flex = null;
+        }
+
+        return flex;
+    },
+
     applyItemId: function(itemId) {
         return itemId || this.getId();
+    },
+
+    render: function(container, insertBeforeElement) {
+        this.renderTo(container, insertBeforeElement);
+    },
+
+    renderTo: function(container, insertBeforeElement) {
+        var dom = this.renderElement.dom,
+            containerDom = Ext.getDom(container),
+            insertBeforeChildDom;
+
+        if (Ext.isNumber(insertBeforeChildDom)) {
+            insertBeforeElement = containerDom.childNodes[insertBeforeElement];
+        }
+        insertBeforeChildDom = Ext.getDom(insertBeforeElement);
+
+        if (containerDom) {
+            if (insertBeforeChildDom) {
+                containerDom.insertBefore(dom, insertBeforeChildDom);
+            }
+            else {
+                containerDom.appendChild(dom);
+            }
+
+            this.setRendered(Boolean(dom.offsetParent));
+        }
     },
 
     destroy: function() {
@@ -71,6 +125,10 @@ Ext.define('Ext.overrides.Widget', {
     
     isCentered: function() {
         return false;
+    },
+
+    isDocked: function() {
+        return Boolean(this.getDocked());
     },
     
     isFloating: function() {
@@ -108,6 +166,8 @@ Ext.define('Ext.overrides.Widget', {
         this.parent = null;
     },
 
+    setLayoutSizeFlags: Ext.emptyFn,
+
     /**
      * @private
      * @param {Boolean} rendered
@@ -122,5 +182,20 @@ Ext.define('Ext.overrides.Widget', {
         }
 
         return false;
+    },
+
+    updateLayout: function() {
+        // If size monitoring for widgets has improvements to not
+        // need to do this anymore, core/Widget will need this to be
+        // declared as an emptyFn to preserve toolkit compat
+        var parent = this.getParent(),
+            scrollable;
+
+        if (parent) {
+            scrollable = parent.getScrollable();
+            if (scrollable) {
+                scrollable.refresh();
+            }
+        }
     }
 });

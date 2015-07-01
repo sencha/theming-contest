@@ -46,13 +46,16 @@ Ext.define('Ext.view.DragZone', {
 
     init: function(id, sGroup, config) {
         var me = this,
-            // TODO: does multi-input device IE handle this correctly?
-            triggerEvent = Ext.supports.touchScroll ? 'itemlongpress' : 'itemmousedown',
             eventSpec = {
+                itemmousedown: me.onItemMouseDown,
                 scope: me
             };
 
-        eventSpec[triggerEvent] = me.onItemMouseDown;
+        // If there may be ambiguity with touch/swipe to scroll and a drag gesture
+        // *also* trigger drag start on longpress
+        if (Ext.supports.touchScroll) {
+            eventSpec['itemlongpress'] = me.onItemMouseDown;
+        }
         me.initTarget(id, sGroup, config);
         me.view.mon(me.view, eventSpec);
     },
@@ -64,12 +67,27 @@ Ext.define('Ext.view.DragZone', {
     },
 
     onItemMouseDown: function(view, record, item, index, e) {
+        var navModel;
+
+        // Only respond to longpress for touch dragging
+        if (e.pointerType === 'touch' && e.type !== 'longpress') {
+            return;
+        }
+
         if (!this.isPreventDrag(e, record, item, index)) {
+            navModel = view.getNavigationModel();
+
             // Since handleMouseDown prevents the default behavior of the event, which
             // is to focus the view, we focus the view now.  This ensures that the view
             // remains focused if the drag is cancelled, or if no drag occurs.
-            if (view.focusRow) {
-                view.focusRow(record);
+            //
+            // A Table event will have a position property which is a CellContext
+            if (e.position) {
+                navModel.setPosition(e.position);
+            }
+            // Otherwise, just use the item index
+            else {
+                navModel.setPosition(index);
             }
             this.handleMouseDown(e);
         }

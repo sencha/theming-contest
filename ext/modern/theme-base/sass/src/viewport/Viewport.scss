@@ -38,3 +38,11 @@
         pointer-events: none;
     }
 }
+
+#ext-viewport {
+    margin: 0;
+    @if $enable-font-smoothing {
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}

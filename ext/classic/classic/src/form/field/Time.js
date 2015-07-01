@@ -88,8 +88,8 @@ Ext.define('Ext.form.field.Time', {
     //<locale>
     /**
      * @cfg {String} [format=undefined]
-     * The default time format string which can be overriden for localization support. The format must be valid
-     * according to {@link Ext.Date#parse}.
+     * The default time format string which can be overridden for localization support. 
+     * The format must be valid according to {@link Ext.Date#parse}.
      *
      * Defaults to `'g:i A'`, e.g., `'3:15 PM'`. For 24-hour time format try `'H:i'` instead.
      */
@@ -116,11 +116,12 @@ Ext.define('Ext.form.field.Time', {
     //</locale>
     
     //<locale>
-    /**
-     * @cfg {String} formatText The format text to be announced by screen readers
-     * when the field is focused.
-     */
     // The default format for the time field is 'g:i A', which is hardly informative
+    /**
+     * @cfg {String} formatText
+     * The format text to be announced by screen readers when the field is focused.
+     */
+    /** @ignore */
     formatText: 'Expected time format: HH:MM space am/pm',
     //</locale>
 

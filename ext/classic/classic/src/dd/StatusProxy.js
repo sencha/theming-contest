@@ -18,6 +18,8 @@ Ext.define('Ext.dd.StatusProxy', {
     repairCls: Ext.baseCSSPrefix + 'dd-drag-repair',
     
     ariaRole: 'presentation',
+    
+    skipLayout: true,
 
     /**
      * Creates new StatusProxy.

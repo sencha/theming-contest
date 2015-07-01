@@ -418,12 +418,11 @@ Ext.define('Ext.mixin.Bindable', {
      */
     publishState: function (property, value) {
         var me = this,
-            path = me.viewModelKey,
             state = me.publishedState,
             binds = me.getBind(),
             binding = binds && property && binds[property],
             count = 0,
-            name, publishes, vm;
+            name, publishes, vm, path;
 
         if (binding && !binding.syncing && !binding.isReadOnly()) {
             // If the binding has never fired & our value is either:
@@ -437,11 +436,17 @@ Ext.define('Ext.mixin.Bindable', {
             }
         }
 
-        if (!path || !(publishes = me.getPublishes())) {
+        if (!(publishes = me.getPublishes())) {
             return;
         }
 
         if (!(vm = me.lookupViewModel())) {
+            return;
+        }
+
+        // Important to access path after lookupViewModel, which will kick off
+        // our inheritedState if we don't have one
+        if (!(path = me.viewModelKey)) {
             return;
         }
 
@@ -749,6 +754,27 @@ Ext.define('Ext.mixin.Bindable', {
                 }
                 me.publishState(cfg.name, newValue);
             };
+        },
+
+        /**
+         * Checks if a particular binding is synchronizing the value.
+         * @param {String} name The name of the property being bound to.
+         * @return {Boolean} `true` if the binding is syncing.
+         *
+         * @protected
+         */
+        isSyncing: function(name) {
+            var bindings = this.getBind(),
+                ret = false,
+                binding;
+
+            if (bindings) {
+                binding = bindings[name];
+                if (binding) {
+                    ret = binding.syncing > 0;
+                }
+            }
+            return ret;
         },
 
         onBindNotify: function (value, oldValue, binding) {

@@ -918,10 +918,11 @@ Ext.define('Ext.form.Basic', {
      *         }]
      *     });
      * 
-     * **Note**: this method does not cause the Field's {@link #validate} or 
-     * {@link #isValid} methods to return `false` if the value does _pass_ validation. 
-     * So simply marking a Field as invalid will not prevent submission of forms
-     * submitted with the {@link Ext.form.action.Submit#clientValidation} option set.
+     * **Note**: this method does not cause the Field's 
+     * {@link Ext.form.field.Field#validate} or {@link Ext.form.field.Base#isValid} 
+     * methods to return `false` if the value does _pass_ validation.  So simply marking 
+     * a Field as invalid will not prevent submission of forms submitted with the 
+     * {@link Ext.form.action.Submit#clientValidation} option set.
      * 
      * For additional information on how the fields are marked invalid see field's 
      * {@link Ext.form.field.Base#markInvalid markInvalid} method.

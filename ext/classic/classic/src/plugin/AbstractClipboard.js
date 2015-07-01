@@ -158,6 +158,16 @@ Ext.define('Ext.plugin.AbstractClipboard', {
     },
 
     /**
+     * Returns the element target to listen to copy/paste.
+     *
+     * @param {Ext.Component} comp The component this plugin is initialized on.
+     * @return {Ext.dom.Element} The element target.
+     */
+    getTarget: function(comp) {
+        return comp.el;
+    },
+
+    /**
      * This method returns the selected data in text format.
      * @method getTextData
      * @param {String} format The name of the format (i.e., "text").
@@ -275,7 +285,7 @@ Ext.define('Ext.plugin.AbstractClipboard', {
             var me = this;
 
             me.keyMap = new Ext.util.KeyMap({
-                target: comp.el,
+                target: me.getTarget(comp),
 
                 binding: [{
                     ctrl: true, key: 'x', fn: me.onCut, scope: me

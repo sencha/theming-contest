@@ -8,6 +8,8 @@ Ext.define('Ext.scroll.DomScroller', {
 
     isDomScroller: true,
 
+    _spacerCls: Ext.baseCSSPrefix +  'domscroller-spacer',
+
     getMaxPosition: function() {
         var element = this.getElement(),
             x = 0,
@@ -87,7 +89,43 @@ Ext.define('Ext.scroll.DomScroller', {
         return size;
     },
 
-    setSize: Ext.emptyFn,
+    setSize: function(size) {
+        var me = this,
+            element = me.getElement(),
+            spacer, x, y;
+
+        if (element) {
+            spacer = me.getSpacer();
+
+            // Typically a dom scroller simply assumes the scroll size dictated by its content.
+            // In some cases, however, it is necessary to be able to manipulate this scroll size
+            // (infinite lists for example).  This method positions a 1x1 px spacer element
+            // within the scroller element to set a specific scroll size.
+
+            if (size == null) {
+                spacer.hide();
+            } else {
+                if (typeof size === 'number') {
+                    x = size;
+                    y = size;
+                } else {
+                    x = size.x || 0;
+                    y = size.y || 0;
+                }
+
+                // Subtract spacer size from coordinates (spacer is always 1x1 px in size)
+                if (x > 0) {
+                    x -= 1;
+                }
+                if (y > 0) {
+                    y -= 1;
+                }
+
+                me.setSpacerXY(spacer, x, y);
+                spacer.show();
+            }
+        }
+    },
 
     updateElement: function(element, oldElement) {
         this.initXStyle();
@@ -158,6 +196,36 @@ Ext.define('Ext.scroll.DomScroller', {
         // rtl hook
         getElementScroll: function(element) {
             return element.getScroll();
+        },
+
+        getSpacer: function() {
+            var me = this,
+                spacer = me._spacer,
+                element;
+
+            // In some cases (e.g. infinite lists) we need to be able to tell the scroller
+            // to have a specific size, regardless of its contents.  This creates a spacer
+            // element which can then be absolutely positioned to affect the element's
+            // scroll size.
+            if (!spacer) {
+                element = me.getElement();
+                spacer = me._spacer = element.createChild({
+                    cls: me._spacerCls
+                });
+
+                spacer.setVisibilityMode(2); // 'display' visibilityMode
+
+                // make sure the element is positioned if it is not already.  This ensures
+                // that the spacer's position will affect the element's scroll size
+                element.position();
+            }
+
+            return spacer;
+        },
+
+        // rtl hook
+        setSpacerXY: function(spacer, x, y) {
+            spacer.setLocalXY(x, y);
         },
 
         stopAnimation: function() {

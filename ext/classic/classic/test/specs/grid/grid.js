@@ -46,9 +46,8 @@ describe("grid-general", function() {
                 }), view, colRef;
 
             function makeStore(data) {
-                store = new Ext.data.Store({
-                    model: GridModel,
-                    data: data || [{
+                if (!data && data !== null) {
+                    data = [{
                         field1: 1,
                         field2: 2,
                         field3: 3,
@@ -59,7 +58,11 @@ describe("grid-general", function() {
                         field8: 8,
                         field9: 9,
                         field10: 10
-                    }]
+                    }];
+                }
+                store = new Ext.data.Store({
+                    model: GridModel,
+                    data: data
                 });
                 return store;
             }
@@ -136,7 +139,7 @@ describe("grid-general", function() {
                 // EXTJS-16436
                 it('should not throw an exception when scrollable:false', function() {
                     // Spec will fail if an error is thrown
-                    makeGrid(null, null, {
+                    makeGrid(null, undefined, {
                         scrollable: false
                     });
                 });
@@ -171,7 +174,7 @@ describe("grid-general", function() {
                 });
 
                 it("should not throw an error when the store is loaded in the afterrender of an earlier sibling", function() {
-                    makeGrid(null, null, {
+                    makeGrid(null, undefined, {
                         renderTo: null
                     });
 
@@ -253,7 +256,7 @@ describe("grid-general", function() {
 
             describe("sizing", function() {
                 it("should allow for a minHeight on the view with a shrink wrapped grid", function() {
-                    makeGrid(null, null, {
+                    makeGrid(null, undefined, {
                         height: undefined,
                         viewConfig: {
                             minHeight: 100
@@ -356,7 +359,7 @@ describe("grid-general", function() {
 
                 describe("when to display", function() {
                     it("should display on first refresh with deferEmptyText: false", function() {
-                        makeGrid(null, 0, {
+                        makeGrid(null, null, {
                             viewConfig: {
                                 emptyText: 'Foo',
                                 deferEmptyText: false
@@ -366,7 +369,7 @@ describe("grid-general", function() {
                     });
 
                     it("should not display on first refresh with deferEmptyText: true", function() {
-                        makeGrid(null, 0, {
+                        makeGrid(null, null, {
                             viewConfig: {
                                 emptyText: 'Foo',
                                 deferEmptyText: true
@@ -376,7 +379,7 @@ describe("grid-general", function() {
                     });
 
                     it("should display on subsequent refreshes with deferEmptyText: true", function() {
-                        makeGrid(null, 0, {
+                        makeGrid(null, null, {
                             viewConfig: {
                                 emptyText: 'Foo',
                                 deferEmptyText: true
@@ -412,7 +415,7 @@ describe("grid-general", function() {
                 describe("config", function() {
                     describe("emptyCls", function() {
                         it("should use the passed emptyCls", function() {
-                            makeGrid(null, 0, {
+                            makeGrid(null, null, {
                                 emptyCls: 'foo',
                                 viewConfig: {
                                     emptyText: 'Foo',
@@ -425,7 +428,7 @@ describe("grid-general", function() {
 
                     describe("emptyText", function() {
                         it("should use the passed emptyText", function() {
-                            makeGrid(null, 0, {
+                            makeGrid(null, null, {
                                 viewConfig: {
                                     emptyText: 'Foo',
                                     deferEmptyText: false
@@ -438,7 +441,7 @@ describe("grid-general", function() {
 
                 describe("size", function() {
                     it("should set the grid height correctly based on the emptyText when auto heighting", function() {
-                        makeGrid(null, 0, {
+                        makeGrid(null, null, {
                             height: null,
                             hideHeaders: true,
                             viewConfig: {
@@ -602,7 +605,7 @@ describe("grid-general", function() {
 
                 describe("starting with no overflow", function() {
                     beforeEach(function() {
-                        makeGrid(null, null, {
+                        makeGrid(null, undefined, {
                             forceFit: true,
                             width: 400,
                             height: 200
@@ -659,7 +662,7 @@ describe("grid-general", function() {
                     describe("without locking", function() {
                         it("should be able to configure without columns", function() {
                             expect(function() {
-                                makeGrid(null, null, null, {preventColumnCreate: true});
+                                makeGrid(null, undefined, null, {preventColumnCreate: true});
                             }).not.toThrow();
                         });
                     });
@@ -667,7 +670,7 @@ describe("grid-general", function() {
                     describe("with locking", function() {
                         it("should be able to configure without columns", function() {
                             expect(function() {
-                                makeGrid(null, null, {enableLocking: true}, {preventColumnCreate: true});
+                                makeGrid(null, undefined, {enableLocking: true}, {preventColumnCreate: true});
                             }).not.toThrow();
                         });
                     });
@@ -687,7 +690,7 @@ describe("grid-general", function() {
 
                     describe('with locking', function () {
                         it('should be able to lookup the itemSelector on the LockingView', function () {
-                            makeGrid(null, null, null, null, true);
+                            makeGrid(null, undefined, null, null, true);
                             expect(view.itemSelector).toBe(itemSelector);
                         });
                     });
@@ -712,7 +715,7 @@ describe("grid-general", function() {
                     var dirtyCls;
 
                     function makeDirtyGrid(markDirty, preventRender, columns) {
-                        makeGrid(columns, null, {
+                        makeGrid(columns, undefined, {
                             renderTo: preventRender ? null : Ext.getBody(),
                             viewConfig: {
                                 markDirty: markDirty,
@@ -852,7 +855,7 @@ describe("grid-general", function() {
                                 locked: withLocking
                             }, {
                                 dataIndex: 'field2'
-                            }], null, {
+                            }], undefined, {
                                 selModel: sm
                             });
                         });
@@ -1079,7 +1082,7 @@ describe("grid-general", function() {
                     makeGrid([{
                         dataIndex: 'field1',
                         formatter: 'this.foo(2)'
-                    }], null, {
+                    }], undefined, {
                         defaultListenerScope: true,
                         foo: formatter
                     });
@@ -1141,7 +1144,7 @@ describe("grid-general", function() {
                                     beforeEach(function() {
                                         makeReconfigureGrid([{
                                             dataIndex: 'field1'
-                                        }], null, null, {preventStoreCreate: true});
+                                        }], undefined, null, {preventStoreCreate: true});
                                         reconfigure(makeStore());
                                     });
 
@@ -1243,7 +1246,7 @@ describe("grid-general", function() {
                                             dataIndex: 'field1'
                                         }, {
                                             dataIndex: 'field2'
-                                        }], null, null, {preventStoreCreate: true});
+                                        }], undefined, null, {preventStoreCreate: true});
                                         reconfigure(makeStore());
                                     });
 
@@ -1346,7 +1349,7 @@ describe("grid-general", function() {
                             describe("without locking", function() {
                                 describe("with no columns", function() {
                                     beforeEach(function() {
-                                        makeReconfigureGrid(null, null, null, {preventColumnCreate: true});
+                                        makeReconfigureGrid(null, undefined, null, {preventColumnCreate: true});
                                         oldCols = colRef;
                                         reconfigure(null, [{
                                             dataIndex: 'field2'
@@ -1418,7 +1421,7 @@ describe("grid-general", function() {
                             describe("with locking", function() {
                                 describe("with no columns", function() {
                                     beforeEach(function() {
-                                        makeReconfigureGrid(null, null, {enableLocking: true}, {preventColumnCreate: true});
+                                        makeReconfigureGrid(null, undefined, {enableLocking: true}, {preventColumnCreate: true});
                                         oldCols = colRef;
                                         reconfigure(null, [{
                                             locked: true,
@@ -1528,7 +1531,7 @@ describe("grid-general", function() {
 
                                 describe("with no store and no columns", function() {
                                     beforeEach(function() {
-                                        makeReconfigureGrid(null,  null, null, {preventStoreCreate: true, preventColumnCreate: true});
+                                        makeReconfigureGrid(null,  undefined, null, {preventStoreCreate: true, preventColumnCreate: true});
                                         oldCols = colRef;
                                         oldStore = store;
                                         reconfigure(makeStore(), [{
@@ -1576,7 +1579,7 @@ describe("grid-general", function() {
 
                                 describe("with an existing store and no columns", function() {
                                     beforeEach(function() {
-                                        makeReconfigureGrid(null,  null, null, {preventColumnCreate: true});
+                                        makeReconfigureGrid(null,  undefined, null, {preventColumnCreate: true});
                                         oldCols = colRef;
                                         oldStore = store;
                                         reconfigure(makeStore(), [{
@@ -1637,7 +1640,7 @@ describe("grid-general", function() {
                                     beforeEach(function() {
                                         makeReconfigureGrid([{
                                             dataIndex: 'field1'
-                                        }],  null, null, {preventStoreCreate: true});
+                                        }],  undefined, null, {preventStoreCreate: true});
                                         oldCols = colRef;
                                         oldStore = store;
                                         reconfigure(makeStore(), [{
@@ -1790,7 +1793,7 @@ describe("grid-general", function() {
 
                                 describe("with no store and no columns", function() {
                                     beforeEach(function() {
-                                        makeReconfigureGrid(null,  null, {enableLocking: true}, {preventStoreCreate: true, preventColumnCreate: true});
+                                        makeReconfigureGrid(null,  undefined, {enableLocking: true}, {preventStoreCreate: true, preventColumnCreate: true});
                                         oldCols = colRef;
                                         oldStore = store;
                                         reconfigure(makeStore(), [{
@@ -1844,7 +1847,7 @@ describe("grid-general", function() {
 
                                 describe("with an existing store and no columns", function() {
                                     beforeEach(function() {
-                                        makeReconfigureGrid(null,  null, {enableLocking: true}, {preventColumnCreate: true});
+                                        makeReconfigureGrid(null,  undefined, {enableLocking: true}, {preventColumnCreate: true});
                                         oldCols = colRef;
                                         oldStore = store;
                                         reconfigure(makeStore(), [{
@@ -1914,7 +1917,7 @@ describe("grid-general", function() {
                                             dataIndex: 'field1'
                                         }, {
                                             dataIndex: 'field3'
-                                        }],  null, null, {preventStoreCreate: true});
+                                        }],  undefined, null, {preventStoreCreate: true});
                                         oldCols = colRef;
                                         oldStore = store;
                                         reconfigure(makeStore(), [{
@@ -2716,7 +2719,7 @@ describe("grid-general", function() {
                     }, {
                         dataIndex: 'field4',
                         renderer: fn   
-                    }], null, {
+                    }], undefined, {
                         width: 600,
                         height: 200
                     });
@@ -2753,7 +2756,7 @@ describe("grid-general", function() {
                         dataIndex: 'field3'
                     }, {
                         dataIndex: 'field4'
-                    }], null, {
+                    }], undefined, {
                         width: 600,
                         height: 200
                     });
@@ -2788,7 +2791,7 @@ describe("grid-general", function() {
                         });
 
                         it('should hide the load mask if the load fails with an exception', function() {
-                            makeGrid(null, null, {
+                            makeGrid(null, undefined, {
                                 store: {
                                     proxy: {
                                         type: 'ajax',
@@ -2825,7 +2828,7 @@ describe("grid-general", function() {
                             dataIndex: 'field3'
                         }, {
                             dataIndex: 'field4'
-                        }], null, {
+                        }], undefined, {
                             width: 600,
                             height: 200
                         });
@@ -2844,7 +2847,7 @@ describe("grid-general", function() {
                             dataIndex: 'field3'
                         }, {
                             dataIndex: 'field4'
-                        }], null, {
+                        }], undefined, {
                             viewConfig: {
                                 loadMask: false
                             }
@@ -2864,7 +2867,7 @@ describe("grid-general", function() {
                             dataIndex: 'field3'
                         }, {
                             dataIndex: 'field4'
-                        }], null, {
+                        }], undefined, {
                             loadMask: true
                         });
 
@@ -2883,7 +2886,7 @@ describe("grid-general", function() {
                             dataIndex: 'field3'
                         }, {
                             dataIndex: 'field4'
-                        }], null, {
+                        }], undefined, {
                             loadMask: false,
                             viewConfig: {
                                 loadMask: true
@@ -2905,7 +2908,7 @@ describe("grid-general", function() {
                             dataIndex: 'field3'
                         }, {
                             dataIndex: 'field4'
-                        }], null, {
+                        }], undefined, {
                             loadMask: true,
                             viewConfig: {
                                 loadMask: false
@@ -2931,7 +2934,7 @@ describe("grid-general", function() {
 
                             // Let's make it simpler to measure the width by not having any locked columns.
                             // EnableLocking will have the checkbox column added to the lockedGrid partner.
-                            makeGrid(null, null, {
+                            makeGrid(null, undefined, {
                                 enableLocking: true,
                                 selModel: new Ext.selection.CheckboxModel()
                             });
@@ -2943,10 +2946,12 @@ describe("grid-general", function() {
                             }, {
                                 dataIndex: 'field3'
                             }]);
+                        
+                            var borderWidth = grid.lockedGrid.el.getBorderWidth('lr');
 
                             // First, verify that the width of the lockedGrid is the width of the checkbox
                             // column after reconfigure.
-                            expect(grid.lockedGrid.width).toBe(Ext.selection.CheckboxModel.prototype.headerWidth);
+                            expect(grid.lockedGrid.width).toBe(Ext.selection.CheckboxModel.prototype.headerWidth + borderWidth);
 
                             activeHeader = grid.normalGrid.columnManager.getLast();
 
@@ -2955,7 +2960,7 @@ describe("grid-general", function() {
 
                             // We now expect the locked grid to be at least the width of the checkbox column
                             // plus the newly-locked column.
-                            expect(grid.lockedGrid.width).toBeAtLeast(Ext.selection.CheckboxModel.prototype.headerWidth + activeHeader.width);
+                            expect(grid.lockedGrid.width).toBe(Ext.selection.CheckboxModel.prototype.headerWidth + activeHeader.width + borderWidth);
                         });
                     });
                 });
@@ -3260,18 +3265,33 @@ describe("grid-general", function() {
                         function expectScroll(vertical, horizontal) {
                             var dom = gridRef.getView().getEl().dom;
 
+                            // In Mac OS X, scrollbars can be invisible until user hovers mouse cursor
+                            // over the scrolled area. This is hard to test so we just assume that
+                            // in Mac browsers scrollbars can have 0 width.
                             if (vertical !== undefined) {
                                 if (vertical) {
-                                    expect(dom.scrollHeight).toBeGreaterThan(dom.clientHeight);
-                                } else {
+                                    if (Ext.isMac) {
+                                        expect(dom.scrollHeight).toBeGreaterThanOrEqual(dom.clientHeight);
+                                    }
+                                    else {
+                                        expect(dom.scrollHeight).toBeGreaterThan(dom.clientHeight);
+                                    }
+                                }
+                                else {
                                     expect(dom.scrollHeight).toBeLessThanOrEqual(dom.clientHeight);
                                 }
                             }
 
                             if (horizontal !== undefined) {
                                 if (horizontal) {
-                                    expect(dom.scrollWidth).toBeGreaterThan(dom.clientWidth);
-                                } else {
+                                    if (Ext.isMac) {
+                                        expect(dom.scrollWidth).toBeGreaterThanOrEqual(dom.clientWidth);
+                                    }
+                                    else {
+                                        expect(dom.scrollWidth).toBeGreaterThan(dom.clientWidth);
+                                    }
+                                }
+                                else {
                                     expect(dom.scrollWidth).toBeLessThanOrEqual(dom.clientWidth);
                                 }
                             }
@@ -5767,17 +5787,17 @@ describe("grid-general", function() {
                     expect(grid.isMasked()).toBe(true);
                     expect(grid.headerCt.disabled).toBe(true);
                     expect(grid.headerCt.isMasked()).toBeFalsy();
-                    expect(grid.headerCt.el.dom.tabIndex).toBe(-1);
+                    expect(grid.headerCt.el.dom.getAttribute('tabIndex')).toBe('-1');
                     
                     grid.enable();
                     expect(grid.isMasked()).toBeFalsy();
                     expect(grid.headerCt.disabled).toBe(false);
                     expect(grid.headerCt.isMasked()).toBeFalsy();
-                    expect(grid.headerCt.el.dom.tabIndex).toBe(0);
+                    expect(grid.headerCt.el.dom.getAttribute('tabIndex')).toBe('0');
                 });
                 
                 it('should disable locking grids', function() {
-                    makeGrid(null, null, null, null, true);
+                    makeGrid(null, undefined, null, null, true);
                     grid.disable();
 
                     // Outermost grid should be masked
@@ -5787,13 +5807,13 @@ describe("grid-general", function() {
                     expect(grid.lockedGrid.isMasked()).toBeFalsy();
                     expect(grid.lockedGrid.headerCt.disabled).toBe(true);
                     expect(grid.lockedGrid.headerCt.isMasked()).toBeFalsy();
-                    expect(grid.lockedGrid.headerCt.el.dom.tabIndex).toBe(-1);
+                    expect(grid.lockedGrid.headerCt.el.dom.getAttribute('tabIndex')).toBe('-1');
 
                     // Normal side
                     expect(grid.normalGrid.isMasked()).toBeFalsy();
                     expect(grid.normalGrid.headerCt.disabled).toBe(true);
                     expect(grid.normalGrid.headerCt.isMasked()).toBeFalsy();
-                    expect(grid.normalGrid.headerCt.el.dom.tabIndex).toBe(-1);
+                    expect(grid.normalGrid.headerCt.el.dom.getAttribute('tabIndex')).toBe('-1');
                     
                     grid.enable();
 
@@ -5804,13 +5824,13 @@ describe("grid-general", function() {
                     expect(grid.lockedGrid.isMasked()).toBeFalsy();
                     expect(grid.lockedGrid.headerCt.disabled).toBe(false);
                     expect(grid.lockedGrid.headerCt.isMasked()).toBeFalsy();
-                    expect(grid.lockedGrid.headerCt.el.dom.tabIndex).toBe(0);
+                    expect(grid.lockedGrid.headerCt.el.dom.getAttribute('tabIndex')).toBe('0');
 
                     // Normal side
                     expect(grid.normalGrid.isMasked()).toBeFalsy();
                     expect(grid.normalGrid.headerCt.disabled).toBe(false);
                     expect(grid.normalGrid.headerCt.isMasked()).toBeFalsy();
-                    expect(grid.normalGrid.headerCt.el.dom.tabIndex).toBe(0);
+                    expect(grid.normalGrid.headerCt.el.dom.getAttribute('tabIndex')).toBe('0');
                 });
             });
 
@@ -5833,7 +5853,7 @@ describe("grid-general", function() {
                 });
 
                 it('should disable both views in a locking grid when view.disable is alled on a locking grid', function() {
-                    makeGrid(null, null, null, null, true);
+                    makeGrid(null, undefined, null, null, true);
                     grid.view.disable();
                     
                     expect(grid.disabled).toBe(false);

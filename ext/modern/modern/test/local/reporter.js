@@ -1445,6 +1445,7 @@ Test.SandBoxImpl.prototype.createIframe = function() {
     
     iframe = new jasmine.Dom({
         tag: "iframe",
+        id: 'sandboxIframe',
         cls: "sandboxIframe",
         name: "sandbox",
         frameBorder: 0,

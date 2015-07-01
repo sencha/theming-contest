@@ -452,7 +452,7 @@ Ext.define('Ext.Component', {
      * A Component or Element by which to position this component according to the {@link #defaultAlign}.
      * Defaults to the owning Container.
      *
-     * *Only applicable if this component is {@link #floating}*
+     * *Only applicable if this component is {@link #cfg-floating}*
      *
      * *Used upon first show*.
      */
@@ -526,7 +526,7 @@ Ext.define('Ext.Component', {
     /**
      * @cfg {Boolean} autoShow
      * `true` to automatically show the component upon creation. This config option may only be used for
-     * {@link #floating} components or components that use {@link #autoRender}.
+     * {@link #cfg-floating} components or components that use {@link #autoRender}.
      *
      * @since 2.3.0
      */
@@ -657,7 +657,7 @@ Ext.define('Ext.Component', {
      * The default {@link Ext.util.Positionable#getAlignToXY Ext.dom.Element#getAlignToXY} anchor position value for this component
      * relative to its {@link #alignTarget} (which defaults to its owning Container).
      *
-     * _Only applicable if this component is {@link #floating}_
+     * _Only applicable if this component is {@link #cfg-floating}_
      *
      * *Used upon first show*.
      */
@@ -708,7 +708,7 @@ Ext.define('Ext.Component', {
 
     /**
      * @cfg {Boolean/Object} [draggable=false]
-     * Specify as true to make a {@link #floating} Component draggable using the Component's encapsulating element as
+     * Specify as true to make a {@link #cfg-floating} Component draggable using the Component's encapsulating element as
      * the drag handle.
      *
      * This may also be specified as a config object for the {@link Ext.util.ComponentDragger ComponentDragger} which is
@@ -1491,7 +1491,7 @@ Ext.define('Ext.Component', {
 
     /**
      * @property {Ext.Container} floatParent
-     * **Only present for {@link #floating} Components which were inserted as child items of Containers.**
+     * **Only present for {@link #cfg-floating} Components which were inserted as child items of Containers.**
      *
      * There are other similar relationships such as the {@link Ext.button.Button button} which activates a {@link Ext.button.Button#cfg-menu menu}, or the
      * {@link Ext.menu.Item menu item} which activated a {@link Ext.menu.Item#cfg-menu submenu}, or the
@@ -1502,7 +1502,7 @@ Ext.define('Ext.Component', {
      * Floating Components that are programmatically {@link Ext.Component#method-render rendered} will not have a `floatParent`
      * property.
      *
-     * See {@link #floating} and {@link #zIndexManager}
+     * See {@link #cfg-floating} and {@link #zIndexManager}
      * @readonly
      */
 
@@ -1804,6 +1804,15 @@ Ext.define('Ext.Component', {
     // ***********************************************************************************
     // Begin Events
     // ***********************************************************************************
+
+    /**
+     * @event afterlayoutanimation
+     * This event first after a component's layout has been updated by a layout that
+     * included animation (e.g., a {@link Ext.panel.Panel panel} in an
+     * {@link Ext.layout.container.Accordion accordion} layout).
+     * @param {Ext.Component} this
+     * @since 6.0.0
+     */
 
     /**
      * @event beforeactivate
@@ -2663,7 +2672,7 @@ Ext.define('Ext.Component', {
             oldScrollable.destroy();
         }
 
-        if (me.rendered) {
+        if (me.rendered && !me.destroying && !me.destroyed) {
             me.getOverflowStyle(); // refresh the scrollFlags
             me.updateLayout();
         }
@@ -2889,6 +2898,7 @@ Ext.define('Ext.Component', {
             }
 
             me.clearListeners();
+            
             // make sure we clean up the element references after removing all events
             if (me.rendered) {
                 if (!me.preserveElOnDestroy) {
@@ -2907,10 +2917,12 @@ Ext.define('Ext.Component', {
                         }
                     }
                 }
-
-                me.data = me.el = me.frameBody = me.rendered = null;
+                
+                me.data = me.el = me.frameBody = me.rendered = me.afterRenderEvents = null;
+                me.tpl = me.renderTpl = me.renderData = null;
+                me.focusableContainer = me.container = me.scrollable = null;
             }
-
+            
             // isDestroying added for compat reasons
             me.isDestroying = me.destroying = false;
             me.callParent();
@@ -2929,6 +2941,7 @@ Ext.define('Ext.Component', {
 
         if (!fromParent) {
             inherited.disabled = true;
+            me.savedDisabled = true;
         }
 
         if (me.maskOnDisable) {
@@ -2980,6 +2993,7 @@ Ext.define('Ext.Component', {
 
         if (!fromParent) {
             delete me.getInherited().disabled;
+            me.savedDisabled = false;
         }
 
         if (me.maskOnDisable) {
@@ -3124,6 +3138,10 @@ Ext.define('Ext.Component', {
         }
         if (me.modelValidation !== undefined) {
             inheritedState.modelValidation = me.modelValidation;
+        }
+
+        if (me.savedDisabled) {
+            inheritedState.disabled = true;
         }
 
         me.mixins.bindable.initInheritedState.call(me, inheritedState);
@@ -4128,8 +4146,30 @@ Ext.define('Ext.Component', {
      */
     onBoxReady: function(width, height) {
         var me = this,
-            scroller = me.scrollable;
-
+            scroller = me.scrollable,
+            label;
+        
+        // We have to do this lookup onBoxReady instead of afterRender
+        // to ensure that the components that could be referenced in
+        // me.ariaLabelledBy or me.ariaDescribedBy are already rendered
+        if (me.ariaLabelledBy || me.ariaDescribedBy) {
+            if (me.ariaLabelledBy) {
+                label = me.getAriaLabelEl(me.ariaLabelledBy);
+                
+                if (label) {
+                    me.ariaEl.dom.setAttribute('aria-labelledby', label);
+                }
+            }
+            
+            if (me.ariaDescribedBy) {
+                label = me.getAriaLabelEl(me.ariaDescribedBy);
+                
+                if (label) {
+                    me.ariaEl.dom.setAttribute('aria-describedby', label);
+                }
+            }
+        }
+        
         if (me.resizable) {
             me.initResizable(me.resizable);
         }
@@ -4169,7 +4209,6 @@ Ext.define('Ext.Component', {
      */
     onDestroy: function() {
         var me = this,
-            controller = me.controller,
             container = me.focusableContainer;
 
         // Ensure that any ancillary components are destroyed.
@@ -4813,7 +4852,7 @@ Ext.define('Ext.Component', {
                 }
                 // If already visible, just update display with passed configs.
                 if (me.loadMask.isVisible()) {
-                    me.loadMask.afterShow();
+                    me.loadMask.syncMaskState();
                 }
                 // Otherwise show with new configs
                 else {
@@ -5182,12 +5221,12 @@ Ext.define('Ext.Component', {
     },
 
     /**
-     * Shows this Component, rendering it first if {@link #autoRender} or {@link #floating} are `true`.
+     * Shows this Component, rendering it first if {@link #autoRender} or {@link #cfg-floating} are `true`.
      *
-     * After being shown, a {@link #floating} Component (such as a {@link Ext.window.Window}), is activated it and
+     * After being shown, a {@link #cfg-floating} Component (such as a {@link Ext.window.Window}), is activated it and
      * brought to the front of its {@link #zIndexManager z-index stack}.
      *
-     * @param {String/Ext.dom.Element} [animateTarget=null] **only valid for {@link #floating} Components such as {@link
+     * @param {String/Ext.dom.Element} [animateTarget=null] **only valid for {@link #cfg-floating} Components such as {@link
      * Ext.window.Window Window}s or {@link Ext.tip.ToolTip ToolTip}s, or regular Components which have been configured
      * with `floating: true`.** The target from which the Component should animate from while opening.
      * @param {Function} [callback] A callback function to call after the Component is displayed.
@@ -5309,7 +5348,7 @@ Ext.define('Ext.Component', {
 
     /**
      * Shows this component by the specified {@link Ext.Component Component} or {@link Ext.dom.Element Element}.
-     * Used when this component is {@link #floating}.
+     * Used when this component is {@link #cfg-floating}.
      * @param {Ext.Component/Ext.dom.Element} component The {@link Ext.Component} or {@link Ext.dom.Element} to show the component by.
      * @param {String} [position] Alignment position as used by {@link Ext.util.Positionable#getAlignToXY}.
      * Defaults to `{@link #defaultAlign}`. See {@link #alignTo} for possible values.

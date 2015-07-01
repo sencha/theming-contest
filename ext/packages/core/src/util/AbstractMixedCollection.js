@@ -86,6 +86,14 @@ Ext.define('Ext.util.AbstractMixedCollection', {
 
         me.mixins.observable.constructor.call(me);
     },
+    
+    destroy: function() {
+        var me = this;
+        
+        me.items = me.map = me.keys = me.indexMap = null;
+        
+        me.callParent();
+    },
 
     /**
      * @cfg {Boolean} allowFunctions Specify <code>true</code> if the {@link #addAll}

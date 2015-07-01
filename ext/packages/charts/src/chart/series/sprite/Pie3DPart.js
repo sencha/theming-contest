@@ -317,7 +317,7 @@ Ext.define('Ext.chart.series.sprite.Pie3DPart', {
                                     depth = Math.max(Math.sin(startAngle), Math.sin(endAngle));
                                 }
                             } else {
-                                depth = 0;
+                                depth = 1;
                             }
                             attr.zIndex = 4 + depth;
                             break;

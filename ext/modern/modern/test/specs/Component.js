@@ -2,7 +2,7 @@ describe('Ext.Component', function() {
     var component;
 
     function makeComponent(config) {
-        component = new Ext.Component(config);
+        return component = new Ext.Component(config);
     }
 
     var hasCls = function(cls) {
@@ -54,6 +54,10 @@ describe('Ext.Component', function() {
                     });
                     component.getBind();
                 }).toThrow();
+                
+                // The caught exception above was thrown after the component was
+                // constructed and registered with ComponentManager, so we have to clean up
+                Ext.ComponentMgr.clearAll();
             });
         });
     });
@@ -1095,4 +1099,19 @@ describe('Ext.Component', function() {
             expect(component.innerHtmlElement.dom.innerHTML).toEqual('first name is ');
         });
     });
+
+    describe('destroy', function () {
+        it("should fire the 'destroy' event", function () {
+            var cmp = makeComponent({}),
+                isFired;
+
+            cmp.on('destroy', function () {
+                isFired = true;
+            });
+            cmp.destroy();
+
+            expect(isFired).toBe(true);
+        });
+    });
+
 });

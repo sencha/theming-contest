@@ -479,7 +479,6 @@ Ext.define('Ext.chart.series.Gauge', {
                 label: sectors[i].label,
                 fillStyle: sectors[i].color,
                 strokeOpacity: 0,
-                rotateLabels: false,
                 doCallout: false,           // Show labels inside sectors.
                 labelOverflowPadding: -1    // Allow labels to overlap.
             };

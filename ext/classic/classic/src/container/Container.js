@@ -933,11 +933,6 @@ Ext.define('Ext.container.Container', {
         }
     },
 
-    onDestroy: function() {
-        this.callParent();
-        this.refs = null;
-    },
-
     beforeDestroy: function() {
         var me = this,
             items = me.items,
@@ -955,11 +950,26 @@ Ext.define('Ext.container.Container', {
                 me.doRemove(c, true);
             }
         }
-
-        Ext.destroy(
-            me.layout
-        );
+        
+        Ext.destroy(me.layout);
+        
         me.callParent();
+    },
+    
+    destroy: function() {
+        var me = this;
+        
+        me.callParent();
+        
+        if (me.items) {
+            me.items.destroy();
+        }
+        
+        if (me.floatingItems) {
+            me.floatingItems.destroy();
+        }
+        
+        me.refs = me.items = me.floatingItems = me.layout = null;
     },
 
     beforeRender: function () {
@@ -1594,7 +1604,7 @@ Ext.define('Ext.container.Container', {
      * before removing, then fires the {@link #event-remove} event after the component has
      * been removed.
      *
-     * @param {Ext.Component/String} component The component reference or id to remove.
+     * @param {Ext.Component/String} component The component instance or id to remove.
      *
      * @param {Boolean} [autoDestroy] True to automatically invoke the removed Component's
      * {@link Ext.Component#method-destroy} function.
@@ -1606,7 +1616,14 @@ Ext.define('Ext.container.Container', {
      */
     remove: function(component, autoDestroy) {
         var me = this,
-            c = me.getComponent(component);
+            c;
+        
+        // After destroying, items is nulled so we can't proceed
+        if (me.destroyed || me.destroying) {
+            return;
+        }
+        
+        c = me.getComponent(component);
 
         //<debug>
         if (!arguments.length) {

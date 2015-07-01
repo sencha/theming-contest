@@ -29,6 +29,9 @@
 .#{$prefix}grid-cell-row-checker .#{$prefix}grid-cell-inner {
     padding: $checkbox-selection-model-cell-padding;
 
+    // &nbsp; in summary rows must be same height as checkbox
+    line-height: $form-checkbox-size;
+
     @if $grid-no-row-lines-show-focus-border {
         .#{$prefix}grid-no-row-lines .#{$prefix}grid-row-focused & {
             padding-top: top($checkbox-selection-model-cell-padding) - $grid-row-cell-border-width;

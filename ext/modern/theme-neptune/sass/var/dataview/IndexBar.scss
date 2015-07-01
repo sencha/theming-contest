@@ -6,16 +6,16 @@
  * @var {measurement} $index-bar-width
  * Width of the index bar.
  */
-$index-bar-width: 1.1em !dynamic;
+$index-bar-width: dynamic(1.1em);
 
 /**
  * @var {color} $index-bar-bg-color
  * Background-color of the index bar.
  */
-$index-bar-bg-color: hsla(hue($base-color), 10%, 60%, .8) !dynamic;
+$index-bar-bg-color: dynamic(hsla(hue($base-color), 10%, 60%, .8));
 
 /**
  * @var {color} $index-bar-color
  * Text color of the index bar.
  */
-$index-bar-color: darken(desaturate($base-color, 5%), 15%) !dynamic;
+$index-bar-color: dynamic(darken(desaturate($base-color, 5%), 15%));

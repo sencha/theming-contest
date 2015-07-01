@@ -476,6 +476,12 @@ describe("Ext.app.Controller", function() {
         });
         
         afterEach(function() {
+            var refs = ctrl.refCache;
+            
+            for (var ref in refs) {
+                Ext.destroy(refs[ref]);
+            }
+            
             Ext.undefine('TestController.controller.Refs');
         });
 
@@ -526,6 +532,8 @@ describe("Ext.app.Controller", function() {
             expect(p.xtype).toBe('bazpanel');
 
             bazPanelId = p.getId();
+            
+            p.destroy();
         });
 
         it("creates component every time when ref has forceCreate flag", function() {
@@ -534,6 +542,8 @@ describe("Ext.app.Controller", function() {
             expect(p.xtype).toBe('bazpanel');
             // AND
             expect(p.getId()).not.toBe(bazPanelId);
+            
+            p.destroy();
         });
     });
     

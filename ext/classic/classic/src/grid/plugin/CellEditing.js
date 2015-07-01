@@ -64,7 +64,6 @@ Ext.define('Ext.grid.plugin.CellEditing', {
     alias: 'plugin.cellediting',
     extend: 'Ext.grid.plugin.Editing',
     requires: ['Ext.grid.CellEditor', 'Ext.util.DelayedTask'],
-    lockableScope: 'both',
 
     /**
      * @event beforeedit
@@ -151,8 +150,7 @@ Ext.define('Ext.grid.plugin.CellEditing', {
      */
 
     init: function(grid) {
-        var me = this,
-            lockingPartner = me.lockingPartner;
+        var me = this;
 
         // This plugin has an interest in entering actionable mode.
         // It places the cell editors into the tabbable flow.
@@ -160,20 +158,9 @@ Ext.define('Ext.grid.plugin.CellEditing', {
 
         me.callParent(arguments);
 
-        // Share editor apparatus with lockingPartner because columns may move from side to side
-        if (lockingPartner) {
-            if (lockingPartner.editors) {
-                me.editors = lockingPartner.editors;
-            } else {
-                me.editors = lockingPartner.editors = new Ext.util.MixedCollection(false, function(editor) {
-                    return editor.editorId;
-                });
-            }
-        } else {
-            me.editors = new Ext.util.MixedCollection(false, function(editor) {
-                return editor.editorId;
-            });
-        }
+        me.editors = new Ext.util.MixedCollection(false, function(editor) {
+            return editor.editorId;
+        });
     },
 
     // Ensure editors are cleaned up.
@@ -239,7 +226,7 @@ Ext.define('Ext.grid.plugin.CellEditing', {
         var me = this,
             context = me.getEditingContext(record, columnHeader);
 
-        if (me.grid.view.isVisible(true) && context) {
+        if (context.view.isVisible(true) && context) {
             columnHeader = context.column;
             record = context.record;
             if (columnHeader && me.getEditor(record, columnHeader)) {
@@ -261,11 +248,6 @@ Ext.define('Ext.grid.plugin.CellEditing', {
             context,
             cell,
             editor;
-
-        // Activation position not within this view
-        if (position.view !== me.view) {
-            return;
-        }
 
         context = me.getEditingContext(record, column);
         if (!context) {
@@ -353,16 +335,10 @@ Ext.define('Ext.grid.plugin.CellEditing', {
     // internal getters/setters
     setEditingContext: function(context) {
         this.context = context;
-        if (this.lockingPartner) {
-            this.lockingPartner.context = context;
-        }
     },
 
     setActiveEditor: function(ed) {
         this.activeEditor = ed;
-        if (this.lockingPartner) {
-            this.lockingPartner.activeEditor = ed;
-        }
     },
 
     getActiveEditor: function() {
@@ -371,9 +347,6 @@ Ext.define('Ext.grid.plugin.CellEditing', {
 
     setActiveColumn: function(column) {
         this.activeColumn = column;
-        if (this.lockingPartner) {
-            this.lockingPartner.activeColumn = column;
-        }
     },
 
     getActiveColumn: function() {
@@ -382,9 +355,6 @@ Ext.define('Ext.grid.plugin.CellEditing', {
 
     setActiveRecord: function(record) {
         this.activeRecord = record;
-        if (this.lockingPartner) {
-            this.lockingPartner.activeRecord = record;
-        }
     },
 
     getActiveRecord: function() {
@@ -465,7 +435,6 @@ Ext.define('Ext.grid.plugin.CellEditing', {
         column.un('removed', me.onColumnRemoved, me);
     },
 
-    // inherit docs
     setColumnField: function(column, field) {
         var ed = this.editors.getByKey(column.getItemId());
         Ext.destroy(ed, column.field);

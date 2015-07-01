@@ -280,10 +280,18 @@ Ext.define('Ext.app.Controller', {
 
                 requires.push(absoluteName);
                 getterName = me.getGetterName(shortName, strings.upper);
-                cls[getterName] = getter = me.createGetter(strings.getter, name);
+
+                if (!cls[getterName]) {
+                    cls[getterName] = getter = me.createGetter(strings.getter, name);
+                }
+                //<debug>
+                else if (getterName === 'getMainView') {
+                    Ext.log.warn('Cannot have a view named \'Main\' - getter conflicts with mainView config.')
+                }
+                //</debug>
 
                 // Application class will init the controller getters
-                if (kind !== 'controller') {
+                if (getter && kind !== 'controller') {
                     // This marker allows the constructor to easily/cheaply identify the
                     // generated getter methods since they all need to be called to get
                     // things initialized. We use a property name that deliberately does
@@ -853,7 +861,9 @@ Ext.define('Ext.app.Controller', {
 
             if (name) {
                 store = Ext.create(name.absoluteName, {
-                    storeId: storeId
+                    // Use id here. If the store has a configured storeId, 
+                    // that will take precedence
+                    id: storeId
                 });
             }
         }

@@ -266,15 +266,13 @@ Ext.define('Ext.form.action.Action', {
      * Creates a callback object.
      */
     createCallback: function() {
-        var me = this,
-            undef,
-            form = me.form;
+        var me = this;
+
         return {
             success: me.onSuccess,
             failure: me.onFailure,
             scope: me,
-            timeout: (this.timeout * 1000) || (form.timeout * 1000),
-            upload: form.fileUpload ? me.onSuccess : undef
+            timeout: (me.timeout || me.form.timeout) * 1000
         };
     },
 

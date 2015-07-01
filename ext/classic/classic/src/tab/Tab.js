@@ -7,24 +7,11 @@ Ext.define('Ext.tab.Tab', {
     extend: 'Ext.button.Button',
     alias: 'widget.tab',
 
-    requires: [
-        'Ext.util.KeyNav'
-    ],
-
     /**
      * @property {Boolean} isTab
      * `true` in this class to identify an object as an instantiated Tab, or subclass thereof.
      */
     isTab: true,
-    
-    /**
-     * @cfg {Number} tabIndex
-     * Sets a DOM tabIndex for this tab. Tab's tabIndex is automatically managed by the framework
-     * and doesn't generally require modification.  
-     *
-     * tabIndex on tab defaults to -1.
-     */
-     tabIndex: -1,
 
     baseCls: Ext.baseCSSPrefix + 'tab',
     closeElOverCls: Ext.baseCSSPrefix + 'tab-close-btn-over',
@@ -115,6 +102,11 @@ Ext.define('Ext.tab.Tab', {
      */
 
     ariaRole: 'tab',
+    tabIndex: -1,
+    
+    keyHandlers: {
+        DELETE: 'onDeleteKey'
+    },
 
     _btnWrapCls: Ext.baseCSSPrefix + 'tab-wrap',
     _btnCls: Ext.baseCSSPrefix + 'tab-button',
@@ -295,19 +287,6 @@ Ext.define('Ext.tab.Tab', {
             me.closeEl.addClsOnOver(me.closeElOverCls);
             me.closeEl.addClsOnClick(me.closeElPressedCls);
         }
-        
-        me.initKeyNav();
-    },
-    
-    initKeyNav: function() {
-        var me = this;
-
-        me.keyNav = new Ext.util.KeyNav(me.el, {
-            space: me.onEnterKey,
-            enter: me.onEnterKey,
-            del: me.onDeleteKey,
-            scope: me
-        });
     },
 
     setElOrientation: function() {
@@ -322,7 +301,6 @@ Ext.define('Ext.tab.Tab', {
         }
     },
 
-    // inherit docs
     enable: function(silent) {
         var me = this;
 
@@ -333,7 +311,6 @@ Ext.define('Ext.tab.Tab', {
         return me;
     },
 
-    // inherit docs
     disable: function(silent) {
         var me = this;
 
@@ -342,15 +319,6 @@ Ext.define('Ext.tab.Tab', {
         me.addCls(me._disabledCls);
 
         return me;
-    },
-
-    onDestroy: function() {
-        var me = this;
-
-        Ext.destroy(me.keyNav);
-        delete me.keyNav;
-
-        me.callParent(arguments);
     },
 
     /**
@@ -480,6 +448,8 @@ Ext.define('Ext.tab.Tab', {
 
         if (me.tabBar) {
             me.tabBar.onClick(e, me.el);
+            e.stopEvent();
+            return false;
         }
     },
 
@@ -489,6 +459,8 @@ Ext.define('Ext.tab.Tab', {
     onDeleteKey: function(e) {
         if (this.closable) {
             this.onCloseClick();
+            e.stopEvent();
+            return false;
         }
     },
 

@@ -436,10 +436,9 @@ Ext.define('Ext.selection.Model', {
         // If the mousedowned record was not already selected, then it becomes the
         // start of any range created from now on.
         // If we drop to no records selected, then there is no range start any more.
-        if (!keyEvent.shiftKey && !me.destroyed) {
-            if (me.isSelected(record)) {
-                me.selectionStart = record;
-            }
+        if (!keyEvent.shiftKey && !me.destroyed && me.isSelected(record)) {
+            me.selectionStart = record;
+            me.selectionStartIdx = recIdx;
         }
     },
 
@@ -579,20 +578,27 @@ Ext.define('Ext.selection.Model', {
         var me = this,
             record;
 
-        if (me.locked) {
+        if (me.locked || records == null) {
             return;
         }
+
         if (typeof records === "number") {
             record = me.store.getAt(records);
-            // No matching record, jump out
+            // No matching record, jump out.
             if (!record) {
                 return;
             }
             records = [record];
         }
-        if (me.selectionMode === "SINGLE" && records) {
-            record = records.length ? records[0] : records;
-            me.doSingleSelect(record, suppressEvent);
+
+        if (me.selectionMode === "SINGLE") {
+            if (records.isModel) {
+                records = [records];
+            }
+
+            if (records.length) {
+                me.doSingleSelect(records[0], suppressEvent);
+            }
         } else {
             me.doMultiSelect(records, keepExisting, suppressEvent);
         }

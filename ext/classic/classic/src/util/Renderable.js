@@ -322,7 +322,10 @@ Ext.define('Ext.util.Renderable', {
         me.protoEl = null;
 
         // If this is the outermost Container, lay it out as soon as it is rendered.
-        if (!me.ownerCt) {
+        // Some Components like Ext.LoadMask will lay out themselves and some like
+        // Ext.dd.StatusProxy will even render themselves to a detached document body,
+        // so we allow them to opt out of the Ext layouts.
+        if (!me.ownerCt && !me.skipLayout) {
             me.updateLayout();
         }
 
@@ -334,24 +337,6 @@ Ext.define('Ext.util.Renderable', {
             me.onDisable();
         }
         
-        if (me.ariaLabelledBy || me.ariaDescribedBy) {
-            if (me.ariaLabelledBy) {
-                target = me.getAriaLabelEl(me.ariaLabelledBy);
-                
-                if (target) {
-                    me.ariaEl.dom.setAttribute('aria-labelledby', target);
-                }
-            }
-            
-            if (me.ariaDescribedBy) {
-                target = me.getAriaLabelEl(me.ariaDescribedBy);
-                
-                if (target) {
-                    me.ariaEl.dom.setAttribute('aria-describedby', target);
-                }
-            }
-        }
-
         controller = me.controller;
         if (controller && controller.afterRender) {
             controller.afterRender(me);
@@ -780,8 +765,10 @@ Ext.define('Ext.util.Renderable', {
             me.wrapPrimaryEl(el); // ensure me.el is wrapped
             el = me.el;
         }
-
-        Ext.suspendLayouts();
+        
+        if (!me.skipLayout) {
+            Ext.suspendLayouts();
+        }
 
         container = me.initContainer(container);
 
@@ -832,8 +819,10 @@ Ext.define('Ext.util.Renderable', {
         if (el && !vetoed) {
             me.finishRender(position);
         }
-
-        Ext.resumeLayouts(!me.hidden && !container.isDetachedBody);
+        
+        if (!me.skipLayout) {
+            Ext.resumeLayouts(!me.hidden && !container.isDetachedBody);
+        }
     },
 
     /**

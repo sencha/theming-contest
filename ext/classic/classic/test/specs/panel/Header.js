@@ -22,6 +22,15 @@ describe("Ext.panel.Header", function() {
         Ext.destroy(header);
         header = null;
     });
+
+    describe('Title value', function() {
+        it('should set it as configured', function() {
+            makeHeader({
+                title: 10
+            });
+            expect(header.title.getText()).toBe(10);
+        });
+    });
     
     describe("setTitlePosition", function() {
         beforeEach(function() {

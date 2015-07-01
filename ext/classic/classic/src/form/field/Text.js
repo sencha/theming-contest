@@ -438,6 +438,16 @@ Ext.define('Ext.form.field.Text', {
     
     needArrowKeys: true,
 
+    // Listener block to preventDefault on the mouseup event..
+    // Observable rejects Ext.emptyFn as a no-op and the listener does not get added so the default does not get prevented.
+    // We do not want touchend events translated into mouseup, we only want to prevent default on real mouseup events.
+    squashMouseUp: {
+        mouseup: function(){},
+        translate: false,
+        single: true,
+        preventDefault: true
+    },
+
     childEls: [
         /**
          * @property {Ext.dom.Element} triggerWrap
@@ -673,13 +683,12 @@ Ext.define('Ext.form.field.Text', {
     },
 
     onMouseDown: function(){
-        var me = this;
-        if(!me.hasFocus) {
+        if (!this.hasFocus) {
             // On the next mouseup, prevent default.
             // 99% of the time, it will be the mouseup of the click into the field, and 
             // We will be preventing deselection of selected text: https://code.google.com/p/chromium/issues/detail?id=4505
             // Listener is on the doc in case the pointer moves out before user lets go.
-            Ext.getDoc().on('mouseup', Ext.emptyFn, me, { single: true, preventDefault: true });
+            Ext.getDoc().on(this.squashMouseUp);
         }
     },
 

@@ -1,5 +1,7 @@
 describe("Ext.toolbar.Toolbar", function(){
-    var toolbar;
+    var expectAria = jasmine.expectAriaAttr,
+        expectNoAria = jasmine.expectNoAriaAttr,
+        toolbar;
 
     function createToolbar(cfg) {
         toolbar = new Ext.toolbar.Toolbar(Ext.apply({
@@ -164,6 +166,44 @@ describe("Ext.toolbar.Toolbar", function(){
             });
 
             expect(toolbar.items.getAt(0).ui).toBe('default');
+        });
+    });
+    
+    describe("FocusableContainer", function() {
+        it("should be on with buttons", function() {
+            createToolbar({
+                items: [{
+                    xtype: 'button'
+                }, {
+                    xtype: 'button'
+                }]
+            });
+            
+            expectAria(toolbar, 'tabIndex', '0');
+        });
+        
+        it("should be off with input fields", function() {
+            createToolbar({
+                items: [{
+                    xtype: 'button'
+                }, {
+                    xtype: 'textfield'
+                }]
+            });
+            
+            expectNoAria(toolbar, 'tabIndex');
+        });
+        
+        it("should be off with sliders", function() {
+            createToolbar({
+                items: [{
+                    xtype: 'button'
+                }, {
+                    xtype: 'slider'
+                }]
+            });
+            
+            expectNoAria(toolbar, 'tabIndex');
         });
     });
 });

@@ -10,6 +10,27 @@ describe("Ext.event.Event", function() {
         return e;
     }
     
+    describe("isSpecialKey", function() {
+        describe("keypress events", function() {
+            beforeEach(function() {
+                makeKeyEvent({
+                    type: 'keypress',
+                    keyCode: 33
+                });
+            });
+            
+            it("should return false when !ctrlKey", function() {
+                expect(e.isSpecialKey()).toBe(false);
+            });
+            
+            it("should return true when ctrlKey", function() {
+                e.ctrlKey = true;
+                
+                expect(e.isSpecialKey()).toBe(true);
+            });
+        });
+    });
+    
     describe("isNavKeyPress", function() {
         var suite, i, len,
             suites = [{

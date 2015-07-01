@@ -72,6 +72,14 @@ Ext.define('Ext.field.Number', {
     xtype: 'numberfield',
     alternateClassName: 'Ext.form.Number',
 
+    /**
+     * @event change
+     * Fires when the value has changed.
+     * @param {Ext.field.Text} this This field
+     * @param {Number} newValue The new value
+     * @param {Number} oldValue The original value
+     */
+
     config: {
         /**
          * @cfg

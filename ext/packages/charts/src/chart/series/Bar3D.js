@@ -5,6 +5,9 @@
  * Creates a 3D Bar or 3D Column Chart (depending on the value of the
  * {@link Ext.chart.CartesianChart#flipXY flipXY} config).
  *
+ * Note: 'bar3d' series is meant to be used with the
+ * {@link Ext.chart.axis.Category 'category3d'} axis as its x-axis.
+ *
  *     @example
  *     Ext.create({
  *        xtype: 'cartesian', 

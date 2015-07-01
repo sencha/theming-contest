@@ -212,38 +212,14 @@ Ext.define('Ext.grid.filters.filter.List', {
         }
         //</debug>
 
-        options = me.options;
-        store = me.store;
-
-        // In order to fully support the `active` config, we need to do some preprocessing in case we need to fetch store data
-        // in order to create the options menu items.
-        //
-        // In addition, if the List filter is auto-creating its store from the unique values in the grid store (i.e., no `options` or
-        // `store` configs), it will need to listen to grid store events to properly sync its options when the grid store changes.
-        if (!options && !store) {
-            // Here we need to subscribe to very specific events. We can't subscribe to a catch-all like 'datachanged' because the listener
-            // will get called too many times.
-            // This will respond to the following scenarios:
-            //  1. Removing a filter
-            //  2. Adding a filter
-            //  3. (Re)loading the store
-            //  4. Updating a model
-            me.getGridStore().on({
-                scope: me,
-                add: me.onDataChanged,
-                refresh: me.onDataChanged,
-                remove: me.onDataChanged,
-                update: me.onDataChanged
-            });
-        }
-
         me.labelIndex = me.labelIndex || me.column.dataIndex;
     },
 
     destroy: function () {
         var me = this,
             store = me.store,
-            autoStore = me.autoStore;
+            autoStore = me.autoStore,
+            gridStoreListeners = me.gridStoreListeners;
 
         // We may bind listeners to both the options store & grid store, so we
         // need to unbind both sets here
@@ -257,14 +233,9 @@ Ext.define('Ext.grid.filters.filter.List', {
             me.store = null;
         }
 
-        if (autoStore) {
-            me.getGridStore().un({
-                scope: me,
-                add: me.onDataChanged,
-                refresh: me.onDataChanged,
-                remove: me.onDataChanged,
-                update: me.onDataChanged
-            });
+        if (gridStoreListeners) {
+            me.getGridStore().un(gridStoreListeners);
+            me.gridStoreListeners = null;
         }
 
         me.callParent();
@@ -352,6 +323,21 @@ Ext.define('Ext.grid.filters.filter.List', {
                 fields: [idField, labelField],
                 data: storeData
             });
+
+            // In order to fully support the `active` config, we need to do some preprocessing in case we need to fetch store data
+            // in order to create the options menu items.
+            //
+            // In addition, if the List filter is auto-creating its store from the unique values in the grid store (i.e., no `options` or
+            // `store` configs), it will need to listen to grid store events to properly sync its options when the grid store changes.
+            //
+            // Here we need to subscribe to very specific events. We can't subscribe to a catch-all like 'datachanged' because the listener
+            // will get called too many times.
+            // This will respond to the following scenarios:
+            //  1. Removing a filter
+            //  2. Adding a filter
+            //  3. (Re)loading the store
+            //  4. Updating a model
+            me.getGridStore().on(me.getGridStoreListeners());
 
             me.loaded = true;
         }
@@ -467,6 +453,18 @@ Ext.define('Ext.grid.filters.filter.List', {
         // _value would be undefined.
         config.value = config.value || [];
         return this.callParent([config, key]);
+    },
+
+    getGridStoreListeners: function () {
+        var me = this;
+
+        return me.gridStoreListeners = {
+            scope: me,
+            add: me.onDataChanged,
+            refresh: me.onDataChanged,
+            remove: me.onDataChanged,
+            update: me.onDataChanged
+        };
     },
 
     getOptionsFromStore: function (store) {

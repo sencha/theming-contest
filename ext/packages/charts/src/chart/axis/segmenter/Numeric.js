@@ -63,6 +63,7 @@ Ext.define('Ext.chart.axis.segmenter.Numeric', {
     exactStep: function (min, estStepSize) {
         var order = Math.floor(Math.log(estStepSize) * Math.LOG10E),
             scale = Math.pow(10, order);
+
         return {
             unit: {
                 // add one decimal point if estStepSize is not a multiple of scale
@@ -78,6 +79,7 @@ Ext.define('Ext.chart.axis.segmenter.Numeric', {
             max = range[1],
             increment = step * scale,
             remainder = min % increment;
+
         if (remainder !== 0) {
             range[0] = min - remainder + (min < 0 ? -increment : 0);
         }

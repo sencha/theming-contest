@@ -133,7 +133,7 @@ Ext.define('Ext.chart.MarkerHolder', {
 
         for (name in boundMarkers) {
             marker = boundMarkers[name];
-            marker.clear(this.getId());
+            marker.destroy();
         }
     }
 

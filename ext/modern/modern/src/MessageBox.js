@@ -17,6 +17,7 @@
  */
 Ext.define('Ext.MessageBox', {
     extend  : 'Ext.Sheet',
+    xtype: 'messagebox',
     requires: [
         'Ext.Toolbar',
         'Ext.field.Text',
@@ -25,12 +26,6 @@ Ext.define('Ext.MessageBox', {
     ],
 
     config: {
-        /**
-         * @cfg
-         * @inheritdoc
-         */
-        ui: 'dark',
-
         /**
          * @cfg
          * @inheritdoc
@@ -201,17 +196,9 @@ Ext.define('Ext.MessageBox', {
             };
         }
 
-        var minHeight = '1.3em';
-        if (Ext.theme.is.Cupertino) {
-            minHeight = '1.5em'
-        } else if (Ext.filterPlatform('blackberry') || Ext.filterPlatform('ie10')) {
-            minHeight = '2.6em';
-        }
-
         Ext.applyIf(config, {
             docked: 'top',
-            minHeight: minHeight,
-            ui: Ext.filterPlatform('blackberry') ? 'light' : 'dark',
+            ui: Ext.filterPlatform('blackberry') ? 'light' : null,
             cls   : this.getBaseCls() + '-title'
         });
 
@@ -256,7 +243,7 @@ Ext.define('Ext.MessageBox', {
                     pack: 'center'
                 };
 
-                var isFlexed = Ext.theme.is.CupertinoClassic  || Ext.theme.is.MountainView  || Ext.theme.is.Blackberry;
+                var isFlexed = Ext.theme.is.MountainView  || Ext.theme.is.Blackberry;
 
                 me.buttonsToolbar = Ext.create('Ext.Toolbar', {
                     docked: 'bottom',
@@ -680,7 +667,7 @@ Ext.define('Ext.MessageBox', {
         });
     }
 }, function(MessageBox) {
-    Ext.onReady(function() {
+    Ext.onInternalReady(function() {
         /**
          * @class Ext.Msg
          * @extends Ext.MessageBox

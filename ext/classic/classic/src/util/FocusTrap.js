@@ -50,7 +50,7 @@ Ext.define('Ext.util.FocusTrap', {
                 tabIndex = me.tabGuardIndex,
                 nodes;
             
-            if (!me.rendered) {
+            if (!me.rendered || !me.tabGuard) {
                 return;
             }
             
@@ -68,17 +68,17 @@ Ext.define('Ext.util.FocusTrap', {
             }
             
             if (nodes.length) {
-                beforeGuard.dom.setAttribute(Ext.dom.Element.tabIndexAttributeName, tabIndex);
+                beforeGuard.dom.setAttribute('tabIndex', tabIndex);
                 beforeGuard.on('focusenter', me.onTabGuardFocusEnter, me);
                 
-                afterGuard.dom.setAttribute(Ext.dom.Element.tabIndexAttributeName, tabIndex);
+                afterGuard.dom.setAttribute('tabIndex', tabIndex);
                 afterGuard.on('focusenter',  me.onTabGuardFocusEnter, me);
             }
             else {
-                beforeGuard.dom.removeAttribute(Ext.dom.Element.tabIndexAttributeName);
+                beforeGuard.dom.removeAttribute('tabIndex');
                 beforeGuard.un('focusenter', me.onTabGuardFocusEnter, me);
                 
-                afterGuard.dom.removeAttribute(Ext.dom.Element.tabIndexAttributeName);
+                afterGuard.dom.removeAttribute('tabIndex');
                 afterGuard.un('focusenter',  me.onTabGuardFocusEnter, me);
             }
         },

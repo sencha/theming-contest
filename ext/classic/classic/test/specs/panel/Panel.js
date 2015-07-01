@@ -2157,7 +2157,7 @@ describe("Ext.panel.Panel", function () {
                 suite = ['constraining: renderTo = ', !!renderTo, ', positionAbsolute = ', !!positionAbsolute, ', constrainHeader = ', !!constrainHeader, ', isRtl = ', !!isRtl].join('');
 
             describe(suite, function () {
-                var pan, style, xy, offsets;
+                var pan, pan2, style, xy, offsets;
 
                 beforeEach(function () {
                     pan = new Ext.panel.Panel({
@@ -2173,14 +2173,14 @@ describe("Ext.panel.Panel", function () {
                 });
 
                 afterEach(function () {
-                    pan = style = xy = offsets = Ext.destroy(pan);
+                    Ext.destroy(pan2, pan);
+                    pan = pan2 = style = xy = offsets = null;
                 });
 
                 function createPositionable(offsets) {
                     var x = offsets[0],
                         y = offsets[1] || 30,
-                        obj = {},
-                        p;
+                        obj = {};
 
                     obj[!constrainHeader ? 'constrain' : 'constrainHeader'] = true;
 
@@ -2189,7 +2189,7 @@ describe("Ext.panel.Panel", function () {
                     }
 
                     // Don't use this suite's makePanel function here, we want to control renderTo (or not).
-                    p = new Ext.panel.Panel(Ext.apply({
+                    pan2 = new Ext.panel.Panel(Ext.apply({
                         title: 'My Panel',
                         width: 100,
                         height: 100,
@@ -2199,11 +2199,11 @@ describe("Ext.panel.Panel", function () {
                     }, obj));
 
                     if (!renderTo) {
-                        p.render(pan.el);
+                        pan2.render(pan.el);
                     }
 
-                    style = p.el.dom.style;
-                    xy = [ p.x, p.y ];
+                    style = pan2.el.dom.style;
+                    xy = [ pan2.x, pan2.y ];
                 }
 
                 describe('the x offset', function () {
@@ -2537,6 +2537,369 @@ describe("Ext.panel.Panel", function () {
                 var focusEl = ct.getFocusEl();
                 
                 expect(focusEl).toBe(undefined);
+            });
+        });
+    });
+    
+    describe("defaultButton", function() {
+        var pressKey = jasmine.pressKey,
+            okSpy, cancelSpy, keydownSpy, fooInput, barInput, cancelButton, event;
+        
+        beforeEach(function() {
+            okSpy = jasmine.createSpy('OK button handler');
+            cancelSpy = jasmine.createSpy('Cancel button handler');
+            keydownSpy = jasmine.createSpy('Panel keydown');
+            
+            makePanel({
+                renderTo: undefined,
+                x: 10,
+                y: 10,
+                width: 400,
+                height: 400,
+                referenceHolder: true,
+                items: [{
+                    xtype: 'textfield',
+                    fieldLabel: 'foo',
+                    reference: 'fooInput'
+                }, {
+                    xtype: 'textfield',
+                    fieldLabel: 'bar',
+                    reference: 'barInput'
+                }],
+                defaultButton: 'okButton',
+                buttons: [{
+                    reference: 'okButton',
+                    text: 'OK',
+                    handler: okSpy
+                }, {
+                    reference: 'cancelButton',
+                    text: 'Cancel',
+                    handler: cancelSpy
+                }]
+            });
+            
+            fooInput = panel.lookupReference('fooInput');
+            barInput = panel.lookupReference('barInput');
+            cancelButton = panel.lookupReference('cancelButton');
+            
+            panel.on('boxready', function() {
+                this.el.on('keydown', keydownSpy);
+            });
+            
+            okSpy.andCallFake(function(btn, e) {
+                event = e;
+            });
+            
+            keydownSpy.andCallFake(function(e) {
+                event = e;
+            });
+        });
+        
+        afterEach(function() {
+            panel.el.un('keydown', keydownSpy);
+            okSpy = cancelSpy = keydownSpy = fooInput = barInput = cancelButton = null;
+            event = null;
+        });
+        
+        describe("no defaultButton", function() {
+            beforeEach(function() {
+                panel.defaultButton = undefined;
+                panel.render(Ext.getBody());
+            });
+            
+            it("should not fire OK handler", function() {
+                pressKey(fooInput, 'enter');
+                
+                waitForSpy(keydownSpy);
+                
+                runs(function() {
+                    expect(okSpy).not.toHaveBeenCalled();
+                });
+            });
+            
+            it("should not have stopped the keydown event", function() {
+                pressKey(barInput, 'enter');
+                
+                waitForSpy(keydownSpy);
+                
+                runs(function() {
+                    expect(event.isStopped).toBeFalsy();
+                });
+            });
+        });
+        
+        describe("with defaultButton", function() {
+            beforeEach(function() {
+                panel.render(Ext.getBody());
+            });
+            
+            it("should fire OK handler in fooInput", function() {
+                pressKey(fooInput, 'enter');
+                
+                waitForSpy(okSpy);
+                
+                runs(function() {
+                    expect(okSpy).toHaveBeenCalled();
+                });
+            });
+            
+            it("should fire OK handler in barInput", function() {
+                pressKey(barInput, 'enter');
+                
+                waitForSpy(okSpy);
+                
+                runs(function() {
+                    expect(okSpy).toHaveBeenCalled();
+                });
+            });
+            
+            it("should not fire OK handler on Cancel button", function() {
+                pressKey(cancelButton, 'enter');
+                
+                waitForSpy(cancelSpy);
+                
+                runs(function() {
+                    expect(okSpy).not.toHaveBeenCalled();
+                });
+            });
+            
+            it("should have stopped the keydown event", function() {
+                pressKey(fooInput, 'enter');
+                
+                waitForSpy(okSpy);
+                
+                runs(function() {
+                    expect(event.isStopped).toBeTruthy();
+                });
+            });
+            
+            it("should not have reached main el keydown listener", function() {
+                pressKey(barInput, 'enter');
+                
+                waitForSpy(okSpy);
+                
+                runs(function() {
+                    expect(keydownSpy).not.toHaveBeenCalled();
+                });
+            });
+        });
+        
+        describe("with defaultButton and defaultButtonTarget", function() {
+            beforeEach(function() {
+                panel.defaultButtonTarget = 'el';
+                panel.render(Ext.getBody());
+            });
+            
+            it("should fire OK handler in fooInput", function() {
+                pressKey(fooInput, 'enter');
+                
+                waitForSpy(okSpy);
+                
+                runs(function() {
+                    expect(okSpy).toHaveBeenCalled();
+                });
+            });
+            
+            it("should fire OK handler in barInput", function() {
+                pressKey(barInput, 'enter');
+                
+                waitForSpy(okSpy);
+                
+                runs(function() {
+                    expect(okSpy).toHaveBeenCalled();
+                });
+            });
+            
+            it("should NOT fire OK handler on Cancel button", function() {
+                pressKey(cancelButton, 'enter');
+                
+                waitForSpy(cancelSpy);
+                
+                runs(function() {
+                    expect(okSpy).not.toHaveBeenCalled();
+                });
+            });
+            
+            it("should have stopped the keydown event", function() {
+                pressKey(fooInput, 'enter');
+                
+                waitForSpy(okSpy);
+                
+                runs(function() {
+                    expect(event.isStopped).toBeTruthy();
+                });
+            });
+        });
+        
+        describe("nested panel", function() {
+            var nestedPanel, nestedInput, nestedOk, nestedCancel,
+                nestedOkSpy, nestedCancelSpy;
+            
+            beforeEach(function() {
+                nestedOkSpy = jasmine.createSpy('Nested OK handler');
+                nestedCancelSpy = jasmine.createSpy('Nested Cancel handler');
+                
+                nestedPanel = panel.add({
+                    xtype: 'panel',
+                    title: 'nested',
+                    items: [{
+                        xtype: 'textfield',
+                        fieldLabel: 'Nested',
+                        reference: 'nestedInput'
+                    }],
+                    buttons: [{
+                        text: 'Nested OK',
+                        reference: 'nestedOk',
+                        handler: nestedOkSpy
+                    }, {
+                        text: 'Nested Cancel',
+                        reference: 'nestedCancel',
+                        handler: nestedCancelSpy
+                    }]
+                });
+                
+                nestedInput = panel.lookupReference('nestedInput');
+                nestedOk = panel.lookupReference('nestedOk');
+                nestedCancel = panel.lookupReference('nestedCancel');
+                
+                nestedOkSpy.andCallFake(function(btn, e) {
+                    event = e;
+                });
+                
+                nestedCancelSpy.andCallFake(function(btn, e) {
+                    event = e;
+                    
+                    e.stopEvent();
+                    
+                    return false;
+                });
+            });
+            
+            afterEach(function() {
+                nestedOkSpy = nestedCancelSpy = null;
+                nestedInput = nestedOk = nestedCancel = null;
+            });
+            
+            describe("no defaultButton config", function() {
+                beforeEach(function() {
+                    panel.render(Ext.getBody());
+                });
+                
+                it("should fire outer OK handler on nested input", function() {
+                    pressKey(nestedInput, 'enter');
+                    
+                    waitForSpy(okSpy);
+                    
+                    runs(function() {
+                        expect(okSpy).toHaveBeenCalled();
+                    });
+                });
+                
+                it("should NOT fire outer OK handler on nested OK button", function() {
+                    pressKey(nestedOk, 'enter');
+                    
+                    waitForSpy(nestedOkSpy);
+                    
+                    runs(function() {
+                        expect(okSpy).not.toHaveBeenCalled();
+                    });
+                });
+                
+                it("should NOT fire outer OK handler on nested Cancel button", function() {
+                    pressKey(nestedCancel, 'enter');
+                    
+                    waitForSpy(nestedCancelSpy);
+                    
+                    runs(function() {
+                        expect(okSpy).not.toHaveBeenCalled();
+                    });
+                });
+            });
+            
+            describe("with defaultButton config", function() {
+                beforeEach(function() {
+                    nestedPanel.defaultButton = 'nestedOk';
+                    panel.render(Ext.getBody());
+                });
+                
+                describe("on nested input", function() {
+                    beforeEach(function() {
+                        pressKey(nestedInput, 'enter');
+                        
+                        waitForSpy(nestedOkSpy);
+                    });
+                    
+                    it("should fire nested OK handler", function() {
+                        expect(nestedOkSpy).toHaveBeenCalled();
+                    });
+                    
+                    it("should NOT fire outer OK handler", function() {
+                        // Check that OUTER spy hasn't been fired;
+                        // we can only get there if the above waitForSpy()
+                        // didn't timeout
+                        expect(okSpy).not.toHaveBeenCalled();
+                    });
+                    
+                    it("should have stopped the event", function() {
+                        expect(event.isStopped).toBeTruthy();
+                    });
+                    
+                    it("should not have reached outer keydown handler", function() {
+                        expect(keydownSpy).not.toHaveBeenCalled();
+                    });
+                });
+                
+                describe("on nested OK button", function() {
+                    beforeEach(function() {
+                        pressKey(nestedOk, 'enter');
+                    
+                        waitForSpy(nestedOkSpy);
+                    });
+                    
+                    it("should fire nested OK handler", function() {
+                        expect(nestedOkSpy).toHaveBeenCalled();
+                    });
+                    
+                    it("should NOT fire outer OK handler", function() {
+                        expect(okSpy).not.toHaveBeenCalled();
+                    });
+                    
+                    it("should have stopped the event", function() {
+                        expect(event.isStopped).toBeTruthy();
+                    });
+                    
+                    it("should not have reached outer keydown handler", function() {
+                        expect(keydownSpy).not.toHaveBeenCalled();
+                    });
+                });
+                
+                describe("on nested Cancel button", function() {
+                    beforeEach(function() {
+                        pressKey(nestedCancel, 'enter');
+                        
+                        waitForSpy(nestedCancelSpy);
+                    });
+                    
+                    it("should fire nested Cancel handler", function() {
+                        expect(nestedCancelSpy).toHaveBeenCalled();
+                    });
+                    
+                    it("should NOT fire nested OK handler", function() {
+                        expect(nestedOkSpy).not.toHaveBeenCalled();
+                    });
+                    
+                    it("should NOT fire outer OK handler", function() {
+                        expect(okSpy).not.toHaveBeenCalled();
+                    });
+                    
+                    it("should have not reached outer keydown handler", function() {
+                        expect(keydownSpy).not.toHaveBeenCalled();
+                    });
+                    
+                    it("should have stopped the event", function() {
+                        expect(event.isStopped).toBeTruthy();
+                    });
+                });
             });
         });
     });
@@ -2945,6 +3308,8 @@ describe("Ext.panel.Panel", function () {
                     var other = new Ext.Component();
                     makeDockPanel();
                     expect(panel.removeDocked(other)).toBe(other);
+                    
+                    other.destroy();
                 });
             });
 
@@ -2955,6 +3320,7 @@ describe("Ext.panel.Panel", function () {
                     });
                     panel.removeDocked(a, false);
                     expect(a.destroyed).not.toBe(true);
+                    a.destroy();
                 });
 
                 it("should destroy with panel.autoDestroy=true & autoDestroy=true", function() {
@@ -2971,6 +3337,7 @@ describe("Ext.panel.Panel", function () {
                     });
                     panel.removeDocked(a, false);
                     expect(a.destroyed).not.toBe(true);
+                    a.destroy();
                 });
 
                 it("should destroy with panel.autoDestroy=false & autoDestroy=true", function() {

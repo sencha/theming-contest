@@ -62,7 +62,7 @@ describe('Ext.grid.header.Container', function () {
 
                 // Opening the menu with down arrow focuses it
                 col.el.focus();
-                jasmine.fireKeyEvent(col.el.dom, 'keydown', Ext.EventObject.DOWN);
+                jasmine.fireKeyEvent(col.el.dom, 'keydown', Ext.event.Event.DOWN);
             });
             waitsFor(function() {
                 return menu.isVisible() && menu.containsFocus;
@@ -257,6 +257,22 @@ describe('Ext.grid.header.Container', function () {
 
                 expect(wasCalled).toBe(false);
             });
+        });
+    });
+    
+    describe("keyboard events", function() {
+        beforeEach(function() {
+            createGrid();
+        });
+        
+        it("should focus first column header on Home key", function() {
+            jasmine.syncPressKey(grid.headerCt.el, 'home');
+            jasmine.expectFocused(grid.headerCt.gridVisibleColumns[0]);
+        });
+        
+        it("should focus last column header on End key", function() {
+            jasmine.syncPressKey(grid.headerCt.el, 'end');
+            jasmine.expectFocused(grid.headerCt.gridVisibleColumns[1]);
         });
     });
 });

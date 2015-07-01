@@ -513,60 +513,6 @@ describe('Ext.util.Renderable', function(){
                             attrIt('render aria-expanded', 'aria-expanded', 'true');
                         });
                     });
-                    
-                    describe("labels and descriptions", function() {
-                        describe("by id", function() {
-                            var label, desc;
-                            
-                            beforeEach(function() {
-                                label = Ext.getBody().createChild({
-                                    id: 'label',
-                                    html: 'label'
-                                });
-                                
-                                desc = Ext.getBody().createChild({
-                                    id: 'desc',
-                                    html: 'desc'
-                                });
-                                
-                                makeC({
-                                    ariaLabelledBy: '#label',
-                                    ariaDescribedBy: '#desc'
-                                });
-                            });
-                            
-                            afterEach(function() {
-                                Ext.destroy(label, desc);
-                                label = desc = null;
-                            });
-                            
-                            attrIt('resolve aria-labelledby', 'aria-labelledby', function() {
-                                return label.id;
-                            });
-                            
-                            attrIt('resolve aria-describedby', 'aria-describedby', function() {
-                                return desc.id;
-                            });
-                        });
-                        
-                        describe("by selector", function() {
-                            beforeEach(function() {
-                                makeC({
-                                    ariaLabelledBy: '.label',
-                                    ariaDescribedBy: '.desc',
-                                    childEls: ['wrapEl', 'labelEl', 'descEl'],
-                                });
-                            });
-                            
-                            attrIt('resolve aria-labelledby', 'aria-labelledby', function() {
-                                return c.labelEl.id;
-                            });
-                            
-                            attrIt('resolve aria-describedby', 'aria-describedby', function() {
-                                return c.descEl.id;
-                            });
-                        });
-                    });
                 });
             }
             

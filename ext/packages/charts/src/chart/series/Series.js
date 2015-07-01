@@ -592,7 +592,7 @@ Ext.define('Ext.chart.series.Series', {
 
     updateHighlight: function (highlight) {
         this.getStyle();
-        if (highlight) {
+        if (!Ext.Object.isEmpty(highlight)) {
             this.addItemHighlight();
         }
     },
@@ -668,26 +668,35 @@ Ext.define('Ext.chart.series.Series', {
     },
 
     constructor: function (config) {
-        var me = this;
-        me.getId();
+        var me = this,
+            id;
+
+        config = config || {};
+
+        // Backward compatibility with Ext.
+        if (config.tips) {
+            config = Ext.apply({
+                tooltip: config.tips
+            }, config);
+        }
+        // Backward compatibility with Touch.
+        if (config.highlightCfg) {
+            config = Ext.apply({
+                highlight: config.highlightCfg
+            }, config);
+        }
+
+        if ('id' in config) {
+            id = config.id;
+        } else if ('id' in me.config) {
+            id = me.config.id;
+        } else {
+            id = me.getId();
+        }
+        me.setId(id);
+
         me.sprites = [];
         me.dataRange = [];
-        Ext.ComponentManager.register(me);
-
-        if (config) {
-            // Backward compatibility with Ext.
-            if (config.tips) {
-                config = Ext.apply({
-                    tooltip: config.tips
-                }, config);
-            }
-            // Backward compatibility with Touch.
-            if (config.highlightCfg) {
-                config = Ext.apply({
-                    highlight: config.highlightCfg
-                }, config);
-            }
-        }
 
         me.mixins.observable.constructor.call(me, config);
         me.initBindable();
@@ -879,23 +888,31 @@ Ext.define('Ext.chart.series.Series', {
     /**
      * @private
      * This method will return an array containing data coordinated by a specific axis.
-     * @param {Array} items
-     * @param {String} field
-     * @param {Ext.chart.axis.Axis} axis
+     * @param {Array} items Store records.
+     * @param {String} field The field to fetch from each record.
+     * @param {Ext.chart.axis.Axis} axis The axis used to lay out the data.
      * @return {Array}
      */
     coordinateData: function (items, field, axis) {
         var data = [],
             length = items.length,
             layout = axis && axis.getLayout(),
-            coord = axis ? function (x, field, idx, items) {
-                return layout.getCoordFor(x, field, idx, items);
-            } : function (x) { return +x; },
             i, x;
 
         for (i = 0; i < length; i++) {
             x = items[i].data[field];
-            data[i] = !Ext.isEmpty(x) ? coord(x, field, i, items) : x;
+            // An empty string (a valid discrete axis value) will be coordinated
+            // by the axis layout (if axis is given), otherwise it will be converted
+            // to zero (via +'').
+            if (!Ext.isEmpty(x, true)) {
+                if (layout) {
+                    data[i] = layout.getCoordFor(x, field, i, items);
+                } else {
+                    data[i] = +x;
+                }
+            } else {
+                data[i] = x;
+            }
         }
         return data;
     },
@@ -986,10 +1003,10 @@ Ext.define('Ext.chart.series.Series', {
 
         if (oldChart) {
             oldChart.un('axeschange', 'onAxesChange', me);
-            // TODO: destroy them
-            me.sprites = [];
+            me.clearSprites();
             me.setSurface(null);
             me.setOverlaySurface(null);
+            oldChart.unregister(me);
             me.onChartDetached(oldChart);
             if (!store) {
                 me.updateStore(null);
@@ -1009,6 +1026,7 @@ Ext.define('Ext.chart.series.Series', {
                 me.onAxesChange(newChart);
             }
             me.onChartAttached(newChart);
+            newChart.register(me);
             if (!store) {
                 me.updateStore(newChart.getStore());
             }
@@ -1680,21 +1698,9 @@ Ext.define('Ext.chart.series.Series', {
         });
     },
 
-    destroy: function () {
-        var me = this,
-            store = me._store,
-            // Peek at the config so we don't create one just to destroy it
-            tooltip = me.getConfig('tooltip', true),
-            sprites = me.getSprites(),
+    clearSprites: function () {
+        var sprites = this.sprites,
             sprite, i, ln;
-
-        Ext.ComponentManager.unregister(me);
-
-        if (store && store.getAutoDestroy()) {
-            Ext.destroy(store);
-        }
-        me.updateStore(null);
-        me.setStore(null);
 
         for (i = 0, ln = sprites.length; i < ln; i++) {
             sprite = sprites[i];
@@ -1702,7 +1708,20 @@ Ext.define('Ext.chart.series.Series', {
                 sprite.destroy();
             }
         }
-        me.sprites = null;
+        this.sprites = [];
+    },
+
+    destroy: function () {
+        var me = this,
+            store = me._store,
+            // Peek at the config so we don't create one just to destroy it
+            tooltip = me.getConfig('tooltip', true);
+
+        if (store && store.getAutoDestroy()) {
+            Ext.destroy(store);
+        }
+
+        me.setChart(null);
 
         me.clearListeners();
 

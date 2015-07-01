@@ -28,5 +28,16 @@ Ext.define('Ext.chart.overrides.AbstractChart', {
                 delete map[type];
             }
         }
+    },
+
+    destroy: function () {
+        var me = this;
+
+        // TODO: Modern Component should have onDestroy method,
+        // TODO: so we don't have to set these flags in subclasses.
+        me.isDestroying = me.destroying = true;
+        me.destroyChart();
+        me.callParent();
     }
+
 });

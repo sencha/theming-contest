@@ -1,5 +1,4 @@
 describe("Ext.layout.container.VBox", function(){
-    
     var ct, c, makeCt;
     
     afterEach(function(){
@@ -8,12 +7,41 @@ describe("Ext.layout.container.VBox", function(){
     });
     
     describe("defaults", function(){
-        it("should have no padding", function(){
-            expect(Ext.layout.container.VBox.prototype.padding).toBe(0);
+        var counter = 0,
+            proto = Ext.layout.container.VBox.prototype;
+        
+        beforeEach(function() {
+            // We only need to create a layout instance once to wire up configs
+            if (!counter) {
+                ct = new Ext.container.Container({
+                    renderTo: Ext.getBody(),
+                    layout: 'vbox',
+                    width: 100,
+                    height: 100
+                });
+                
+                counter++;
+            }
         });
         
-        it("should have pack start", function(){
-            expect(Ext.layout.container.VBox.prototype.pack).toBe('start');    
+        it("should have align: begin", function() {
+            expect(proto.align).toBe('begin');
+        });
+        
+        it("should have constrainAlign: false", function() {
+            expect(proto.constrainAlign).toBe(false);
+        });
+        
+        it("should have enableSplitters: true", function() {
+            expect(proto.enableSplitters).toBe(true);
+        });
+        
+        it("should have no padding", function() {
+            expect(proto.padding).toBe(0);
+        });
+        
+        it("should have pack start", function() {
+            expect(proto.pack).toBe('start');    
         });  
     });
 
@@ -157,7 +185,8 @@ describe("Ext.layout.container.VBox", function(){
             });
             
             // When adding the item to the collapsed panel, it won't render
-            ct.add({});
+            c = ct.add({});
+            
             expect(function() {
                 ct.remove(0, false);
             }).not.toThrow();

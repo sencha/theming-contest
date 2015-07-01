@@ -365,8 +365,37 @@ Ext.define('Ext.data.reader.Reader', {
          *     });
          *
          */ 
-        transform: null
+        transform: null,
+        
+        /**
+         * @cfg {Boolean} [keepRawData] Determines if the Reader will keep raw data
+         * received from the server in the {@link #rawData} property.
+         *
+         * While this might seem useful to do additional data processing, keeping raw data
+         * might cause adverse effects such as memory leaks. It is recommended to set
+         * `keepRawData` to `false` if you do not need the raw data.
+         *
+         * If you need to process data packet to extract additional data such as row summaries,
+         * it is recommended to use {@link #transform} function for that purpose.
+         *
+         * Note that starting with Ext JS 6.0 the default behavior has been changed to
+         * **not** keep the raw data because of the high potential for memory leaks.
+         * @since 5.1.1
+         */
+        keepRawData: null
     },
+    
+    /**
+     * @property {Object} rawData
+     * The raw data object that was last passed to {@link #readRecords}. rawData is populated 
+     * based on the results of {@link Ext.data.proxy.Server#processResponse}. rawData will 
+     * maintain a cached copy of the last successfully returned records. In other words, 
+     * if processResponse is unsuccessful, the records from the last successful response 
+     * will remain cached in rawData.
+     *
+     * Since Ext JS 5.1.1 you can use the {@link #keepRawData} config option to
+     * control this behavior.
+     */
     
     /**
      * @property {Object} metaData
@@ -543,15 +572,13 @@ Ext.define('Ext.data.reader.Reader', {
           
         me.buildExtractors();
         
-        /**
-         * @property {Object} rawData
-         * The raw data object that was last passed to {@link #readRecords}. rawData is populated 
-         * based on the results of {@link Ext.data.proxy.Server#processResponse}. rawData will 
-         * maintain a cached copy of the last successfully returned records. In other words, 
-         * if processResponse is unsuccessful, the records from the last successful response 
-         * will remain cached in rawData.
-         */
-        me.rawData = data;
+        if (me.getKeepRawData()) {
+            me.rawData = data;
+        }
+        
+        if (me.hasListeners.rawdata) {
+            me.fireEventArgs('rawdata', [data]);
+        }
 
         data = me.getData(data);
         
@@ -655,9 +682,13 @@ Ext.define('Ext.data.reader.Reader', {
                     record = me.extractRecord(node, readOptions, entityType, includes,
                                               fieldExtractorInfo);
                 }
-
-                if (record.isModel) {
-                    // Trees need to be able to access the raw data (the XML node) in order to process its children.
+                
+                // Generally we don't want to have references to XML documents
+                // or XML nodes to hang around in memory but Trees need to be able
+                // to access the raw XML node data in order to process its children.
+                // See https://sencha.jira.com/browse/EXTJS-15785 and
+                // https://sencha.jira.com/browse/EXTJS-14286
+                if (record.isModel && record.isNode) {
                     record.raw = node;
                 }
             }
@@ -954,11 +985,15 @@ Ext.define('Ext.data.reader.Reader', {
 
     destroy: function() {
         var me = this;
-        delete me.model;
-        delete me.getTotal;
-        delete me.getSuccess;
-        delete me.getMessage;
 
+        me.model = me.getTotal = me.getSuccess = me.getMessage = me.rawData = null;
+        
+        // Proxy could have created a sequence
+        me.onMetaChange = null;
+        
+        // Transform function can be bound
+        me.transform = null;
+        
         me.callParent();
     },
 
@@ -974,7 +1009,6 @@ Ext.define('Ext.data.reader.Reader', {
             me.setConfig(reader.getConfig());
             --me.duringInit;
             me.hasExtractors = true;
-
         }
     }
 }, function(Cls) {

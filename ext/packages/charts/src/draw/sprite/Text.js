@@ -358,6 +358,48 @@ Ext.define('Ext.draw.sprite.Text', {
         this.setAttributes(changes, true);
     },
 
+    fontProperties: {
+        fontStyle: true,
+        fontVariant: true,
+        fontWeight: true,
+        fontSize: true,
+        fontFamily: true
+    },
+
+    setAttributes: function (changes, bypassNormalization, avoidCopy) {
+        var key, obj;
+
+        // Discard individual font properties if 'font' shorthand was also provided.
+
+        // Example: a user provides a config for chart series labels, using the font
+        // shorthand, which is parsed into individual font properties and corresponding
+        // sprite attributes are set. Then a theme is applied to the chart, and
+        // individual font properties from the theme make up the new font shorthand
+        // that overrides the previous one. In other words, no matter what font
+        // the user has specified, theme font will be used.
+
+        // This workaround relies on the fact that the theme merges its own config with
+        // the user config (where user config values take over the same theme config
+        // values). So both user font shorthand and individual font properties from
+        // the theme are present in the resulting config (since there are no collisions),
+        // which ends up here as the 'changes' parameter.
+
+        // If the user wants their font config to merged with the the theme's font config,
+        // instead of taking over it, individual font properties should be used
+        // by the user as well.
+
+        if (changes && changes.font) {
+            obj = {};
+            for (key in changes) {
+                if (!(key in this.fontProperties)) {
+                    obj[key] = changes[key];
+                }
+            }
+            changes = obj;
+        }
+        this.callParent([changes, bypassNormalization, avoidCopy]);
+    },
+
     // Overriding the getBBox method of the abstract sprite here to always
     // recalculate the bounding box of the text in flipped RTL mode
     // because in that case the position of the sprite depends not just on
@@ -487,20 +529,10 @@ Ext.define('Ext.draw.sprite.Text', {
         this.setAttributes({text: text}, true);
     },
 
-    setElementStyles: function (element, styles) {
-        var stylesCache = element.stylesCache || (element.stylesCache = {}),
-            style = element.dom.style,
-            name;
-        for (name in styles) {
-            if (stylesCache[name] !== styles[name]) {
-                stylesCache[name] = style[name] = styles[name];
-            }
-        }
-    },
-
     //<debug>
     renderBBox: function (surface, ctx) {
         var bbox = this.getBBox(true);
+
         ctx.beginPath();
         ctx.moveTo(bbox.x, bbox.y);
         ctx.lineTo(bbox.x + bbox.width, bbox.y);

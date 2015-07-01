@@ -354,7 +354,9 @@ Ext.define('Ext.dd.DragDropManager', {
                 }
             }
         }
+        
         delete me.handleIds[oDD.id];
+        delete me.locationCache[oDD.id];
     },
 
     /**
@@ -484,7 +486,9 @@ Ext.define('Ext.dd.DragDropManager', {
         if (Ext.quickTipsActive){
             Ext.tip.QuickTipManager.ddDisable();
         }
+        
         me.currentPoint = e.getPoint();
+        
         if (me.dragCurrent){
             // the original browser mouseup wasn't handled (e.g. outside FF browser window)
             // so clean up first to avoid breaking the next drag
@@ -576,6 +580,8 @@ Ext.define('Ext.dd.DragDropManager', {
         me.stopDrag(e);
 
         me.stopEvent(e);
+        
+        me.mousedownEvent = me.currentTarget = null;
     },
 
     /**

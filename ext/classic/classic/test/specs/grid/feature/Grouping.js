@@ -1,6 +1,13 @@
 describe('Ext.grid.feature.Grouping', function () {
     var grid, view, store, menu, schema, groupingFeature;
 
+    function completeWithData(data) {
+        Ext.Ajax.mockComplete({
+            status: 200,
+            responseText: Ext.JSON.encode(data)
+        });
+    }
+
     function makeGrid(storeCfg, featureCfg, gridCfg) {
         grid = new Ext.grid.Panel(Ext.apply({
             renderTo: Ext.getBody(),
@@ -70,6 +77,7 @@ describe('Ext.grid.feature.Grouping', function () {
     }
 
     beforeEach(function() {
+        MockAjaxManager.addMethods();
         schema = Ext.data.Model.schema;
         Ext.define('spec.Restaurant', {
             extend: 'Ext.data.Model',
@@ -78,6 +86,7 @@ describe('Ext.grid.feature.Grouping', function () {
     });
 
     afterEach(function(){
+        MockAjaxManager.removeMethods();
         Ext.undefine('spec.Restaurant');
         schema.clear(true);
         grid = view = store = menu = schema = groupingFeature = Ext.destroy(grid);
@@ -1604,290 +1613,503 @@ describe('Ext.grid.feature.Grouping', function () {
         });
     });
 
-    describe('groupers', function () {
-        var contains = Ext.Array.contains,
-            data, groupers;
+    function runGroupers(buffered) {
+        describe('groupers and ' + (buffered ? 'buffered' : 'data') + ' store', function () {
+            var contains = Ext.Array.contains,
+                data, groupers, storeCfg;
+
+            beforeEach(function () {
+                data = [{
+                    cuisine: 'Tuna Delight',
+                    name: {
+                        first: 'Bob',
+                        middle: 'The',
+                        last: 'Cat'
+                    }
+                }, {
+                    cuisine: 'Beef Gizzards',
+                    name: {
+                        first: 'Chuck',
+                        middle: 'The',
+                        last: 'Cat'
+                    }
+                }];
+
+                storeCfg = {
+                    buffered: buffered,
+                    data: !buffered ? data : null
+                };
+
+                if (buffered) {
+                    storeCfg.pageSize = 20;
+                    storeCfg.proxy = {
+                        type: 'ajax',
+                        url: 'fakeUrl'
+                    };
+                }
+            });
+
+            afterEach(function () {
+                data = groupers = storeCfg = null;
+            });
+
+            describe('no defined groupers', function () {
+                // Note we know that they are indeed grouped (and the UI reflects the grouping) by the fact that
+                // there is an entry for the groupField in the metaGroupCache.
+                it('should still group on init when grouping by a groupField with a complex type', function () {
+                    makeGrid(Ext.apply({
+                        groupField: 'name'
+                    }, storeCfg));
+
+                    if (buffered) {
+                        store.load();
+                        completeWithData(data);
+                    }
+
+                    expect(groupingFeature.metaGroupCache['name']).toBeDefined();
+                });
+
+                it('should still group when grouping by a groupField with a complex type', function () {
+                    // Here we're initally grouping by a groupField that maps to a string value and then
+                    // switching to a group that maps to a complex type.
+                    makeGrid(Ext.apply({
+                        groupField: 'cuisine'
+                    }, storeCfg));
+
+                    if (buffered) {
+                        store.load();
+                        completeWithData(data);
+                    }
+
+                    // Not specifying a column here will default to column[0].
+                    clickItem('groupMenuItem');
+
+                    expect(groupingFeature.metaGroupCache['name']).toBeDefined();
+                });
+            });
+
+            describe('defined groupers', function () {
+                describe('startCollapsed', function () {
+                    function doStartCollapsedTests(startCollapsed) {
+                        describe('when ' + startCollapsed, function () {
+                            describe('init', function () {
+                                it('should not have any groupers by default', function () {
+                                    makeGrid(storeCfg);
+
+                                    if (buffered) {
+                                        store.load();
+                                        completeWithData(data);
+                                    }
+
+                                    expect(groupingFeature.groupers).toBe(null);
+                                });
+
+                                it('should honor configured groupers', function () {
+                                    makeGrid(storeCfg, {
+                                        groupers: [{
+                                            property: 'name',
+                                            groupFn: Ext.emptyFn
+                                        }, {
+                                            property: 'cuisine',
+                                            groupFn: Ext.emptyFn
+                                        }]
+                                    });
+
+                                    groupers = groupingFeature.groupers;
+
+                                    if (buffered) {
+                                        store.load();
+                                        completeWithData(data);
+                                    }
+
+                                    expect(groupers).toBeDefined();
+                                    expect(groupers.length).toBe(2);
+                                    expect(groupers[0].property).toBe('name');
+                                    expect(groupers[1].property).toBe('cuisine');
+                                });
+                            });
+
+                            describe('after init', function () {
+                                // Note: the Grouping feature doesn't completely support a BufferedStore yet so I've
+                                // these specs are only testing non-buffered data store.
+                                var groupNames = [],
+                                    rendererValues = [],
+                                    cache;
+
+                                beforeEach(function () {
+                                    makeGrid({
+                                        groupField: 'name',
+                                        data: data
+                                    }, {
+                                        groupers: [{
+                                            property: 'name',
+                                            groupFn: function (val) {
+                                                var name = val.data.name,
+                                                    ret = [name.first, name.middle, name.last].join(' ');
+
+                                                if (!contains(groupNames, ret)) {
+                                                    groupNames.push(ret);
+
+                                                }
+
+                                                return ret;
+                                            }
+                                        }],
+                                        startCollapsed: startCollapsed
+                                    }, {
+                                        columns: [{
+                                            text: 'Name',
+                                            dataIndex: 'name',
+                                            renderer: function (val) {
+                                                if (!contains(rendererValues, val)) {
+                                                    rendererValues.push(val);
+                                                }
+
+                                                return [val.first, val.middle, val.last].join(' ');
+                                            }
+                                        }]
+                                    });
+
+                                    cache = groupingFeature.metaGroupCache;
+                                });
+
+                                afterEach(function () {
+                                    groupNames.length = rendererValues.length = 0;
+                                    cache = null;
+                                });
+
+                                describe('metaGroupCache', function () {
+                                    it('should have a named reference to each group that was determined by the groupFn', function () {
+                                        expect(!!cache[groupNames[0]]).toBe(true);
+                                        expect(!!cache[groupNames[1]]).toBe(true);
+                                    });
+
+                                    describe('tpl values', function () {
+                                        var name = 'Chuck The Cat';
+
+                                        it('should have a "name" value computed by the column renderer', function () {
+                                            expect(cache.name).toBe(name);
+                                        });
+
+                                        it('should have a "renderedGroupValue" value computed by the column renderer', function () {
+                                            expect(cache.renderedGroupValue).toBe(name);
+                                        });
+
+                                        it('should have the same value for "name" and "renderedGroupValue"', function () {
+                                            expect(cache.name).toBe(cache.renderedGroupValue);
+                                        });
+
+                                        it('should have a "groupValue" value determined by looking up the groupField on the record', function () {
+                                            // Note that the local var "name" is hard-coded to the last group.
+                                            expect(cache.groupValue).toBe(getRec(1).get(cache.groupField));
+                                        });
+                                    });
+                                });
+
+                                describe('column renderers', function () {
+                                    it('should be passed a complex data type as the value', function () {
+                                        expect(Ext.isObject(rendererValues[0])).toBe(true);
+                                        expect(Ext.isObject(rendererValues[1])).toBe(true);
+                                    });
+                                });
+
+                                describe('the UI', function () {
+                                    var cells;
+
+                                    afterEach(function () {
+                                        cells = null;
+                                    });
+
+                                    describe('group container rows', function () {
+                                        it('should create a group container row for each group with the correct group name', function () {
+                                            cells = view.body.query('.' + groupingFeature.ctCls, true);
+
+                                            expect((cells[0].textContent || cells[0].innerText).replace(/\s/g, '')).toBe('Name:BobTheCat');
+                                            expect((cells[1].textContent || cells[1].innerText).replace(/\s/g, '')).toBe('Name:ChuckTheCat');
+                                        });
+                                    });
+
+                                    if (!startCollapsed) {
+                                        describe('data rows', function () {
+                                            it('should correctly render the cell value', function () {
+                                                cells = view.body.query('.x-grid-row');
+
+                                                expect((cells[0].textContent || cells[0].innerText).replace(/\s/g, '')).toBe('BobTheCat');
+                                                expect((cells[1].textContent || cells[1].innerText).replace(/\s/g, '')).toBe('ChuckTheCat');
+                                            });
+                                        });
+                                    }
+                                });
+                            });
+                        });
+                    }
+
+                    doStartCollapsedTests(true);
+                    doStartCollapsedTests(false);
+                });
+
+                describe('grouping via the UI', function () {
+                    // Here we're just testing that the internal cache values update when the UI is clicked.
+                    //
+                    // Note: the Grouping feature doesn't completely support a BufferedStore yet so I've
+                    // these specs are only testing non-buffered data store.
+                    beforeEach(function () {
+                        makeGrid({
+                            groupField: 'cuisine',
+                            data: data
+                        }, {
+                            groupers: [{
+                                property: 'name',
+                                groupFn: function (val) {
+                                    var name = val.data.name;
+
+                                    return [name.first, name.middle, name.last].join(' ');
+                                }
+                            }]
+                        }, {
+                            columns: [{
+                                text: 'Name',
+                                dataIndex: 'name',
+                                renderer: function (val) {
+                                    return [val.first, val.middle, val.last].join(' ');
+                                }
+                            }, {
+                                text: 'Cuisine',
+                                dataIndex: 'cuisine'
+                            }]
+                        });
+                    });
+
+                    describe('the "Group by this field" menu item', function () {
+                        function doTest() {
+                            // Sanity.
+                            expect(groupingFeature.metaGroupCache.groupField).toBe('cuisine');
+                            expect(groupingFeature.metaGroupCache.groupValue).toBe(data[0].cuisine);
+
+                            // Not specifying a column here will default to column[0].
+                            clickItem('groupMenuItem');
+
+                            waits(100);
+
+                            runs(function () {
+                            expect(groupingFeature.metaGroupCache.groupField).toBe('name');
+                            expect(groupingFeature.metaGroupCache.groupValue).toBe(data[1].name);
+                            });
+                        }
+
+                        it('should work when grouping by a complex data type', function () {
+                            doTest();
+                        });
+
+                        it('should work when toggling', function () {
+                            doTest();
+                            clickItem('groupMenuItem', grid.columns[1]);
+                            doTest();
+                        });
+                    });
+
+                    describe('the "Show in groups" check menu item', function () {
+                        function doTest() {
+                            // Not specifying a column here will default to column[0].
+                            clickItem('groupMenuItem');
+
+                            expect(groupingFeature.metaGroupCache.groupField).toBe('name');
+                            expect(groupingFeature.metaGroupCache.groupValue).toBe(data[1].name);
+                        }
+
+                        it('should work when toggling', function () {
+                            doTest();
+                            clickItem('groupToggleMenuItem', grid.columns[1]);
+                            doTest();
+                        });
+                    });
+                });
+            });
+        });
+    }
+
+    runGroupers(true);
+    runGroupers(false);
+
+    describe('groupKey values', function () {
+        var key;
+
+        function initGrid(groupKey) {
+            makeGrid({
+                data: [
+                    { name: 'Pericles', cuisine: groupKey},
+                    { name: 'Sulla', cuisine: 'Roman'}
+                ],
+                groupField: 'cuisine'
+            });
+        }
+
+        afterEach(function () {
+            key = null;
+        });
+
+        describe('non-empty string values', function () {
+            beforeEach(function () {
+                key = '5th Century Athens';
+            });
+
+            it('should work for string values', function () {
+                initGrid(key);
+                expect(store.getGroups().getAt(0).getGroupKey()).toBe(key);
+            });
+
+            it('should create a metaGroup', function () {
+                initGrid(key);
+                expect(!!groupingFeature.metaGroupCache[key]).toBe(true);
+            });
+        });
+
+        describe('empty string values', function () {
+            beforeEach(function () {
+                key = '';
+            });
+
+            it('should work for empty string', function () {
+                initGrid('');
+                expect(store.getGroups().getAt(0).getGroupKey()).toBe('');
+            });
+
+            it('should create a metaGroup', function () {
+                initGrid('');
+                expect(!!groupingFeature.metaGroupCache[key]).toBe(true);
+            });
+        });
+
+        describe('null values', function () {
+            beforeEach(function () {
+                key = null;
+            });
+
+            it('should work for null values', function () {
+                initGrid(key);
+                expect(store.getGroups().getAt(0).getGroupKey()).toBe('');
+            });
+
+            it('should create a metaGroup with an empty string key', function () {
+                initGrid(key);
+                expect(!!groupingFeature.metaGroupCache['']).toBe(true);
+            });
+        });
+
+        describe('undefined values', function () {
+            beforeEach(function () {
+                key = undefined;
+            });
+
+            it('should work for undefined values', function () {
+                initGrid(key);
+                expect(store.getGroups().getAt(0).getGroupKey()).toBe('');
+            });
+
+            it('should create a metaGroup with an empty string key', function () {
+                initGrid(key);
+                expect(!!groupingFeature.metaGroupCache['']).toBe(true);
+            });
+        });
+    });
+
+    describe('clearing the bound data store', function () {
+        // See EXTJS-1582.
+        var store, view;
 
         beforeEach(function () {
-            data = [{
-                cuisine: 'Tuna Delight',
-                name: {
-                    first: 'Bob',
-                    middle: 'The',
-                    last: 'Cat'
-                }
-            }, {
-                cuisine: 'Beef Gizzards',
-                name: {
-                    first: 'Chuck',
-                    middle: 'The',
-                    last: 'Cat'
-                }
-            }];
+            grid = Ext.create('Ext.grid.Panel', {
+                renderTo : Ext.getBody(),
+                store : Ext.create('Ext.data.Store', {
+                    model: spec.Restaurant,
+                    groupField: 'cuisine',
+                    groupDir: 'DESC',
+                    data : [
+                        { name: "Beardog's", cuisine: "Home cooking"},
+                        { name: "World Service", cuisine: "Poncy"}
+                    ]
+                }),
+                width : 200,
+                height : 200,
+                title : 'Restaurants',
+                deferRowRender: false,
+                features : [{
+                    ftype: 'grouping'
+                }],
+                columns : [{
+                    text : 'Name',
+                    dataIndex : 'name'
+                }, {
+                    text : 'Cuisine',
+                    dataIndex : 'cuisine'
+                }]
+            });
+
+            store = grid.store;
+            view = grid.view;
         });
 
         afterEach(function () {
-            groupers = null;
+            store = view = null;
         });
 
-        describe('no defined groupers', function () {
-            // Note we know that they are indeed grouped (and the UI reflects the grouping) by the fact that
-            // there is an entry for the groupField in the metaGroupCache.
-            it('should still group on init when grouping by a groupField with a complex type', function () {
-                makeGrid({
-                    data: data,
-                    groupField: 'name'
-                });
-
-                expect(groupingFeature.metaGroupCache['name']).toBeDefined();
-            });
-
-            it('should still group when grouping by a groupField with a complex type', function () {
-                // Here we're initally grouping by a groupField that maps to a string value and then
-                // switching to a group that maps to a complex type.
-                makeGrid({
-                    data: data,
-                    groupField: 'cuisine'
-                });
-
-                // Not specifying a column here will default to column[0].
-                clickItem('groupMenuItem');
-
-                expect(groupingFeature.metaGroupCache['name']).toBeDefined();
-            });
+        it('should work', function () {
+            expect(function () {
+                store.removeAll();
+            }).not.toThrow();
         });
 
-        describe('defined groupers', function () {
-            describe('startCollapsed', function () {
-                function doStartCollapsedTests(startCollapsed) {
-                    describe('when ' + startCollapsed, function () {
-                        describe('init', function () {
-                            it('should not have any groupers by default', function () {
-                                makeGrid();
-                                expect(groupingFeature.groupers).toBe(null);
-                            });
+        it('should clear the view', function () {
+            expect(view.all.count).toBe(store.getCount());
+            store.removeAll();
+            expect(view.all.count).toBe(0);
+        });
+    });
 
-                            it('should honor configured groupers', function () {
-                                makeGrid(null, {
-                                    groupers: [{
-                                        property: 'name',
-                                        groupFn: Ext.emptyFn
-                                    }, {
-                                        property: 'cuisine',
-                                        groupFn: Ext.emptyFn
-                                    }]
-                                });
-
-                                groupers = groupingFeature.groupers;
-
-                                expect(groupers).toBeDefined();
-                                expect(groupers.length).toBe(2);
-                                expect(groupers[0].property).toBe('name');
-                                expect(groupers[1].property).toBe('cuisine');
-                            });
-                        });
-
-                        describe('after init', function () {
-                            var groupNames = [],
-                                rendererValues = [],
-                                cache;
-
-                            beforeEach(function () {
-                                makeGrid({
-                                    data: data,
-                                    groupField: 'name'
-                                } , {
-                                    groupers: [{
-                                        property: 'name',
-                                        groupFn: function (val) {
-                                            var name = val.data.name,
-                                                ret = [name.first, name.middle, name.last].join(' ');
-
-                                            if (!contains(groupNames, ret)) {
-                                                groupNames.push(ret);
-
-                                            }
-
-                                            return ret;
-                                        }
-                                    }],
-                                    startCollapsed: startCollapsed
-                                }, {
-                                    columns: [{
-                                        text: 'Name',
-                                        dataIndex: 'name',
-                                        renderer: function (val) {
-                                            if (!contains(rendererValues, val)) {
-                                                rendererValues.push(val);
-                                            }
-
-                                            return [val.first, val.middle, val.last].join(' ');
-                                        }
-                                    }]
-                                });
-
-                                cache = groupingFeature.metaGroupCache;
-                            });
-
-                            afterEach(function () {
-                                groupNames.length = rendererValues.length = 0;
-                                cache = null;
-                            });
-
-                            describe('metaGroupCache', function () {
-                                it('should have a named reference to each group that was determined by the groupFn', function () {
-                                    expect(!!cache[groupNames[0]]).toBe(true);
-                                    expect(!!cache[groupNames[1]]).toBe(true);
-                                });
-
-                                it('should have a reference to the raw value of each group', function () {
-                                    contains(rendererValues, cache[groupNames[0]].raw);
-                                    contains(rendererValues, cache[groupNames[1]].raw);
-                                });
-
-                                describe('tpl values', function () {
-                                    var name = 'Chuck The Cat';
-
-                                    it('should have a "name" value computed by the column renderer', function () {
-                                        expect(cache.name).toBe(name);
-                                    });
-
-                                    it('should have a "renderedGroupValue" value computed by the column renderer', function () {
-                                        expect(cache.renderedGroupValue).toBe(name);
-                                    });
-
-                                    it('should have the same value for "name" and "renderedGroupValue"', function () {
-                                        expect(cache.name).toBe(cache.renderedGroupValue);
-                                    });
-
-                                    it('should have a "groupValue" value determined by looking up the groupField on the record', function () {
-                                        // Note that the local var "name" is hard-coded to the last group.
-                                        expect(cache.groupValue).toBe(getRec(1).get(cache.groupField));
-                                    });
-
-                                    it('should have a "groupValue" value that is a reference to the raw value of the group', function () {
-                                        // Note that the local var "name" is hard-coded to the last group.
-                                        contains(rendererValues, cache[groupNames[1]].raw);
-                                    });
-                                });
-                            });
-
-                            describe('column renderers', function () {
-                                it('should be passed a complex data type as the value', function () {
-                                    expect(Ext.isObject(rendererValues[0])).toBe(true);
-                                    expect(Ext.isObject(rendererValues[1])).toBe(true);
-                                });
-
-                                it('should be passed the raw data for each group', function () {
-                                    contains(rendererValues, cache[groupNames[0]].raw);
-                                    contains(rendererValues, cache[groupNames[1]].raw);
-                                });
-                            });
-
-                            describe('the UI', function () {
-                                var cells;
-
-                                afterEach(function () {
-                                    cells = null;
-                                });
-
-                                describe('group container rows', function () {
-                                    it('should create a group container row for each group with the correct group name', function () {
-                                        cells = view.body.query('.' + groupingFeature.ctCls, true);
-
-                                        expect((cells[0].textContent || cells[0].innerText).replace(/\s/g, '')).toBe('Name:BobTheCat');
-                                        expect((cells[1].textContent || cells[1].innerText).replace(/\s/g, '')).toBe('Name:ChuckTheCat');
-                                    });
-                                });
-
-                                if (!startCollapsed) {
-                                    describe('data rows', function () {
-                                        it('should correctly render the cell value', function () {
-                                            cells = view.body.query('.x-grid-row');
-
-                                            expect((cells[0].textContent || cells[0].innerText).replace(/\s/g, '')).toBe('BobTheCat');
-                                            expect((cells[1].textContent || cells[1].innerText).replace(/\s/g, '')).toBe('ChuckTheCat');
-                                        });
-                                    });
-                                }
-                            });
-                        });
-                    });
-                }
-
-                doStartCollapsedTests(true);
-                doStartCollapsedTests(false);
-            });
-
-            describe('grouping via the UI', function () {
-                // Here we're just testing that the internal cache values update when the UI is clicked.
-                beforeEach(function () {
-                    makeGrid({
-                        data: data,
-                        groupField: 'cuisine'
-                    } , {
-                        groupers: [{
-                            property: 'name',
-                            groupFn: function (val) {
-                                var name = val.data.name;
-
-                                return [name.first, name.middle, name.last].join(' ');
-                            }
-                        }]
-                    }, {
-                        columns: [{
-                            text: 'Name',
-                            dataIndex: 'name',
-                            renderer: function (val) {
-                                return [val.first, val.middle, val.last].join(' ');
-                            }
-                        }, {
-                            text: 'Cuisine',
-                            dataIndex: 'cuisine'
-                        }]
-                    });
+    describe('update operations on the GroupStore', function () {
+        describe('operating on the last field in a group', function () {
+            function createGrid(groupField) {
+                makeGrid({
+                    model: spec.Restaurant,
+                    groupField: groupField || 'cuisine',
+                    data : [
+                        { name: "Beardog's", cuisine: true}
+                    ],
+                    filters: [{
+                        property: 'cuisine',
+                        value: true
+                    }]
                 });
 
-                describe('the "Group by this field" menu item', function () {
-                    function doTest() {
-                        // Sanity.
-                        expect(groupingFeature.metaGroupCache.groupField).toBe('cuisine');
-                        expect(groupingFeature.metaGroupCache.groupValue).toBe(data[0].cuisine);
+                expect(store.data.length).toBe(1);
+            }
 
-                        // Not specifying a column here will default to column[0].
-                        clickItem('groupMenuItem');
+            function test(str, prop) {
+                describe(str, function () {
+                    it('should work when filtering the store', function () {
+                        createGrid(prop);
 
-                        expect(groupingFeature.metaGroupCache.groupField).toBe('name');
-                        expect(groupingFeature.metaGroupCache.groupValue).toBe(data[1].name);
-                    }
+                        expect(function () {
+                            store.filter('cuisine', false);
+                        }).not.toThrow();
 
-                    it('should work when grouping by a complex data type', function () {
-                        doTest();
+                        expect(store.data.length).toBe(0);
                     });
 
-                    it('should work when toggling', function () {
-                        doTest();
-                        clickItem('groupMenuItem', grid.columns[1]);
-                        doTest();
-                    });
-                });
+                    it('should work when setting the model', function () {
+                        createGrid(prop);
 
-                describe('the "Show in groups" check menu item', function () {
-                    function doTest() {
-                        // Not specifying a column here will default to column[0].
-                        clickItem('groupMenuItem');
+                        expect(function () {
+                            store.getAt(0).set('cuisine', false);
+                        }).not.toThrow();
 
-                        expect(groupingFeature.metaGroupCache.groupField).toBe('name');
-                        expect(groupingFeature.metaGroupCache.groupValue).toBe(data[1].name);
-                    }
-
-                    it('should work when toggling', function () {
-                        doTest();
-                        clickItem('groupToggleMenuItem', grid.columns[1]);
-                        doTest();
+                        expect(store.data.length).toBe(0);
                     });
                 });
-            });
+            }
+
+            test('when updated field is different than groupField', 'name');
+            test('when updated field is the same as the groupField');
         });
     });
 });

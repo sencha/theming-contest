@@ -186,7 +186,6 @@ The function must return false is loading is not successful. Below is a sample o
         this.load(Ext.isObject(loadOnRender) ? loadOnRender : null);
     },
 
-    // inherit docs
     removeMask: function(){
         this.target.setLoading(false);
     },

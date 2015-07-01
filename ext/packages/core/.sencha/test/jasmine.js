@@ -4202,7 +4202,7 @@ jasmine.expectTabIndex = jasmine.expectsTabIndex = function(wantIndex, el) {
             el = el.getFocusEl();
         }
 
-        var haveIndex = el.dom.getAttribute('tabindex');
+        var haveIndex = el.dom.getAttribute('tabIndex');
 
         expect(haveIndex - 0).toBe(wantIndex);
     });

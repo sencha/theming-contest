@@ -1,6 +1,20 @@
 describe("grid-celledit", function(){
     var webkitIt = Ext.isWebKit ? it : xit,
-        grid;
+        grid, GridEventModel = Ext.define(null, {
+            extend: 'Ext.data.Model',
+            fields: [
+                'field1',
+                'field2',
+                'field3',
+                'field4',
+                'field5',
+                'field6',
+                'field7',
+                'field8',
+                'field9',
+                'field10'
+            ]
+        });
 
     function triggerCellMouseEvent(type, rowIdx, cellIdx, button, x, y) {
         var target = findCell(rowIdx, cellIdx);
@@ -40,32 +54,16 @@ describe("grid-celledit", function(){
             
             function triggerEditorKey(key) {
                 var target = plugin.getActiveEditor().field.inputEl.dom;
-                // Ext.supports.SpecialKeyDownRepeat changes the event Ext.form.field.Base listens for!
-                jasmine.fireKeyEvent(target, Ext.supports.SpecialKeyDownRepeat ? 'keydown' : 'keypress', key);
+                jasmine.fireKeyEvent(target, 'keydown', key);
+                jasmine.fireKeyEvent(target, 'keyup', key);
+                jasmine.fireKeyEvent(target, 'keypress', key);
             }
 
             function getRec(index) {
                 return store.getAt(index);
             }
             
-            function makeGrid(columns, pluginCfg, gridCfg) {
-                Ext.define('spec.GridEventModel', {
-                    extend: 'Ext.data.Model',
-                    fields: [
-                        'field1',
-                        'field2',
-                        'field3',
-                        'field4',
-                        'field5',
-                        'field6',
-                        'field7',
-                        'field8',
-                        'field9',
-                        'field10'
-                    ]
-                });
-                
-                
+            function makeGrid(columns, pluginCfg, gridCfg) {               
                 var data = [],
                     defaultCols = [],
                     i;
@@ -100,7 +98,7 @@ describe("grid-celledit", function(){
                 }
                 
                 store = new Ext.data.Store({
-                    model: spec.GridEventModel,
+                    model: GridEventModel,
                     data: data
                 });
                 
@@ -131,7 +129,6 @@ describe("grid-celledit", function(){
                 Ext.destroy(grid, store);
                 plugin = grid = store = view = null;
                 colRef.length = 0;
-                Ext.undefine('spec.GridEventModel');
                 Ext.data.Model.schema.clear();
             });
 
@@ -944,9 +941,7 @@ describe("grid-celledit", function(){
                     var context,
                         activeView = grid.lockedGrid.getView();
 
-                    // The CellEditing plugin has lockableScope: 'both', so there is one on each side.
-                    // We are editing the locked side here
-                    plugin = grid.lockedGrid.plugins[0];
+                    plugin = grid.plugins[0];
                     plugin.on('beforeedit', function(a1, a2){
                         context = a2;
                     });
@@ -970,13 +965,13 @@ describe("grid-celledit", function(){
                     var context,
                         activeView = grid.normalGrid.getView();
 
-                    plugin = grid.normalGrid.plugins[0];
+                    plugin = grid.plugins[0];
                     plugin.on('beforeedit', function(a1, a2){
                         context = a2;
                     });
                     triggerCellMouseEvent('dblclick', 0, 3);
                     // Local col idx
-                    expect(context.colIdx).toBe(1);
+                    expect(context.colIdx).toBe(3);
                     expect(context.column).toBe(colRef[3]);
                     expect(context.field).toBe('field4');
                     expect(context.grid).toBe(grid.normalGrid);
@@ -993,35 +988,23 @@ describe("grid-celledit", function(){
 
                 it("should move the editor when a column is locked", function(){
                     var context,
-                        activeView = grid.normalGrid.getView(),
-                        l;
+                        activeView = grid.normalGrid.getView();
 
-                    // The CellEditing plugin has lockableScope: 'both', so there is one on each side.
-                    // We are editing the locked side here
-                    plugin = grid.normalGrid.plugins[0];
-                    l = plugin.on({
+                    plugin = grid.plugins[0];
+                    plugin.on({
                         beforeedit: function(a1, a2){
                             context = a2;
-                        },
-                        destroyable: true
+                        }
                     });
                     triggerCellMouseEvent('dblclick', 0, 2);
 
                     // CellEditors should be rendered into the grid view which they are editing, and should scroll along with the view.
                     expect(plugin.getActiveEditor().el.dom.parentNode).toBe(context.cell);
 
-                    // Remove the listeners
-                    l.destroy();
                     plugin.completeEdit();
 
                     grid.lock(colRef[2]);
                     activeView = grid.lockedGrid.getView();
-                    
-                    // The CellEditing plugin has lockableScope: 'both', so there is one on each side.
-                    plugin = grid.lockedGrid.plugins[0];
-                    plugin.on('beforeedit', function(a1, a2){
-                        context = a2;
-                    });
 
                     // Edit the same column. It's now in the locked side.
                     // Everything should still work
@@ -1177,7 +1160,7 @@ describe("grid-celledit", function(){
                     var headerCt = grid.headerCt;
 
                     grid.unlock(headerCt.getHeaderAtIndex(0), 1, grid.down('#ct'));
-                    plugin = grid.normalGrid.view.editingPlugin;
+                    plugin = grid.view.editingPlugin;
                     plugin.startEdit(0, 1);
                     expect(plugin.editing).toBe(true);
                     expect(plugin.getActiveColumn()).toBe(headerCt.getHeaderAtIndex(1));
@@ -1379,7 +1362,7 @@ describe("grid-celledit", function(){
                             xtype: 'textfield'
                         }
                     }]);
-                    plugin = grid.normalGrid.view.editingPlugin;
+                    plugin = grid.view.editingPlugin;
                     colRef = grid.getColumnManager().getColumns();
                     var cell00 = findCell(0, 0),
                         cell00xy = Ext.fly(cell00).getAnchorXY('c'),

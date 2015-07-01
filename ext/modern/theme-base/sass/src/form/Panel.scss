@@ -2,10 +2,6 @@
 .x-form-label {
     display: none;
 
-    span {
-        font-weight: bold;
-    }
-
     .x-form-label-nowrap & {
         @include ellipsis();
     }
@@ -92,6 +88,7 @@
     .x-component-outer {
         @include st-box();
 
+        @include st-box-align(center);
         > * {
             width: auto;
         }
@@ -115,8 +112,6 @@
 
     .x-spinner-button {
         text-align: center;
-        border: 1px solid #ccc !important;
-        background-color: #eee;
     }
 
     &.x-field-grouped-buttons {
@@ -151,37 +146,19 @@ input[type="search"]::-webkit-search-cancel-button {
 
 .x-field-input .x-clear-icon, .x-field-input .x-reveal-icon {
     display: none;
-    width: 10px;
-    height: 10px;
-    background-color: #ccc;
     position: absolute;
     top: 50%;
-    right: 0;
 }
 
 .x-field-clearable {
     .x-clear-icon {
         display: block;
     }
-
-    .x-field-input {
-        padding-right: 10px;
-    }
 }
 
 .x-field-revealable {
 	.x-reveal-icon {
 		display: block;
-	}
-
-	.x-field-input {
-		padding-right: 10px;
-	}
-}
-
-.x-field-clearable.x-field-revealable {
-	.x-reveal-icon {
-		right: 20px;
 	}
 }
 

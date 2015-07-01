@@ -154,7 +154,13 @@ Ext.define('Ext.scroll.TouchScroller', {
         translatable: {
             translationMethod: 'auto',
             useWrapper: false
-        }
+        },
+
+        /**
+         * @cfg refreshOnIdle
+         * @private
+         */
+        refreshOnIdle: true
     },
 
     cls: Ext.baseCSSPrefix + 'scroll-container',
@@ -215,11 +221,20 @@ Ext.define('Ext.scroll.TouchScroller', {
 
         me.dragDirection = { x: 0, y: 0};
 
-        Ext.GlobalEvents.on('idle', me.onIdle, me);
-
         me.callParent([config]);
 
         me.refreshAxes();
+    },
+
+    applyRefreshOnIdle: function(refreshOnIdle, oldRefreshOnIdle) {
+        var me = this;
+
+        if (refreshOnIdle) {
+            Ext.GlobalEvents.on('idle', me.onIdle, me);
+        } else if (oldRefreshOnIdle) {
+            Ext.GlobalEvents.un('idle', me.onIdle, me);
+        }
+        return refreshOnIdle;
     },
 
     applyBounceEasing: function(easing) {
@@ -312,10 +327,13 @@ Ext.define('Ext.scroll.TouchScroller', {
                 }
             }
         } else if (oldIndicators) {
-            oldIndicators.x.destroy();
-            oldIndicators.y.destroy();
-            oldIndicators.x = null;
-            oldIndicators.y = null;
+            if (oldIndicators.x) {
+                oldIndicators.x.destroy();
+            }
+            if (oldIndicators.y) {
+                oldIndicators.y.destroy();
+            }
+            oldIndicators.x = oldIndicators.y = null;
         }
 
         return indicators;
@@ -345,28 +363,30 @@ Ext.define('Ext.scroll.TouchScroller', {
     },
 
     applySize: function(size) {
-        var el, dom, scrollerDom, x, y;
+        var el = this.getElement(),
+            dom, scrollerDom, x, y;
 
-        if (size == null) { // null or undefined
-            el = this.getElement();
+        if (typeof size === 'number') {
+            x = size;
+            y = size;
+        } else if (size) {
+            x = size.x;
+            y = size.y;
+        }
 
-            if (!el) {
-                return null;
-            }
-
+        if (el && (x == null || y == null)) {
             dom = el.dom;
             scrollerDom = this.getInnerElement().dom;
 
             // using scrollWidth/scrollHeight instead of offsetWidth/offsetHeight ensures
             // that the size includes any contained absolutely positioned items
-            x = Math.max(scrollerDom.scrollWidth, dom.clientWidth);
-            y = Math.max(scrollerDom.scrollHeight, dom.clientHeight);
-        } else if (typeof size === 'number') {
-            x = size;
-            y = size;
-        } else {
-            x = size.x;
-            y = size.y;
+            if (x == null) {
+                x = Math.max(scrollerDom.scrollWidth, dom.clientWidth);
+            }
+
+            if (y ==  null) {
+                y = Math.max(scrollerDom.scrollHeight, dom.clientHeight);
+            }
         }
 
         return {
@@ -442,6 +462,7 @@ Ext.define('Ext.scroll.TouchScroller', {
 
         me.setElement(null);
         me.setInnerElement(null);
+        me.setIndicators(null);
 
         Ext.GlobalEvents.un('idle', me.onIdle, me);
 

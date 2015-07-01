@@ -65,7 +65,8 @@
     position: absolute;
     right: 0;
     top: 0;
-    z-index: 2;
+    // IE9m fix: Needs to be 4 to clear the docked-item that contains it which is at 2.
+    z-index: 4;
     text-align: center;
 }
 
