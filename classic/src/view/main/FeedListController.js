@@ -95,24 +95,20 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      */
     onRemoveFeedClick: function(button) {
         var view = this.getView().down('dataview'),
-            active = this.getSelectedItem();
+            activeFeed = this.getSelectedItem();
 
-        if (active) {
-
+        if (activeFeed) {
             view.getSelectionModel().deselectAll();
-
-            this.animateNode(view.getNode(active), 1, 0, {
+            this.animateNode(view.getNode(activeFeed), 1, 0, {
                 scope: this,
                 afteranimate: function() {
-
-                    view.getStore().remove(active);
-
+                    view.getStore().remove(activeFeed);
                 }
             });
-            view.fireEvent('feedremove', view, active.get('title'), active.get('url'));
+            view.fireEvent('feedremove', view, activeFeed.get('title'), activeFeed.get('url'));
 
             // publish event on the 'controller' domain for other subscribers
-            this.fireEvent('feedremove', view, active.get('title'), active.get('url'));
+            this.fireEvent('feedremove', activeFeed, activeFeed.get('title'), activeFeed.get('url'));
         }
     },
 

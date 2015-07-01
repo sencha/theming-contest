@@ -7,6 +7,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
 
     hideNavButtons: function(){
         var refs = this.getReferences();
+        return;
         refs.newfeedbutton.hide();
         refs.removebutton.hide();
         refs.cancelbutton.hide();
@@ -125,31 +126,28 @@ Ext.define('FeedViewer.view.main.ViewportController', {
             refs = this.getReferences(),
             viewport = me.getView();
 
-
         record.load({
                 url : record.get('feedUrl'),
                 limit : 50,
                 callback: function(records, operation, success) {
-                    if(success){
 
+                    if (success) {
                         viewport.push({
                             xtype: 'feeditemlist',
                             reference: 'feeditemlist',
                             title: record.get('title'),
+                            store : record.entries(),
                             listeners: {
                                 select: 'onFeedListItemSelect'
                             }
                         });
 
-                        refs = me.getReferences();
-                        var list = refs.feeditemlist;
-                        list.setStore(record.entries());
-                        list.getStore().load();
+                        //list.setStore(record.entries());
                     }
                 }}
         );
-        this.hideNavButtons();
-        refs.removebutton.show();
+        //this.hideNavButtons();
+        //refs.removebutton.show();
     },
 
     onFeedListItemSelect : function (view,record) {
