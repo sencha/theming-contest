@@ -63,16 +63,10 @@ Ext.define('FeedViewer.view.main.FeedPost', {
      * @param {FeedViewer.model.RSSItem} prevItem The previous feed item
      */
     updateRssItem: function(rssItem, prevItem) {
-        var me = this,
-            goToPost;
+        var me = this;
 
         if (rssItem && rssItem.isRssItem) {
             me.getViewModel().set('feed', rssItem);
-
-            goToPost = me.down('button[action=goToPost]');
-            if (goToPost) {
-                goToPost.setHref(rssItem.get('link'));
-            }
         }
     },
 
@@ -100,8 +94,7 @@ Ext.define('FeedViewer.view.main.FeedPost', {
         }
 
         items.push({
-            hrefTarget : '_blank',
-            action: 'goToPost',
+            action: 'openPost',
             text: 'Go to post',
             iconCls: 'post-go'
         });

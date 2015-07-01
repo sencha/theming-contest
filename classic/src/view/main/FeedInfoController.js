@@ -18,6 +18,9 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
                 'feeddetail feedpost button[action=openInTab]': {
                     click: 'onPostInTab'
                 },
+                'feedinfo feedpost button[action=openPost]': {
+                    click: 'onGoToPost'
+                },
                 'feeddetail button[action=openAll]': {
                     click: 'onOpenAll'
                 }
@@ -154,7 +157,9 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
         }
     },
 
+
     onGoToPost : function(component, rssItem) {
+        rssItem = rssItem && rssItem.isRssItem ? rssItem : component.up('feedpost').getRssItem();
         var link =  rssItem && rssItem.get('link');
 
         if (link) {
