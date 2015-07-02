@@ -16,12 +16,26 @@ Ext.define('FeedViewer.view.main.FeedList', {
 
     requires : [
         'Ext.toolbar.Toolbar',
-        'Ext.button.Button'
+        'Ext.button.Button',
+        'Ext.plugin.Responsive'
     ],
 
     controller: 'feedlist',
 
     layout: 'fit',
+    collapsed: false,
+
+    plugins: 'responsive',
+
+    responsiveConfig: {
+         'portrait': {
+             collapsed: true
+         },
+
+         'landscape': {
+             collapsed: false
+         }
+    },
 
     items : [
         {
