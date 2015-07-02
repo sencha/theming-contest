@@ -8,7 +8,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
     listen: {
         component: {
             'app-main': {
-                show:'onFeedShow'
+                show:'onViewportShow'
             },
             'feedlist': {
                 select: 'onFeedSelect'
@@ -104,7 +104,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         }
     },
 
-    onFeedShow: function(){
+    onViewportShow: function(){
         Ext.Viewport.setMenu(this.createHamburgerMenu(),{
             side: 'left',
             reveal: true
@@ -123,6 +123,10 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         }
     },
 
+    /**
+     * React to the viewport being ready to add side menus. Creates a left side menu
+     * @private
+     */
     createHamburgerMenu: function(){
         var menu = Ext.create('Ext.Menu', {
             width: 150,
