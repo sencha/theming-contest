@@ -76,11 +76,11 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
                             id: 'reading-menu',
                             items: [{
                                 text: 'Bottom',
-                                checked: true,
                                 cycleRegion : 'south',
                                 iconCls:'preview-bottom'
                             }, {
                                 text: 'Right',
+                                checked: true,
                                 cycleRegion : 'east',
                                 iconCls:'preview-right'
                             }, {

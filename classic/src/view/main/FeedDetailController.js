@@ -26,12 +26,12 @@ Ext.define('FeedViewer.view.main.FeedDetailController', {
         var view = this.getView(),
             post = view.down('feedpost'),
             config,
-            region;
+            region = activeItem.cycleRegion;
 
-        switch (activeItem.cycleRegion) {
+        switch (region) {
             case 'south':
                 config = {
-                     region : 'south',
+                     region : region,
                      minHeight : 250,
                      minWidth : null,
                      height : '50%',
@@ -42,7 +42,7 @@ Ext.define('FeedViewer.view.main.FeedDetailController', {
 
             case 'east':
                 config = {
-                    region : 'east',
+                    region : region,
                     minHeight : null,
                     minWidth : 250,
                     height : null,
@@ -54,7 +54,7 @@ Ext.define('FeedViewer.view.main.FeedDetailController', {
                 config = { hidden : true };
         }
 
-        if (config) {
+        if (post && config) {
             view.suspendLayouts();
             post.setConfig(config);
             view.resumeLayouts({root : true});
