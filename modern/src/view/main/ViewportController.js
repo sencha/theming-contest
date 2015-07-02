@@ -8,7 +8,9 @@ Ext.define('FeedViewer.view.main.ViewportController', {
     listen: {
         component: {
             'app-main': {
-                show:'onViewportShow'
+                show:'onViewportShow',
+                activeitemchange: 'onActiveChange'
+
             },
             'feedlist': {
                 select: 'onFeedSelect'
@@ -17,7 +19,10 @@ Ext.define('FeedViewer.view.main.ViewportController', {
                 select: 'onFeedItemSelect'
             },
             'feedform button[action=save]': {
-                tap: 'onSaveClick'
+                tap: 'onSaveFeed'
+            },
+            'feedform button[action=remove]': {
+                tap: 'onRemoveFeed'
             }
         }
     },
@@ -75,7 +80,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
      * React to the new form save button being clicked.
      * @private
      */
-    onSaveClick: function () {
+    onSaveFeed: function () {
         var form = this.getView().down('feedform').getValues(),
             feed = Ext.create('FeedViewer.model.RSSFeed');
 
@@ -104,6 +109,93 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         }
     },
 
+    /**
+     * React to the viewport active item change. Used to manage navigation menu items
+     * @private
+     */
+    onActiveChange: function (view, value, old) {
+        var refs = this.getReferences(),
+            active = this.getView().getActiveItem();
+
+        Ext.Viewport.hideMenu('left');
+
+        if(value && value.xtype != 'feedlist'){
+            refs.newbutton.hide();
+        }else{
+            refs.newbutton.show();
+            if(value.getSelectionCount()){
+                value.deselectAll();
+            }
+        }
+
+        if(value && value.xtype != 'feeditems'){
+            refs.editbutton.hide();
+        }else{
+            refs.editbutton.show();
+            if(value.getSelectionCount()){
+                value.deselectAll();
+            }
+        }
+
+    },
+
+    /**
+     * React to new button to open form.
+     * @private
+     */
+    onNewFeed: function () {
+        var navView = this.getView(),
+            refs = this.getReferences(),
+            active = this.getView().getActiveItem();
+
+        if(active && active.xtype != 'feedform'){
+            navView.push({
+                xtype: 'feedform',
+                reference: 'feedform'
+            });
+            refs.newbutton.hide();
+        }
+    },
+
+    /**
+     * React to edit button
+     * @private
+     */
+    onEditFeed: function () {
+        var navView = this.getView(),
+            refs = this.getReferences(),
+            active = this.getView().getActiveItem(),
+            formViewModel;
+
+        if(active && active.xtype != 'feedform'){
+            navView.push({
+                xtype: 'feedform',
+                reference: 'feedform'
+            });
+            refs.newbutton.hide();
+
+            formViewModel = this.getView().getActiveItem().getViewModel();
+            formViewModel.set('isEdit',true);
+            formViewModel.set('feed',active.getViewModel().data.feed);
+        }
+    },
+
+    /**
+     * React to remove button
+     * @private
+     */
+    onRemoveFeed: function () {
+      /*  var feed = this.getView().getActiveItem().getViewModel().data.feed,
+            store = this.lookupReference('feedlist').getStore();
+        store.remove(feed);*/
+    },
+
+
+
+    /**
+     * React to viewport being shown. Creates a left side menu
+     * @private
+     */
     onViewportShow: function(){
         Ext.Viewport.setMenu(this.createHamburgerMenu(),{
             side: 'left',
@@ -111,8 +203,9 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         });
     },
 
+
     /**
-     * React to hambuger menu tap. Toggles the hamburgermenu
+     * React to hamburger menu toggle press
      * @private
      */
     onHamburgerToggle: function(){
@@ -124,7 +217,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
     },
 
     /**
-     * React to the viewport being ready to add side menus. Creates a left side menu
+     * React to the viewport being ready to add side menus.
      * @private
      */
     createHamburgerMenu: function(){
@@ -149,23 +242,5 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         });
         return menu;
     },
-
-    /**
-     * React to new button to open form.
-     * @private
-     */
-    onNewFeed: function () {
-        var navView = this.getView(),
-            active = this.getView().getActiveItem();
-
-        if(active && active.xtype != 'feedform'){
-            navView.push({
-                xtype: 'feedform',
-                reference: 'feedform'
-            });
-
-        }
-        Ext.Viewport.hideMenu('left');
-    }
 
 });

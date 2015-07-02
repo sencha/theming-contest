@@ -13,12 +13,29 @@ Ext.define('FeedViewer.view.main.Viewport', {
             xtype: 'button',
             iconCls: 'x-fa fa-navicon',
             ui: 'plain',
+            hidden: true,
             handler: 'onHamburgerToggle'
+        },{
+            xtype: 'button',
+            align:'right',
+            iconCls: 'x-fa fa-plus-square',
+            reference: 'newbutton',
+            action:'new',
+            handler: 'onNewFeed'
+        },{
+            xtype: 'button',
+            align:'right',
+            iconCls: 'x-fa fa-pencil',
+            reference: 'editbutton',
+            hidden: 'true',
+            ui: 'plain',
+            handler: 'onEditFeed'
         }]
     },
     items: [{
         xtype:'feedlist',
         layout: 'fit',
+        reference:'feedlist',
         title: 'Feeds'
     }]
 
