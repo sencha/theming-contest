@@ -105,10 +105,7 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     {
         xtype: 'feedpost',
         reference: 'feedpost',
-        region : 'east',
         split : true,
-        width: '50%',
-        minWidth: 200,
         plugins: 'responsive',
         responsiveConfig: {
              'tall': {
