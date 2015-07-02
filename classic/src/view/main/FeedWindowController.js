@@ -7,11 +7,10 @@ Ext.define('FeedViewer.view.main.FeedWindowController', {
     alias: 'controller.feedwindow',
 
     /**
-     * @event feedvalid
-     * @param {FeedViewer.FeedWindow} this
+     * @event feedrequest
+     * @param {FeedViewer.model.RSSFeed} feed
      * @param {String} title
      * @param {String} url
-     * @param {String} description
      */
 
 
@@ -45,7 +44,8 @@ Ext.define('FeedViewer.view.main.FeedWindowController', {
      * React to the feed validation responses
      * @private
      */
-    validateFeed: function(records, operation, success) {
+    validateFeed: function(feed, operation, success) {
+
         var me = this,
             form = me.lookupReference('feedForm');
 
@@ -53,7 +53,7 @@ Ext.define('FeedViewer.view.main.FeedWindowController', {
         form.setLoading(false);
 
         if (success) {
-            me.fireEvent('feedrequest', records);
+            me.fireEvent('feedrequest', feed, feed.get('title'), feed.get('url'));
             me.onClose();
         } else {
             me.lookupReference('feedUrl').markInvalid('The URL specified is not a valid RSS2 feed.');

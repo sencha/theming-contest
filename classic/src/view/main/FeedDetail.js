@@ -28,9 +28,11 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
 
     controller : 'feeddetail',
     reference : 'feedDetail',
-    referenceHolder : true,
-
     layout: 'border',
+
+    tabConfig: {
+        cls : 'tab-feed-details'
+    },
 
     bind : {
         title: '{feed.title}'
@@ -47,44 +49,48 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
         minWidth: 200,
         split : true,
 
-        dockedItems: [{
-            xtype:'toolbar',
-            dock: 'top',
-            cls: 'x-docked-noborder-top',
-            border : true,
-            items: [{
-                iconCls: 'open-all',
-                text: 'Open All',
-                action : 'openAll'
-            }, '-', {
-                xtype: 'cycle',
-                text: 'Reading Pane',
-                action : 'cyclePreview',
-                prependText: 'Preview: ',
-                showText: true,
-                menu: {
-                    id: 'reading-menu',
-                    items: [{
-                        text: 'Bottom',
-                        checked: true,
-                        iconCls:'preview-bottom'
-                    }, {
-                        text: 'Right',
-                        iconCls:'preview-right'
-                    }, {
-                        text: 'Hidden',
-                        iconCls:'preview-hide'
-                    }]
-                }
-            }, {
-                iconCls: 'summary',
-                text: 'Summary',
-                enableToggle: true,
-                pressed: true,
-                toggleHandler: 'onSummaryToggle'
-            }]
-
-        }]
+        dockedItems: [
+            {
+                xtype:'toolbar',
+                dock: 'top',
+                cls: 'feed-list-toolbar x-docked-noborder-top',
+                items: [
+                    {
+                        iconCls: 'open-all',
+                        text: 'Open All',
+                        action : 'openAll'
+                    },
+                    {
+                        xtype: 'cycle',
+                        text: 'Reading Pane',
+                        action : 'cyclePreview',
+                        prependText: 'Preview: ',
+                        showText: true,
+                        menu: {
+                            id: 'reading-menu',
+                            items: [{
+                                text: 'Bottom',
+                                checked: true,
+                                iconCls:'preview-bottom'
+                            }, {
+                                text: 'Right',
+                                iconCls:'preview-right'
+                            }, {
+                                text: 'Hidden',
+                                iconCls:'preview-hide'
+                            }]
+                        }
+                    },
+                    {
+                        iconCls: 'summary',
+                        text: 'Summary',
+                        enableToggle: true,
+                        pressed: true,
+                        toggleHandler: 'onSummaryToggle'
+                    }
+                ]
+            }
+        ]
 
     },
     {
@@ -94,8 +100,6 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
         split : true,
         height: '50%',
         minHeight: 200
-
     }]
-
 
 });

@@ -1,5 +1,5 @@
 /**
- * @class FeedViewer.Feedlist
+ * @class FeedViewer.view.main.Feedlist
  * @extends Ext.panel.Panel
  *
  * Shows a list of available feeds. Also has the ability to add/remove and load feeds.
@@ -13,6 +13,12 @@ Ext.define('FeedViewer.view.main.FeedList', {
     extend: 'Ext.panel.Panel',
 
     xtype: 'feedlist',
+
+    requires : [
+        'Ext.toolbar.Toolbar',
+        'Ext.button.Button'
+    ],
+
     controller: 'feedlist',
 
     layout: 'fit',

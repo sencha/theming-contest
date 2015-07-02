@@ -5,27 +5,25 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.feedinfo',
 
-    init: function() {
-        this.listen({
-            controller: {
-                '*': {
-                    feedselect: 'onFeedSelect',
-                    rssitemselect : 'onRSSItemSelect',
-                    feeditemdblclick : 'onGoToPost'
-                }
-            },
-            component: {
-                'feeddetail feedpost button[action=openInTab]': {
-                    click: 'onPostInTab'
-                },
-                'feedinfo feedpost button[action=openPost]': {
-                    click: 'onGoToPost'
-                },
-                'feeddetail button[action=openAll]': {
-                    click: 'onOpenAll'
-                }
+    listen: {
+        controller: {
+            '*': {
+                feedselect: 'onFeedSelect',
+                rssitemselect : 'onRSSItemSelect',
+                feeditemdblclick : 'onGoToPost'
             }
-        });
+        },
+        component: {
+            'feeddetail feedpost button[action=openInTab]': {
+                click: 'onPostInTab'
+            },
+            'feedinfo feedpost button[action=openPost]': {
+                click: 'onGoToPost'
+            },
+            'feeddetail button[action=openAll]': {
+                click: 'onOpenAll'
+            }
+        }
     },
 
     /**
@@ -37,7 +35,7 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
     },
 
     /**
-     * Add a new feed
+     * Loads a selected feed
      * @param {FeedViewer.model.RSSFeed} feed Feed model instance
      * @param {String} title The title of the feed
      * @param {String} url The url of the feed
@@ -97,7 +95,7 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
 
     /**
     * This method inserts rss news items into the TabPanel (if not already present)
-    * and sets the active tab to the first item passed
+    * and sets the active tab to the first item processed or duplicated
     * @private
     * @param {FeedViewer.model.RSSItem|Array} rssItems One or more rssItems
     */
@@ -133,19 +131,28 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
 
         Ext.suspendLayouts();
         if (items.length) {
-            items = parent.add(items);
+            items = parent.insert(1, items);
         }
         parent.setActiveTab(items[0] || duplicate);
         Ext.resumeLayouts(true);
 
     },
 
+    /**
+     * Opens all unique RSS Feed items available in the grid into tabs
+     * @param {Ext.button.Button} button
+     */
     onOpenAll : function(button) {
         this.postToTab(
             this.getView().down('feedgrid').getStore().getRange()
         );
     },
 
+
+    /**
+     * Loads the currently selected RSS Feed Item into a unique tab
+     * @param button
+     */
     onPostInTab : function(button) {
 
         var view =  this.getView(),
@@ -157,7 +164,11 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
         }
     },
 
-
+    /**
+     * Launches a new browser tab to display the reference RSS Feed Item
+     * @param {Ext.Component} component
+     * @param (FeedViewer.model.RSSItem} rssItem
+     */
     onGoToPost : function(component, rssItem) {
         rssItem = rssItem && rssItem.isRssItem ? rssItem : component.up('feedpost').getRssItem();
         var link =  rssItem && rssItem.get('link');
@@ -167,8 +178,13 @@ Ext.define('FeedViewer.view.main.FeedInfoController', {
         }
     },
 
-    onRSSItemSelect : function (src, item) {
-        this.getView().down('feedpost:not([inTab])').setRssItem(item);
+    /**
+     * Handles bubbled Controller-generated requests to load the content for an RSS Feed Item
+     * @param {Ext.app.BaseController} controller
+     * @param (FeedViewer.model.RSSItem} rssItem
+     */
+    onRSSItemSelect : function (controller, rssItem) {
+        this.getView().down('feedpost:not([inTab])').setRssItem(rssItem);
     }
 
 });

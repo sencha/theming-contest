@@ -27,6 +27,10 @@ Ext.define('FeedViewer.view.main.FeedPost', {
         }
     },
 
+    tabConfig: {
+        cls : 'tab-feed-post'
+    },
+
     bind : {
         data : '{feed}'
     },
@@ -52,13 +56,13 @@ Ext.define('FeedViewer.view.main.FeedPost', {
         }
     ],
 
-    initComponent: function(){
+    initComponent: function() {
         this.dockedItems = [this.createToolbar()];
         this.callParent(arguments);
     },
 
     /**
-     * Set the active post
+     * Set the active RSSItem for the Templated output
      * @param {FeedViewer.model.RSSItem} rssItem The feed item
      * @param {FeedViewer.model.RSSItem} prevItem The previous feed item
      */
@@ -68,6 +72,24 @@ Ext.define('FeedViewer.view.main.FeedPost', {
         if (rssItem && rssItem.isRssItem) {
             me.getViewModel().set('feed', rssItem);
         }
+    },
+
+    listeners : {
+        click : {
+            element: 'body',
+            delegate: 'a',
+            scope: 'this',
+            fn: 'onLinkDelegate'
+        }
+    },
+
+    /**
+     * Ensure all click/tapped Feed content links are targeted to new browser tab
+     * @param {Ext.Event} e
+     * @param {HTMLElement} target
+     */
+    onLinkDelegate : function(e, target) {
+        Ext.fly(target).set({target : '_blank'});
     },
 
     /**

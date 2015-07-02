@@ -5,16 +5,13 @@ Ext.define('FeedViewer.view.main.FeedDetailController', {
     extend: 'Ext.app.ViewController',
     alias: 'controller.feeddetail',
 
-    init: function() {
-        this.listen({
-            component: {
-                'feeddetail cycle[action=cyclePreview]': {
-                    change: 'readingPaneChange'
-                }
+    listen: {
+        component: {
+            'feeddetail cycle[action=cyclePreview]': {
+                change: 'readingPaneChange'
             }
-        });
+        }
     },
-
 
     /**
      * Handle the checked item being changed

@@ -28,14 +28,13 @@ Ext.define('FeedViewer.view.main.ViewportController', {
      */
     onFeedSelect: function (view, record) {
         var me = this,
-            viewport = me.getView(),
-            vm;
+            viewport = me.getView();
 
         record.load({
                 url : record.get('feedUrl'),
                 limit : 50,
                 callback: function(records, operation, success) {
-                    var list;
+                    var list, vm;
                     if(success){
                         list = viewport.push({
                             xtype: 'feeditems',
@@ -55,7 +54,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
      * React to selection of an item, load the post.
      * @private
      */
-    onFeedItemSelect : function (view,record) {
+    onFeedItemSelect : function (view, record) {
         var me = this,
             refs = this.getReferences(),
             vm,
@@ -103,12 +102,12 @@ Ext.define('FeedViewer.view.main.ViewportController', {
      * validates a feed from save click callback, adds the feed and returns to list
      * @private
      */
-    validateFeed: function(records, operation, success) {
+    validateFeed: function(feed, operation, success) {
         var me = this,
             view = this.getView();
 
         if (success) {
-            view.down('feedlist').getStore().add(records);
+            view.down('feedlist').getStore().add(feed);
             me.getView().pop();
         } else {
             me.lookupReference('feedUrl').markInvalid('The URL specified is not a valid RSS2 feed.');

@@ -9,14 +9,12 @@ Ext.define('FeedViewer.view.main.FeedListController',{
         'Ext.fx.Anim'
     ],
 
-    init: function() {
-        this.listen({
-            controller: {
-                '*': {
-                    feedrequest: 'onFeedRequest'
-                }
+    listen: {
+        controller: {
+            '*': {
+                feedrequest: 'onFeedRequest'
             }
-        });
+        }
     },
 
     /**
