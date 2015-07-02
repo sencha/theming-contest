@@ -32,7 +32,8 @@
                 profile = 'modern';
             }
             else {
-                profile = tags.desktop ? 'classic' : 'modern';
+                profile = (tags.tablet || tags.desktop) ? 'classic' : 'modern';
+                //profile = tags.desktop ? 'classic' : 'modern';
                 //profile = tags.phone ? 'modern' : 'classic';
             }
 
@@ -49,10 +50,8 @@
 
         };
 
-
     </script>
-    
-    
+
     <!-- The line below must be kept intact for Sencha Cmd to build your application -->
     <script id="microloader" data-app="6569ca19-7571-4938-8136-7514b89ef07b" type="text/javascript" src="bootstrap.js"></script>
 

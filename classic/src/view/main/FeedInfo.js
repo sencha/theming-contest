@@ -15,14 +15,12 @@ Ext.define('FeedViewer.view.main.FeedInfo', {
     maxTabWidth: 250,
     border: false,
     controller: 'feedinfo',
-    ui: 'navigation',
 
     reference : 'feedTabs',
 
     defaults : {
         border : false
     },
-
     tabBar: {
         border: true
     }

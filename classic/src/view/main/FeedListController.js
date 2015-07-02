@@ -2,45 +2,12 @@
  * @class FeedViewer.view.main.FeedPanelController
  */
 Ext.define('FeedViewer.view.main.FeedListController',{
-    extend: 'Ext.app.ViewController',
+    extend: 'FeedViewer.view.main.FeedListBaseController',
     alias: 'controller.feedlist',
 
     requires: [
         'Ext.fx.Anim'
     ],
-
-    listen: {
-        controller: {
-            '*': {
-                feedrequest: 'onFeedRequest'
-            }
-        }
-    },
-
-    /**
-     * @event feedremove Fired when a feed is removed
-     * @param {FeedViewer.model.RSSFeed} feed
-     * @param {String} title The title of the feed
-     * @param {String} url The url of the feed
-     */
-
-    /**
-     * @event feedselect Fired when a feed is selected
-     * @param {FeedViewer.model.RSSFeed} feed
-     * @param {String} title The title of the feed
-     * @param {String} url The url of the feed
-     */
-
-    onViewReady: function(view){
-
-      var store = Ext.data.StoreManager.lookup('Feeds'),
-         first = store && store.first();
-
-         if (first) {
-            view.getSelectionModel().select(first);
-         }
-    },
-
 
     /**
      * Used when view selection changes so we can disable toolbar buttons.
@@ -52,40 +19,8 @@ Ext.define('FeedViewer.view.main.FeedListController',{
             refs = me.getReferences();
 
         refs.removeFeed.setDisabled(!selected);
-
-        if (selected) {
-            this.loadFeed(selected);
-        }
+        return me.callParent(arguments);
     },
-
-    /**
-     * React to the load feed menu click.
-     * @private
-     */
-    onLoadClick: function() {
-        this.loadFeed(this.menu.activeFeed);
-    },
-
-    /**
-     * Loads a feed.
-     * @private
-     * @param {FeedViewer.model.RSSFeed} feed The feed
-     */
-    loadFeed: function(feed) {
-        if (feed) {
-            this.fireEvent('feedselect', this, feed, feed.get('title'), feed.get('feedUrl'));
-        }
-    },
-
-    /**
-     * Returns the selected feed or false if nothing is selected.
-     * @private
-     * @return {FeedViewer.model.RSSFeed}
-     */
-    getSelectedItem: function() {
-        return this.lookupReference('feedList').getSelectionModel().getSelection()[0] || false;
-    },
-
 
     /**
      * React to a feed being removed
@@ -96,6 +31,7 @@ Ext.define('FeedViewer.view.main.FeedListController',{
             activeFeed = this.getSelectedItem();
 
         if (activeFeed) {
+            this.callParent(arguments);
             view.getSelectionModel().deselectAll();
             this.animateNode(view.getNode(activeFeed), 1, 0, {
                 scope: this,
@@ -104,9 +40,6 @@ Ext.define('FeedViewer.view.main.FeedListController',{
                 }
             });
             view.fireEvent('feedremove', view, activeFeed.get('title'), activeFeed.get('url'));
-
-            // publish event on the 'controller' domain for other subscribers
-            this.fireEvent('feedremove', activeFeed, activeFeed.get('title'), activeFeed.get('url'));
         }
     },
 
@@ -128,10 +61,9 @@ Ext.define('FeedViewer.view.main.FeedListController',{
      * @param {String} url The url of the feed
      */
     onFeedRequest: function(feed, title, url) {
-        var view = this.getView().down('dataview'),
-            store = view.getStore();
+        var view = this.getView().down('dataview');
 
-        store.add(feed);
+        feed = this.callParent(arguments);
         this.animateNode(view.getNode(feed), 0, 1);
     },
 

@@ -14,7 +14,8 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     xtype: 'feeddetail',
 
     requires : [
-        'Ext.button.Cycle'
+        'Ext.button.Cycle',
+        'Ext.plugin.Responsive'
     ],
 
     viewModel : {
@@ -36,6 +37,10 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
 
     bind : {
         title: '{feed.title}'
+    },
+
+    defaults : {
+        border : false
     },
 
     items:[{
@@ -63,6 +68,7 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
                     {
                         xtype: 'cycle',
                         text: 'Reading Pane',
+                        reference : 'regionCycler',
                         action : 'cyclePreview',
                         prependText: 'Preview: ',
                         showText: true,
@@ -71,12 +77,15 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
                             items: [{
                                 text: 'Bottom',
                                 checked: true,
+                                cycleRegion : 'south',
                                 iconCls:'preview-bottom'
                             }, {
                                 text: 'Right',
+                                cycleRegion : 'east',
                                 iconCls:'preview-right'
                             }, {
                                 text: 'Hidden',
+                                cycleRegion : 'hidden',
                                 iconCls:'preview-hide'
                             }]
                         }
@@ -96,10 +105,26 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     {
         xtype: 'feedpost',
         reference: 'feedpost',
-        region : 'south',
+        region : 'east',
         split : true,
-        height: '50%',
-        minHeight: 200
+        width: '50%',
+        minWidth: 200,
+        plugins: 'responsive',
+        responsiveConfig: {
+             'tall': {
+                 region : 'south',
+                 height: '50%',
+                 width : null,
+                 minHeight: 200
+             },
+             'wide': {
+                 region : 'east',
+                 width: '50%',
+                 height : null,
+                 minHeight: null,
+                 minWidth: 200
+             }
+        }
     }]
 
 });

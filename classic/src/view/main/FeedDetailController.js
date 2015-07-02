@@ -10,6 +10,9 @@ Ext.define('FeedViewer.view.main.FeedDetailController', {
             'feeddetail cycle[action=cyclePreview]': {
                 change: 'readingPaneChange'
             }
+        },
+        global : {
+            responsiveupdate : 'onResponsiveApplied'
         }
     },
 
@@ -49,14 +52,33 @@ Ext.define('FeedViewer.view.main.FeedDetailController', {
                 post.hide();
                 return;
         }
+
         if (region) {
             if (config) {
-                Ext.apply( post, config );
+                post.setConfig(config);
             }
             post.isVisible() || post.show();
             post.setRegion(region);
         }
 
+    },
+
+    onResponsiveApplied : function (context) {
+        var me = this,
+            view = me.getView(),
+            cycle = view.down('cycle'),
+            cycleMenu = cycle && cycle.getMenu(),
+            post = view.down('feedpost'),
+            region = post && post.region,
+            item;
+
+        if (cycleMenu && post) {
+            region = !post.isVisible() ? 'hidden' : region;
+            item = region && cycleMenu.child('menuitem[cycleRegion=' + region + ']');
+            if (item) {
+                item.setChecked(true);
+            }
+        }
     }
 
 });

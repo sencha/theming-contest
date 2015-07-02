@@ -14,7 +14,7 @@ Ext.define('FeedViewer.view.main.FeedPost', {
     xtype: 'feedpost',
     cls: 'feed-post preview',
     scrollable: true,
-    border: false,
+
     bodyPadding : '20',
 
     renderConfig : {
