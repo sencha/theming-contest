@@ -11,14 +11,5 @@ Ext.define('FeedViewer.view.main.FeedList', {
     itemTpl: '{title}',
     store:{
         type: 'feeds'
-    },
-    items:[{
-        xtype : 'toolbar',
-        docked: 'bottom',
-        items:[{
-            xtype: 'button',
-            text: 'New',
-            action:'new'
-         }]
-    }]
+    }
 });

@@ -7,8 +7,8 @@ Ext.define('FeedViewer.view.main.ViewportController', {
 
     listen: {
         component: {
-            'feedlist button[action=new]': {
-                tap: 'onNewFeedClick'
+            'app-main': {
+                show:'onFeedShow'
             },
             'feedlist': {
                 select: 'onFeedSelect'
@@ -70,16 +70,6 @@ Ext.define('FeedViewer.view.main.ViewportController', {
 
     },
 
-    /**
-     * React to new button to open form.
-     * @private
-     */
-    onNewFeedClick: function () {
-        this.getView().push({
-            xtype: 'feedform',
-            reference: 'feedform'
-        });
-    },
 
     /**
      * React to the new form save button being clicked.
@@ -112,5 +102,66 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         } else {
             me.lookupReference('feedUrl').markInvalid('The URL specified is not a valid RSS2 feed.');
         }
+    },
+
+    onFeedShow: function(){
+        Ext.Viewport.setMenu(this.createHamburgerMenu(),{
+            side: 'left',
+            reveal: true
+        });
+    },
+
+    /**
+     * React to hambuger menu tap. Toggles the hamburgermenu
+     * @private
+     */
+    onHamburgerToggle: function(){
+        if(Ext.Viewport.getMenus().left.isHidden()){
+            Ext.Viewport.showMenu('left');
+        }else{
+            Ext.Viewport.hideMenu('left');
+        }
+    },
+
+    createHamburgerMenu: function(){
+        var menu = Ext.create('Ext.Menu', {
+            width: 150,
+            scrollable: 'vertical',
+            controller: 'viewport',
+            reference: 'hamburgermenu',
+            items: [{
+                xtype : 'toolbar',
+                docked: 'top',
+                items:[{
+                    xtype: 'button',
+                    align:'right',
+                    iconCls: 'x-fa fa-plus-square',
+                    text: 'New',
+                    action:'new',
+                    handler: 'onNewFeed',
+                    scope: this
+                }]
+            }]
+        });
+        return menu;
+    },
+
+    /**
+     * React to new button to open form.
+     * @private
+     */
+    onNewFeed: function () {
+        var navView = this.getView(),
+            active = this.getView().getActiveItem();
+
+        if(active && active.xtype != 'feedform'){
+            navView.push({
+                xtype: 'feedform',
+                reference: 'feedform'
+            });
+
+        }
+        Ext.Viewport.hideMenu('left');
     }
+
 });
