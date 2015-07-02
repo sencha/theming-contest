@@ -151,11 +151,16 @@ Ext.define('FeedViewer.view.main.ViewportController', {
      * @private
      */
     onNewFeed: function () {
-        var navView = this.getView();
-        navView.push({
-            xtype: 'feedform',
-            reference: 'feedform'
-        });
+        var navView = this.getView(),
+            active = this.getView().getActiveItem();
+
+        if(active && active.xtype != 'feedform'){
+            navView.push({
+                xtype: 'feedform',
+                reference: 'feedform'
+            });
+
+        }
         Ext.Viewport.hideMenu('left');
     }
 
