@@ -28,41 +28,45 @@ Ext.define('FeedViewer.view.main.FeedDetailController', {
             config,
             region;
 
-        switch (activeItem.text) {
-            case 'Bottom':
+        switch (activeItem.cycleRegion) {
+            case 'south':
                 config = {
+                     region : 'south',
                      minHeight : 250,
                      minWidth : null,
                      height : '50%',
+                     hidden : false,
                      width : null
                 };
-                region = 'south';
                 break;
 
-            case 'Right':
-                region = 'east';
+            case 'east':
                 config = {
+                    region : 'east',
                     minHeight : null,
                     minWidth : 250,
                     height : null,
-                    width : '30%'
+                    hidden : false,
+                    width : '50%'
                 };
                 break;
             default:
-                post.hide();
-                return;
+                config = { hidden : true };
         }
 
-        if (region) {
-            if (config) {
-                post.setConfig(config);
-            }
-            post.isVisible() || post.show();
-            post.setRegion(region);
+        if (config) {
+            view.suspendLayouts();
+            post.setConfig(config);
+            view.resumeLayouts({root : true});
         }
 
     },
 
+    /**
+     * Maintains cycle Button state after responsive update layouts
+     * (eg. when the Feedpost Component changes regions, etc)
+     * @param {Object} context The current Responsive context
+     */
     onResponsiveApplied : function (context) {
         var me = this,
             view = me.getView(),
