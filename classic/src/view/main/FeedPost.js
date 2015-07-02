@@ -20,8 +20,6 @@ Ext.define('FeedViewer.view.main.FeedPost', {
     cls: 'feed-post preview',
     scrollable: true,
 
-    bodyPadding : '20',
-
     renderConfig : {
         rssItem : undefined
     },
