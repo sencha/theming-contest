@@ -241,6 +241,6 @@ Ext.define('FeedViewer.view.main.ViewportController', {
             }]
         });
         return menu;
-    },
+    }
 
 });

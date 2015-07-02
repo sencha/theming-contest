@@ -12,6 +12,11 @@ Ext.define('FeedViewer.view.main.FeedPost', {
 
     extend: 'Ext.panel.Panel',
     xtype: 'feedpost',
+
+    requires : [
+        'Ext.mixin.Responsive'
+    ],
+
     cls: 'feed-post preview',
     scrollable: true,
 
@@ -26,6 +31,10 @@ Ext.define('FeedViewer.view.main.FeedPost', {
             feed: null
         }
     },
+
+    mixins: [
+        'Ext.mixin.Responsive'
+    ],
 
     tabConfig: {
         cls : 'tab-feed-post'
@@ -57,8 +66,9 @@ Ext.define('FeedViewer.view.main.FeedPost', {
     ],
 
     initComponent: function() {
-        this.dockedItems = [this.createToolbar()];
-        this.callParent(arguments);
+        var me = this;
+        me.dockedItems = [me.createToolbar()];
+        me.callParent(arguments);
     },
 
     /**
@@ -74,13 +84,17 @@ Ext.define('FeedViewer.view.main.FeedPost', {
         }
     },
 
-    listeners : {
-        click : {
-            element: 'body',
-            delegate: 'a',
-            scope: 'this',
-            fn: 'onLinkDelegate'
-        }
+    initEvents : function () {
+
+        this.callParent(arguments);
+        this.on({
+            click: {
+                element: 'body',
+                delegate: 'a',
+                scope: this,
+                fn: 'onLinkDelegate'
+            }
+        });
     },
 
     /**
@@ -123,5 +137,4 @@ Ext.define('FeedViewer.view.main.FeedPost', {
         config.items = items;
         return Ext.widget('toolbar', config);
     }
-
 });

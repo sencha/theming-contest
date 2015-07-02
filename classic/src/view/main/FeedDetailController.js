@@ -68,6 +68,8 @@ Ext.define('FeedViewer.view.main.FeedDetailController', {
      * @param {Object} context The current Responsive context
      */
     onResponsiveApplied : function (context) {
+
+
         var me = this,
             view = me.getView(),
             cycle = view.down('cycle'),

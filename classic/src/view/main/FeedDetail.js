@@ -14,8 +14,7 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     xtype: 'feeddetail',
 
     requires : [
-        'Ext.button.Cycle',
-        'Ext.plugin.Responsive'
+        'Ext.button.Cycle'
     ],
 
     viewModel : {
@@ -80,12 +79,13 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
                                 iconCls:'preview-bottom'
                             }, {
                                 text: 'Right',
-                                checked: true,
+
                                 cycleRegion : 'east',
                                 iconCls:'preview-right'
                             }, {
                                 text: 'Hidden',
                                 cycleRegion : 'hidden',
+                                checked: true,
                                 iconCls:'preview-hide'
                             }]
                         }
@@ -105,8 +105,8 @@ Ext.define('FeedViewer.view.main.FeedDetail', {
     {
         xtype: 'feedpost',
         reference: 'feedpost',
+
         split : true,
-        plugins: 'responsive',
         responsiveConfig: {
              'tall': {
                  region : 'south',
