@@ -43,6 +43,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
                     if(success){
                         list = viewport.push({
                             xtype: 'feeditems',
+                            reference: 'feeditems',
                             title: record.get('title')
                         });
 
@@ -163,7 +164,7 @@ Ext.define('FeedViewer.view.main.ViewportController', {
      */
     onEditFeed: function () {
         var navView = this.getView(),
-            refs = this.getReferences(),
+            feed = this.lookupReference('feeditems').getViewModel().data.feed,
             active = this.getView().getActiveItem(),
             formViewModel;
 
@@ -172,11 +173,11 @@ Ext.define('FeedViewer.view.main.ViewportController', {
                 xtype: 'feedform',
                 reference: 'feedform'
             });
-            refs.newbutton.hide();
+            this.lookupReference('newbutton').hide();
 
             formViewModel = this.getView().getActiveItem().getViewModel();
             formViewModel.set('isEdit',true);
-            formViewModel.set('feed',active.getViewModel().data.feed);
+            formViewModel.set('feed',feed);
         }
     },
 
@@ -185,9 +186,11 @@ Ext.define('FeedViewer.view.main.ViewportController', {
      * @private
      */
     onRemoveFeed: function () {
-      /*  var feed = this.getView().getActiveItem().getViewModel().data.feed,
+        var feed = this.lookupReference('feeditems').getViewModel().data.feed,
             store = this.lookupReference('feedlist').getStore();
-        store.remove(feed);*/
+        store.remove(feed);
+        this.getView().pop();
+        this.getView().pop();
     },
 
 
