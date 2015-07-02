@@ -8,7 +8,6 @@
 Ext.define('FeedViewer.view.main.FeedForm', {
     extend: 'Ext.form.Panel',
     alias: 'widget.feedform',
-    controller: 'feedform',
     reference : 'feedForm',
     items : [{
         xtype: 'fieldset',
@@ -26,9 +25,8 @@ Ext.define('FeedViewer.view.main.FeedForm', {
         docked: 'bottom',
         items:[{
             xtype: 'button',
-            reference: 'savebutton',
-            text: 'save',
-            handler: 'onSaveClick'
+            action: 'save',
+            text: 'save'
         }]
     }]
 

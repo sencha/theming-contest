@@ -8,14 +8,9 @@ Ext.define('FeedViewer.view.main.FeedList', {
     extend: 'Ext.dataview.List',
     xtype: 'feedlist',
     layout: 'fit',
-    controller: 'feedlist',
-    reference: 'feedlist',
     itemTpl: '{title}',
     store:{
         type: 'feeds'
-    },
-    listeners: {
-        select:'onFeedListSelect'
     },
     items:[{
         xtype : 'toolbar',
@@ -24,9 +19,6 @@ Ext.define('FeedViewer.view.main.FeedList', {
             xtype: 'button',
             text: 'New',
             action:'new'
-            //,
-            // reference: 'newfeedbutton',
-            // handler: 'onNewFeedClick'
-        }]
+         }]
     }]
 });
