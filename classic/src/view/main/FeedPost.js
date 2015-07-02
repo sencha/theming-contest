@@ -12,7 +12,7 @@ Ext.define('FeedViewer.view.main.FeedPost', {
 
     extend: 'Ext.panel.Panel',
     xtype: 'feedpost',
-    cls: 'feed-post-preview',
+    cls: 'feed-post preview',
     scrollable: true,
     border: false,
     bodyPadding : '20',
@@ -101,7 +101,7 @@ Ext.define('FeedViewer.view.main.FeedPost', {
         var items = [],
             config = {
                 dock: 'top',
-                cls: 'feed-post-toolbar'
+                cls: ' navigation feed-post-toolbar'
             };
 
         if (!this.inTab) {

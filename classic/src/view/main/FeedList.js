@@ -45,7 +45,13 @@ Ext.define('FeedViewer.view.main.FeedList', {
             cls: 'feed-list',
             itemSelector: '.feed-list-item',
             overItemCls: 'feed-list-item-hover',
-            tpl: '<tpl for="."><div class="feed-list-item">{title}</div></tpl>'
+            tpl: [
+                '<tpl for=".">',
+                '<div class="feed-list-item">',
+                    '<span class="feed-list-title">{title}</span>',
+                    '<span class="feed-item-dispose x-fa x-fa-trash"></span>',
+                '</div></tpl>'
+            ]
         }
     ],
 
