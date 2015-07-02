@@ -24,12 +24,10 @@ Ext.define('FeedViewer.view.main.Viewport', {
             handler: 'onNewFeed'
         },{
             xtype: 'button',
-            align:'right',
             iconCls: 'x-fa fa-pencil',
             reference: 'editbutton',
-            hidden: 'true',
             ui: 'plain',
-            handler: 'onEditFeed'
+            handler: 'onEditFeeds'
         }]
     },
     items: [{

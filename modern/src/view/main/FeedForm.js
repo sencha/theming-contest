@@ -9,12 +9,6 @@ Ext.define('FeedViewer.view.main.FeedForm', {
     extend: 'Ext.form.Panel',
     alias: 'widget.feedform',
     reference : 'feedForm',
-    viewModel:{
-        data:{
-            feed: null,
-            isEdit: false
-        }
-    },
     items : [{
         xtype: 'fieldset',
         title: 'New RSS Feed',
@@ -34,19 +28,6 @@ Ext.define('FeedViewer.view.main.FeedForm', {
             reference: 'savebutton',
             action: 'save',
             text: 'save'
-        },{
-            xtype:'spacer',
-            bind:{
-                hidden: '{!isEdit}'
-            }
-        },{
-            xtype: 'button',
-            action: 'remove',
-            reference: 'removebutton',
-            bind:{
-                hidden: '{!isEdit}'
-            },
-            text: 'remove'
         }]
     }]
 

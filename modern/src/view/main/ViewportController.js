@@ -20,9 +20,6 @@ Ext.define('FeedViewer.view.main.ViewportController', {
             },
             'feedform button[action=save]': {
                 tap: 'onSaveFeed'
-            },
-            'feedform button[action=remove]': {
-                tap: 'onRemoveFeed'
             }
         }
     },
@@ -35,25 +32,30 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         var me = this,
             viewport = me.getView();
 
-        record.load({
-                url : record.get('feedUrl'),
-                limit : 50,
-                callback: function(records, operation, success) {
-                    var list, vm;
-                    if(success){
-                        list = viewport.push({
-                            xtype: 'feeditems',
-                            reference: 'feeditems',
-                            title: record.get('title')
-                        });
+        if(view.isEditing){
+            this.removeFeed(record);
+        }else {
+            record.load({
+                    url: record.get('feedUrl'),
+                    limit: 50,
+                    callback: function (records, operation, success) {
+                        var list, vm;
+                        if (success) {
+                            list = viewport.push({
+                                xtype: 'feeditems',
+                                reference: 'feeditems',
+                                title: record.get('title')
+                            });
 
-                        vm = list.getViewModel();
-                        vm.set('feed',record);
-                        vm.notify(); // notify Feed model binders
+                            vm = list.getViewModel();
+                            vm.set('feed', record);
+                            vm.notify(); // notify Feed model binders
 
+                        }
                     }
-                }}
-        );
+                }
+            );
+        }
     },
 
     /**
@@ -75,7 +77,6 @@ Ext.define('FeedViewer.view.main.ViewportController', {
         vm.set('feed', record.data);
 
     },
-
 
     /**
      * React to the new form save button being clicked.
@@ -122,17 +123,17 @@ Ext.define('FeedViewer.view.main.ViewportController', {
 
         if(value && value.xtype != 'feedlist'){
             refs.newbutton.hide();
+            refs.editbutton.hide();
         }else{
             refs.newbutton.show();
+            refs.editbutton.show();
             if(value.getSelectionCount()){
                 value.deselectAll();
             }
         }
 
         if(value && value.xtype != 'feeditems'){
-            refs.editbutton.hide();
         }else{
-            refs.editbutton.show();
             if(value.getSelectionCount()){
                 value.deselectAll();
             }
@@ -159,40 +160,33 @@ Ext.define('FeedViewer.view.main.ViewportController', {
     },
 
     /**
-     * React to edit button
+     * React to edit feed list
      * @private
      */
-    onEditFeed: function () {
-        var navView = this.getView(),
-            feed = this.lookupReference('feeditems').getViewModel().data.feed,
-            active = this.getView().getActiveItem(),
-            formViewModel;
+    onEditFeeds: function () {
+        var feeds = this.getView().getActiveItem(),
+            refs = this.getReferences();
 
-        if(active && active.xtype != 'feedform'){
-            navView.push({
-                xtype: 'feedform',
-                reference: 'feedform'
-            });
-            this.lookupReference('newbutton').hide();
-
-            formViewModel = this.getView().getActiveItem().getViewModel();
-            formViewModel.set('isEdit',true);
-            formViewModel.set('feed',feed);
+        if(feeds.isEditing){
+            feeds.setItemTpl(feeds.defaultItemTpl);
+            feeds.isEditing = false;
+            refs.newbutton.show();
+        }else{
+            feeds.setItemTpl(feeds.editItemTpl);
+            feeds.isEditing = true;
+            refs.newbutton.hide();
         }
+
     },
 
     /**
      * React to remove button
      * @private
      */
-    onRemoveFeed: function () {
-        var feed = this.lookupReference('feeditems').getViewModel().data.feed,
-            store = this.lookupReference('feedlist').getStore();
+    removeFeed: function (feed) {
+        var store = this.lookupReference('feedlist').getStore();
         store.remove(feed);
-        this.getView().pop();
-        this.getView().pop();
     },
-
 
 
     /**

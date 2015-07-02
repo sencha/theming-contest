@@ -9,6 +9,8 @@ Ext.define('FeedViewer.view.main.FeedList', {
     xtype: 'feedlist',
     layout: 'fit',
     itemTpl: '{title}',
+    defaultItemTpl: '{title}',
+    editItemTpl: '<div style="float:left">{title}</div><div style="float:right"><span class="x-fa fa-remove"></span></div>',
     store:{
         type: 'feeds'
     }
