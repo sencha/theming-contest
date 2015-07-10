@@ -56,13 +56,16 @@ Ext.define('FeedViewer.view.feed.List', {
                 selection: '{main.currentFeed}',
                 store: '{feeds}'
             },
+
+            viewConfig : {
+                listeners: {
+                    viewready: 'selectFirstFeed'
+                }
+            },
             listeners: {
                 reconfigure: 'selectFirstFeed'
             },
-            // store: {
-            //     type: 'feeds',
-            //     autoLoad: true
-            // },
+
             cls: 'feed-list',
             hideHeaders: true,
             columns: [{

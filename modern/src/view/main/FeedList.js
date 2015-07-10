@@ -6,6 +6,8 @@ Ext.define('FeedViewer.view.main.FeedList', {
     xtype: 'feedlist',
 
     cls: 'feed-list',
+    onItemDisclosure : true,
+
     editingCls: 'feed-list-editing',
 
     itemTpl: '{title}',
