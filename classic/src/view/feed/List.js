@@ -59,11 +59,8 @@ Ext.define('FeedViewer.view.feed.List', {
 
             viewConfig : {
                 listeners: {
-                    viewready: 'selectFirstFeed'
+                    refresh: 'selectFirstFeed'
                 }
-            },
-            listeners: {
-                reconfigure: 'selectFirstFeed'
             },
 
             cls: 'feed-list',

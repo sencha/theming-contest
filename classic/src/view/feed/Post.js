@@ -81,8 +81,12 @@ Ext.define('FeedViewer.view.feed.Post', {
      * @param {FeedViewer.model.RSSItem} prevItem The previous feed item
      */
     updateRssItem: function (rssItem) {
+        var scroll = this.getScrollable();
         if (rssItem && rssItem.isRssItem) {
             this.getViewModel().set('feed', rssItem);
+            if (scroll) {
+                scroll.scrollTo(0, 0);
+            }
         }
     },
 
