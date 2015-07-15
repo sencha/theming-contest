@@ -63,23 +63,23 @@ In the app.json file, change to "theme": "my-contest-theme". Optionally uncommen
 ```
 app.json
 
-"builds": {
-       "classic": {
-           "toolkit": "classic",
-           "theme": "my-contest-theme",
-           "sass": {
-               "save": "classic/sass/save.json"
-           }
-       },
+    "builds": {
+        "classic": {
+            "toolkit": "classic",
+            "theme": "my-contest-theme",
+            "sass": {
+                "save": "classic/sass/save.json"
+            }
+        },
 
-       "modern": {
-           "toolkit": "modern",
-           "theme": "my-contest-theme",
-           "sass": {
-               "save": "modern/sass/save.json"
-           }
-       }
-   }
+        "modern": {
+            "toolkit": "modern",
+            "theme": "my-contest-theme",
+            "sass": {
+                "save": "modern/sass/save.json"
+            }
+        }
+    }
 ```
 * Copy changes from the Inspector (or save.json file) to custom theme. 
 ```
