@@ -25,7 +25,8 @@ Ext.define('FeedViewer.view.tabs.TabsController', {
      * Reacts to a feed being selected.
      */
     onFeedSelect: function (controller, feed) {
-        this.getView().setActiveTab(0);
+        var feedDetails = this.getView().setActiveTab(0);
+        feedDetails.setFeed(feed);
     },
 
     /**

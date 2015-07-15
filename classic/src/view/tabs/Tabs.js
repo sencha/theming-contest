@@ -27,6 +27,9 @@ Ext.define('FeedViewer.view.tabs.Tabs', {
 
     items: [{
         xtype: 'feeddetail',
-        closable: false
+        closable: false,
+        bind: {
+            feed: '{main.currentFeed}'
+        }
     }]
 });

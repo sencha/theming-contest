@@ -12,6 +12,19 @@ Ext.define('FeedViewer.view.detail.Detail', {
         'Ext.toolbar.Toolbar'
     ],
 
+    viewModel: {
+        // In the future we may want to add the capability to view
+        // a detail in a tab, so we may want to have independent 
+        // viewmodels.
+        data: {
+            feed: null
+        }
+    },
+
+    renderConfig: {
+        feed: null
+    },
+
     layout: 'border',
     iconCls: 'x-fa fa-rss',
 
@@ -20,7 +33,7 @@ Ext.define('FeedViewer.view.detail.Detail', {
     },
 
     bind: {
-        title: '{main.currentFeed.title:or("Loading...")}'
+        title: '{feed.title:or("Loading...")}'
     },
 
     defaults: {
@@ -32,7 +45,7 @@ Ext.define('FeedViewer.view.detail.Detail', {
         region: 'center',
         reference: 'feedPosts',
         bind: {
-            store: '{main.currentFeed.entries}'
+            store: '{feed.entries}'
         },
         minHeight: 200,
         minWidth: 200,
@@ -76,5 +89,9 @@ Ext.define('FeedViewer.view.detail.Detail', {
                  minWidth: 200
              }
         }
-    }]
+    }],
+
+    updateFeed: function (feed) {
+        this.getViewModel().set('feed', feed);
+    }
 });
