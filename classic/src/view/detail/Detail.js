@@ -12,19 +12,6 @@ Ext.define('FeedViewer.view.detail.Detail', {
         'Ext.toolbar.Toolbar'
     ],
 
-    viewModel : {
-        // links: {
-        //     feed: {
-        //         type: 'FeedViewer.model.RSSFeed',
-        //         create: true
-        //     }
-        // }
-    },
-
-    renderConfig: {
-        feed: null
-    },
-
     layout: 'border',
     iconCls: 'x-fa fa-rss',
 
@@ -33,7 +20,7 @@ Ext.define('FeedViewer.view.detail.Detail', {
     },
 
     bind: {
-        title: '{feed.title:or("Loading...")}'
+        title: '{main.currentFeed.title:or("Loading...")}'
     },
 
     defaults: {
@@ -45,7 +32,7 @@ Ext.define('FeedViewer.view.detail.Detail', {
         region: 'center',
         reference: 'feedPosts',
         bind: {
-            store: '{feed.entries}'
+            store: '{main.currentFeed.entries}'
         },
         minHeight: 200,
         minWidth: 200,
@@ -89,9 +76,5 @@ Ext.define('FeedViewer.view.detail.Detail', {
                  minWidth: 200
              }
         }
-    }],
-
-    updateFeed: function (feed) {
-        this.getViewModel().set('feed', feed);
-    }
+    }]
 });

@@ -19,6 +19,7 @@ Ext.define('FeedViewer.view.feed.List', {
                 type: 'feeds',
                 autoLoad: true,
                 listeners: {
+                    load: 'selectFirstFeed',
                     remove: 'selectFirstFeed',
                     delay: 1 // let the drop clear the selection first
                 }
@@ -55,12 +56,6 @@ Ext.define('FeedViewer.view.feed.List', {
             bind: {
                 selection: '{main.currentFeed}',
                 store: '{feeds}'
-            },
-
-            viewConfig : {
-                listeners: {
-                    refresh: 'selectFirstFeed'
-                }
             },
 
             cls: 'feed-list',
