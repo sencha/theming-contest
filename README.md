@@ -22,7 +22,10 @@ sencha -sdk {path/to/Ext-JS-SDK} app build development
 
 * Start web server and watch changes
 ```
-sencha app watch
+For feedviewer app using classic toolkit, run
+sencha app watch classic
+For feedviewer app using modern toolkit, run
+sencha app watch modern
 ```
 
 * View the Feedviewer sample app in browser with platform tag. It will show view with classic toolkit
