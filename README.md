@@ -2,7 +2,7 @@
 
 ### Requirements
 * [Download Ext JS 6] (https://www.sencha.com/products/extjs/evaluate/)
-* [Download CMD] (https://www.sencha.com/products/extjs/cmd-download/)
+* [Download Sencha Cmd] (https://www.sencha.com/products/sencha-cmd/)
 * [Download Sencha Inspector Early Access] (http://pages.sencha.com/Inspector-Early-Access.html)
 
 
