@@ -21,12 +21,15 @@ sencha -sdk {path/to/Ext-JS-SDK} app build development
 ```
 
 * Start web server and watch changes
-```
-For feedviewer app using classic toolkit, run
-sencha app watch classic
-For feedviewer app using modern toolkit, run
-sencha app watch modern
-```
+
+    *For feedviewer app using classic toolkit, run*
+    ```
+    sencha app watch classic
+    ```
+    *For feedviewer app using modern toolkit, run*
+    ```
+    sencha app watch modern
+    ```
 
 * View the Feedviewer sample app in browser with platform tag. It will show view with classic toolkit
 ```
@@ -96,9 +99,10 @@ Send us zipped file of your workspace containing your version of the Feed Viewer
 
 
 ### Resources
-Watch our video to learn how to accelerate your theming efforts
-* [ Getting Started with Themeing Contest Video ] (https://vimeo.com/133395706)
-* [Docs - Theming in ExtJS] (http://docs.sencha.com/extjs/6.0/core_concepts/theming.html)
+
+* [Video - Getting started with theming contest] (https://vimeo.com/133395706)
+* [Doc - Ext JS 6.0 theming] (http://docs.sencha.com/extjs/6.0/core_concepts/theming.html)
+* [Tutorial - Ext JS 6.0 theming] (https://www.sencha.com/blog/how-to-create-a-dark-ext-js-theme-part-1/)
 
 ### Any Questions?
 If you have any additional questions about the contest, please send those to contest forum at  [Sencha Contest Forum] (https://www.sencha.com/forum/forumdisplay.php?137-Sencha-Contests) 
