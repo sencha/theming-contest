@@ -102,7 +102,8 @@ Send us zipped file of your workspace containing your version of the Feed Viewer
 
 * [Video - Getting started with theming contest] (https://vimeo.com/133395706)
 * [Doc - Ext JS 6.0 theming] (http://docs.sencha.com/extjs/6.0/core_concepts/theming.html)
-* [Tutorial - Ext JS 6.0 theming] (https://www.sencha.com/blog/how-to-create-a-dark-ext-js-theme-part-1/)
+* [Tutorial - Ext JS 6.0 theming - Part 1] (https://www.sencha.com/blog/how-to-create-a-dark-ext-js-theme-part-1/)
+* [Tutorial - Ext JS 6.0 theming - Part 2] (https://www.sencha.com/blog/how-to-create-a-dark-ext-js-theme-part-2/)
 
 ### Any Questions?
 If you have any additional questions about the contest, please send those to contest forum at  [Sencha Contest Forum] (https://www.sencha.com/forum/forumdisplay.php?137-Sencha-Contests) 
