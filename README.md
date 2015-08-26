@@ -61,7 +61,7 @@ From theming-contest-master directory
 sencha generate theme my-contest-theme
 ```
 
-* Extend “my-contest-theme” from "theme-triton". In the package.json file, change to "extend": "theme-triton"
+* Extend custom theme “my-contest-theme” from "theme-triton". 
 ```
 In theming-workspace/packages/local/my-contest-theme/package.json
 
