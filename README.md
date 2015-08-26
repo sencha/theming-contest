@@ -98,7 +98,7 @@ E.g. Add component variable $base-color: #639000; in
 * Create unique components with Ext JS UIs (CSS mixins).
 
 ### Submit your contest entry
-Send us zipped file of your workspace containing your version of the Feed Viewer sample application as well as custom themes at contest@sencha.com. Please do not include ext directory in the zipped file.  All entries must be received by September 1, 2015.
+Send us zipped file of your workspace containing your version of the Feed Viewer sample application as well as custom themes at contest@sencha.com. Please do not include ext directory in the zipped file.  All entries must be received by September 15, 2015.
 
 
 ### Resources
