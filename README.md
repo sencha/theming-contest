@@ -3,8 +3,7 @@
 ### Requirements
 * [Download Ext JS 6] (https://www.sencha.com/products/extjs/evaluate/)
 * [Download Sencha Cmd 6] (https://www.sencha.com/products/extjs/cmd-download/)
-* [Download Sencha Inspector Early Access] (http://pages.sencha.com/Inspector-Early-Access.html)
-
+* [Download Sencha Inspector Beta] (http://pages.sencha.com/Inspector-Beta.html)
 
 
 ### Getting started with Feed Viewer App
@@ -12,12 +11,15 @@
 * Create a workspace
 ```
 sencha -sdk {path/to/Ext-JS-SDK}  generate workspace theming-workspace
+cd theming-workspace/
 ```
-* Fork/Clone/Download this Feed Viewer sample application and Extract it in theming-workspace
+* Fork/Clone/Download Feed Viewer sample application on this github page and unzip it in theming-workspace
 
 * Build the Feed Viewer sample application
 ```
-sencha -sdk {path/to/Ext-JS-SDK} app build development
+cd theming-contest-master
+delete directory .sencha/workspace (to use theming-workspace)
+sencha app build development
 ```
 
 * Start web server and watch changes
@@ -33,34 +35,35 @@ sencha -sdk {path/to/Ext-JS-SDK} app build development
 
 * View the Feedviewer sample app in browser with platform tag. It will show view with classic toolkit
 ```
-http://localhost:1841/?platformTags=fashion:true
+http://localhost:1841/theming-contest-master/?platformTags=fashion:true
 ```
 
 * To view the modern toolkit based view, in Chrome developer tools, toggle device mode icon and select mobile phone
 
 
 ### Connect Feed Viewer app to Sencha Inspector
+Follow steps in the document:
+http://docs.sencha.com/tools/sencha_inspector/inspecting_desktop_applications.html
 
-* Create a bookmark in your browser with name "Sencha Inspector" and copy the following code into the URL:
-```
-javascript:!function(a,b){var a=a||3e3,b=b||"http://localhost",c=b+":"+a+"/inspector.js",d=function(a,c){var d=document.createElement("script");d.type="text/javascript",d.src=a,document.addEventListener("load",function(){"undefined"!=typeof Ext&&"undefined"!=typeof Ext.onReady&&Ext.onReady(function(){if(window.SenchaInspector){var a=document.head.getAttribute("data-senchainspectorport");SenchaInspector.init(b+":"+a)}})},!0),c?document.head.insertBefore(d,document.head.firstChild):document.body.appendChild(d)};document.head.setAttribute("data-senchainspectorport",a),d(c,!0)}();
-```
-
-* Start the Sencha Inspector 
-* Click on the "Sencha Inspector" bookmark, a link to Feedviewer app should appear in the Sencha Inspector. 
+One quick way to inspect your Feedviewer sample app is to use bookmarklet. To add bookmarklet in your browser, 
+* Open Inspector app, click on the button "Quick connect an app with Bookmarklet"
+* Drag the blue "Sencha Inspector bookmarklet" button to your browser bookmarks bar
+* Now open feedviewer sample app in your browser and click on the bookmarklet in bookmarks bar. 
+* You should see feedviewer app link in Inspector. 
 * Click on the link and go to Theme tab to change Sass variables
 
 ### Create your Custom Theme
 
-* Generate custom theme called “my-contest-theme”
-In theming-workspace,
+* Generate custom theme called “my-contest-theme” in theming-workspace/packages/local/my-contest-theme
+
 ```
+From theming-contest-master directory
 sencha generate theme my-contest-theme
 ```
 
 * Extend “my-contest-theme” from "theme-triton". In the package.json file, change to "extend": "theme-triton"
 ```
-{path/to/theming-workspace}/packages/local/my-contest-theme/package.json
+In theming-workspace/packages/local/my-contest-theme/package.json
 
 "extend": "theme-triton",
 ```
