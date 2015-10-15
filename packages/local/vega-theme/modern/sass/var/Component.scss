@@ -1,0 +1,68 @@
+$grey1: #F5F5F6;
+$grey2: #E5E5E6;
+$grey3: #C6C6C7;
+$grey4: #505051;
+$grey5: #383840;
+$grey6: #2D2D30;
+$grey7: #252526;
+$blue: #2F2F54;
+
+$base-color: dynamic(#48778C);
+$color: $grey2;
+$font-family: dynamic('Roboto Condensed', helvetica, arial, sans-serif);
+$font-weight-normal: dynamic(300);
+$font-weight-bold: dynamic(400);
+$font-size-big: dynamic(100%);
+$toolbar-title-font-size: 1.8rem;
+$toolbar-padding-big: dynamic(.6rem 1rem);
+$toolbar-background-color: dynamic($grey7);
+$toolbar-title-color: dynamic($grey2);
+$toolbar-border-width: dynamic(0 0 1px 0);
+$toolbar-border-color: dynamic($grey5);
+$ext-trial: false; //Sorry; the watermark was ugly :(
+$button-border-radius-big: dynamic(0);
+$button-border-width-big: dynamic(1px);
+$button-background-color: dynamic(#45707F);
+$button-action-ui: false;
+$button-color: dynamic($grey2);
+$list-item-selected-background-color: $blue;
+$list-item-pressed-background-color: $blue;
+$field-label-background-color: $grey5;
+$field-label-color: $grey2;
+$fieldset-border-radius: 0px;
+$field-border-color: $grey5;
+$textfield-input-background-color: $grey4;
+$picker-background-color: $grey5;
+$field-label-padding-big: .4em .8em;
+$textfield-input-padding-big: .4em .8em;
+$mask-background-color: $grey4;
+
+a:link, a:visited, a:hover {
+  color: #67A1D7;
+  text-decoration: none;
+}
+
+a:active {
+  color: #67A1D7;
+  text-decoration: underline;
+}
+
+.x-item-selected {
+  background-color: $blue;
+}
+
+input {
+  color: $grey2;
+}
+
+.x-mask, .x-scroll-container, body {
+  background-color: $grey5 !important;
+}
+
+.x-toolbar.teal { //couldn't find UIs to mixin
+    background-color: #48778C;
+}
+
+.x-form-fieldset .x-form-fieldset-inner {
+  border-color: $grey4 !important;
+}

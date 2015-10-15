@@ -1,0 +1,49 @@
+$ext-trial: false; //Sorry; the watermark was ugly :(
+
+a:link, a:visited, a:active {
+  color: #67A1D7;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #67A1D7;
+  text-decoration: underline;
+}
+
+a.x-btn {
+  text-decoration: none;
+}
+
+.x-tab-active {
+  background-image: url(images/active-tab-caret.png);
+  background-repeat: no-repeat;
+  background-position: center bottom;
+}
+
+.feed-post img {
+  margin-right: 15px;
+}
+
+.feed-list .x-grid-item {
+  line-height: 26px;
+}
+
+.feed-list .x-grid-cell-inner-action-col {
+  padding-top: 10px;
+}
+
+.feed-grid .x-grid-cell-inner {
+  padding: 10px;
+}
+
+.feed-grid .x-grid-rowbody-tr .x-grid-rowbody {
+  padding-top: 0px;
+}
+
+.x-menu-item {
+  line-height: 20px;
+}
+
+.x-window-header .x-tool {
+  left: 474px !important;
+}
