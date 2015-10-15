@@ -1,3 +1,7 @@
+### Download Themes from contest winners
+* Added package with vega theme from contest winner - Third Place - Erin Knight
+
+
 ## Sencha App Theming Contest
 
 ### Requirements
