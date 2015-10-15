@@ -1,0 +1,11 @@
+
+.#{$prefix}btn {
+  @include box-shadow(0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12));
+  transition: box-shadow 0.3s;
+}
+
+.#{$prefix}btn-over,
+.#{$prefix}btn-focus {
+  // "important" needed here to override a set of box-shadow related rules in theme-neutral
+  @include box-shadow(0 5px 11px 0 rgba(0, 0, 0, 0.18), 0 4px 15px 0 rgba(0, 0, 0, 0.15) !important);
+}

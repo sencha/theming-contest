@@ -1,0 +1,26 @@
+$button-default-background-color: dynamic($base-color);
+$button-toolbar-background-color: dynamic($base-color);
+$button-default-background-color-pressed: dynamic($base-dark-color);
+$button-toolbar-background-color-pressed: dynamic($base-dark-color);
+
+$button-default-color: dynamic($light-color);
+$button-toolbar-color: dynamic($light-color);
+
+$button-default-glyph-color: dynamic($light-icon-color);
+$button-toolbar-glyph-color: dynamic($light-icon-color);
+
+$button-small-border-width: dynamic(0);
+$button-medium-border-width: dynamic(0);
+$button-large-border-width: dynamic(0);
+
+$button-small-border-radius: dynamic(2px);
+$button-medium-border-radius: dynamic(2px);
+$button-large-border-radius: dynamic(2px);
+
+$button-small-font-size: dynamic($font-size);
+$button-medium-font-size: dynamic($font-size);
+$button-large-font-size: dynamic($font-size);
+
+$button-small-padding: dynamic(10px 15px);
+$button-medium-padding: dynamic(10px 15px);
+$button-large-padding: dynamic(10px 15px);

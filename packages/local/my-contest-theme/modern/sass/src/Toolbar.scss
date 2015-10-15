@@ -1,0 +1,4 @@
+.#{$prefix}toolbar-primary {
+  background-color: $dark-bg-color;
+  @include box-shadow(inset rgba(0, 0, 0, 0.49) 0 -13px 12px -10px);
+}

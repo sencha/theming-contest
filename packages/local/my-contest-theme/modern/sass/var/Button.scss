@@ -1,0 +1,11 @@
+$button_color: dynamic($base-color);
+$button-pressed-background-color: dynamic(darken($base-color, 10));
+$button-border-radius: dynamic(0.2em);
+$button-border-radius-big: dynamic(0.2em);
+$button-padding: dynamic(0.5em 1.2em);
+$button-padding-big: dynamic(0.5em 1.2em);
+
+$button-background-color: dynamic(transparent);
+
+// custom vars
+$button-back-background-color: $base-color;

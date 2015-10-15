@@ -1,0 +1,10 @@
+$grid-cell-inner-padding: dynamic(5px 15px);
+$grid-body-background-color: dynamic($light-bg-color);
+$grid-row-cell-background-color: dynamic($light-bg-color);
+$grid-row-cell-alt-background-color: dynamic($light-bg-color);
+
+$grid-row-cell-selected-background-color: dynamic(mix($base-color, $light-bg-color, 10%));
+$grid-cell-selected-background-color: dynamic(mix($base-color, $light-bg-color, 10%));
+$grid-row-cell-over-background-color: dynamic(mix($base-color, $light-bg-color, 5%));
+
+$grid-row-cell-border-width: dynamic(0);

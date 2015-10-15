@@ -1,0 +1,17 @@
+.#{$prefix}tab {
+  transition: color 0.3s, background 0.3s;
+  min-height: 38px;
+}
+
+.#{$prefix}tab-inner {
+  font-size: 16px;
+}
+
+.#{$prefix}tab-focus.#{$prefix}tab-default {
+  outline: 0;
+}
+
+// special tab background-color fix for IE < 10
+.#{$prefix}tab-active.#{$prefix}tab .#{$prefix}tab-default-top-mc {
+  background: $tab-base-color-active;
+}

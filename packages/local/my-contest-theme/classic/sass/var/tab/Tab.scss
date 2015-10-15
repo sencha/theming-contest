@@ -1,0 +1,11 @@
+$tab-border-radius: dynamic(3px 3px 0 0);
+$tab-base-color-over: dynamic(rgba(255,255,255,0.54));
+$tab-base-color-active: dynamic($light-bg-color);
+$tab-padding: dynamic(9px 11px 8px 8px);
+$tab-color-active: dynamic(black);
+$tab-glyph-color: dynamic($light-icon-color);
+$tab-glyph-color-focus: dynamic($light-icon-color);
+$tab-glyph-color-over: dynamic($light-icon-color);
+$tab-glyph-color-over-active: dynamic($light-icon-color);
+$tab-glyph-color-active: dynamic($dark-icon-color);
+$tab-glyph-color-focus-active: dynamic($dark-icon-color);
