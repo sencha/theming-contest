@@ -1,0 +1,9 @@
+.#{$prefix}splitter-vertical {
+  background: $body-bg-color;
+
+  /* since splitters are only 1px wide in this theme, trying to fit a collpase
+   elements doesn't really work, so we'll just hide them altogether */
+  .#{$prefix}collapse-el {
+    display: none;
+  }
+}

@@ -1,0 +1,12 @@
+$base-color: dynamic(#3E50B4);
+$color: dynamic(#000);
+$highlight-color: dynamic(#606060);
+$light-color: dynamic(#fafafa);
+$font-family: dynamic('Roboto', 'Helvetica Neue', helvetica, arial, verdana, sans-serif);
+$font-weight-normal: dynamic(400);
+$font-weight-bold: dynamic(500);
+$font-size-big: dynamic(100%);
+
+// custom vars
+$dark-bg-color: dynamic(desaturate(darken($base-color, 20), 8));
+$light-bg-color: dynamic(#fafafa);

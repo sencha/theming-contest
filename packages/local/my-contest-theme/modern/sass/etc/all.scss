@@ -1,0 +1,5 @@
+$enable-googlefont-roboto: dynamic(true);
+
+@if $enable-googlefont-roboto {
+  @import url(https://fonts.googleapis.com/css?family=Roboto:400,500);
+}

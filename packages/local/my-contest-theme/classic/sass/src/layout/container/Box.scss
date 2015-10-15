@@ -1,0 +1,21 @@
+// ensure that button shadows aren't clipped by their parent containers
+
+.#{$prefix}toolbar,
+.#{$prefix}panel-body,
+.#{$prefix}window-item {
+	.#{$prefix}box-inner {
+		overflow: visible;
+	}
+}
+
+.#{$prefix}container {
+	overflow: visible;
+}
+
+.#{$prefix}form-item-body .#{$prefix}box-layout-ct {
+	overflow: visible;
+}
+
+.#{$prefix}fieldset-body {
+	overflow: visible;
+}

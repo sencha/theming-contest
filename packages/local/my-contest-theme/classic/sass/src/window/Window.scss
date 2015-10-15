@@ -1,0 +1,13 @@
+.#{$prefix}window {
+  @include box-shadow(0 5px 12px 0 rgba(0, 0, 0, .22),
+                      0 9px 38px 0 rgba(0, 0, 0, .38));
+  @include border-radius(2px);
+
+  .#{$prefix}panel {
+    background-color: $light-bg-color;
+  }
+}
+
+.#{$prefix}window-header-default .#{$prefix}tool-img {
+  color: $dark-icon-color;
+}

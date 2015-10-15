@@ -505,7 +505,8 @@
     "builds": {
         "classic": {
             "toolkit": "classic",
-            "theme": "theme-triton",
+            //"theme": "theme-triton",
+            "theme": "my-contest-theme",
             "sass": {
                 //"save": "classic/sass/save.json"
             }
@@ -513,7 +514,8 @@
 
         "modern": {
             "toolkit": "modern",
-            "theme": "theme-triton",
+             //"theme": "theme-triton",
+            "theme": "my-contest-theme",
             "sass": {
                 //"save": "modern/sass/save.json"
             }

@@ -1,0 +1,70 @@
+/* the "sidebar" and "central" classes here allow a for apps to include a
+ central, shadowed panel with a contrasting, recessed sidebar */
+
+.sidebar {
+  .#{$prefix}toolbar,
+  .#{$prefix}grid-body,
+  .#{$prefix}grid-item {
+    background-color: $body-bg-color;
+  }
+
+  .#{$prefix}action-col-icon {
+    color: mix(white, $body-bg-color, 54%);
+  }
+
+  .#{$prefix}grid-item,
+  .#{$prefix}grid-item-selected,
+  .#{$prefix}grid-item-focused {
+    color: mix(white, $body-bg-color, 80%);
+    font-weight: 500;
+    font-size: 16px;
+  }
+
+
+  .#{$prefix}grid-item-over {
+    background-color: mix($base-color, $body-bg-color, 25%);
+  }
+
+  .#{$prefix}grid-item-selected,
+  .#{$prefix}grid-item-focused {
+    color: white;
+
+    .#{$prefix}action-col-icon {
+      color: $light-icon-color;
+    }
+  }
+
+  .#{$prefix}title {
+    font-size: 20px;
+    color: mix(white, $body-bg-color, 87%)
+  }
+
+  .#{$prefix}panel-header {
+    padding: 19px 12px 7px 14px;
+  }
+
+  .#{$prefix}grid-item.#{$prefix}grid-item-selected {
+    background-color: $base-color;
+  }
+
+}
+
+.central {
+  @include box-shadow(0px 50px 10px 1px rgba(0, 0, 0, 0.5));
+  z-index: 5; // ensure that the box shadow appears over other elements
+
+  .#{$prefix}splitter-vertical,
+  .#{$prefix}splitter-horizontal {
+    background: $neutral-highlight-color;
+    border-color: $light-bg-color;
+    border-style: solid;
+  }
+
+  .#{$prefix}splitter-vertical {
+    border-width: 15px 0 !important; // important to override ExtJS forced border
+  }
+
+  .#{$prefix}splitter-horizontal {
+    border-width: 0 15px !important; // ditto
+  }
+}
