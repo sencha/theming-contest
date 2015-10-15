@@ -1,0 +1,26 @@
+$list-item-background-color: dynamic($grey6);
+$list-item-color: dynamic($grey2);
+$list-item-padding-big: dynamic(12px 16px);
+
+.x-scroll-container .x-inner {
+  background-color: $grey6;
+}
+
+.x-list-item-odd {
+  background-color: $grey5;
+}
+
+.x-list-item.x-list-item-tpl.x-list-item-first {
+  border-top: none;
+}
+
+.x-list-item-odd.x-list-item-tpl, .x-list-item.x-list-item-tpl {
+  border: none;
+  border-top: 1px solid $grey4;
+}
+
+.x-list-item.x-list-item-tpl.x-list-footer-wrap {
+  border: none;
+  border-top: 1px solid $grey4;
+  border-bottom: 1px solid $grey4;
+}
