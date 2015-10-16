@@ -1,0 +1,22 @@
+//my own variables
+
+/* my Material Palette cyan/amber */
+
+$primary-color-dark:   #0097A7;
+$primary-color:        #00BCD4;
+$primary-color-light:  #B2EBF2;
+$primary-color-text:   #FFFFFF;
+$accent-color:         #FFC107;
+$primary-text-color:   #212121;
+$secondary-text-color: #727272;
+$divider-color:        #B6B6B6;
+ 
+
+ 
+$highlight-color: $base-color;
+$highlight-color2: lighten($highlight-color, 20%);
+$highlight-color3: darken($highlight-color, 20%);
+ 
+$font-family: 'Roboto', Roboto-Regular;
+$font-size: 12px;
+

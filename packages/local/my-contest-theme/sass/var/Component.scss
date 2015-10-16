@@ -1,0 +1,79 @@
+@import '_config.scss';
+// GLOBAL SENCHA VARS
+$base-color: #d8a61d
+
+$body-background-color: $primary-color-dark;
+$color: $primary-text-color;
+$enable-font-smoothing: true;
+
+// SENCHA COMPONENT VARS
+
+$panel-base-color: $primary-color-dark;
+$panel-body-background-color: $primary-color-text;
+$panel-frame-background-color: $primary-color-dark;
+$panel-header-font-size: 12px;
+$panel-header-font-weight: 700;
+$panel-header-color: $primary-color-text;
+
+$border-layout-ct-background-color: $divider-color;
+$splitter-collapse-tool-background-color: $primary-color-dark;
+$splitter-collapse-tool-glyph-color: $highlight-color;
+
+$menu-background-color: $primary-color;
+$menu-item-active-background-color: $primary-color-dark;
+$menu-border-color: $divider-color;
+$menu-text-color: $primary-color-text;
+$menu-separator-border-color: $divider-color;
+$splitter-collapse-tool-glyph-color: $primary-color-text; 
+
+$toolbar-footer-background-color: $primary-color-dark;
+$toolbar-text-color: $primary-color-text;
+$toolbar-font-size: 11px;
+
+$window-body-background-color: $primary-color-dark;
+$window-header-background-color: $primary-color;
+$window-body-color: $primary-color-text;
+$window-header-color: $primary-color-text;
+
+//$grid-cell-selected-color: $accent-color;
+//$grid-cell-special-over-background-color: $accent-color;
+$grid-cell-selected-background-color: $accent-color;
+$grid-row-cell-focus-background-color: $accent-color;
+$grid-row-cell-focus-color: $primary-color-text;
+$grid-row-cell-selected-background-color: $accent-color;
+
+$css-shadow-border-radius: 20px;
+$css-shadow-border-color: blue;
+
+$progress-background-color: $primary-color-dark;
+
+$toolbar-background-color: $primary-color;
+$tip-background-color: $primary-color-dark;
+
+$tabbar-base-color : $primary-color-dark;
+/* unvisited link */
+a:link {
+    color: $primary-color-dark;
+}
+/* visited link */
+a:visited {
+    color: $primary-color-light;
+}
+
+/* mouse over link */
+a:hover {
+    color: $accent-color;
+}
+
+/* selected link */
+a:active {
+    color: $primary-color;
+}
+
+img {
+	margin: 10px;
+}
+
+.post-data {
+	padding-left: 10px;
+}
