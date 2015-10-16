@@ -1,0 +1,24 @@
+$button-toolbar-background-gradient: 'none';
+$button-toolbar-background-gradient-over: 'none';
+$button-toolbar-background-gradient-pressed: 'none';
+
+$button-toolbar-background-color: $primary-color;
+$button-toolbar-background-color-over: $primary-color-dark;
+$button-toolbar-background-color-pressed: $primary-color-dark;
+
+$button-toolbar-border-color: $primary-color-dark;
+
+$button-toolbar-color-pressed: $primary-color-text;
+$button-toolbar-color-over: $primary-color-text;
+$button-toolbar-color: $primary-color-text;
+$button-toolbar-inner-border-width-focus: 0;
+
+$button-default-background-color: $primary-color;
+$button-default-base-color: $accent-color;
+$button-default-color: $primary-text-color;
+$button-default-arrow-glyph-color : $primary-color-text;
+$button-default-glyph-color: $primary-color-text;
+
+// Icons on Buttons
+$button-toolbar-glyph-color: $primary-color-text;
+$button-default-glyph-opacity: 0.5;

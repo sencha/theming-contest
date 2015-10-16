@@ -1,3 +1,6 @@
+## Download Themes from contest winners
+*  Added package with theme from contest winner - Second Place - Martin Lungershausen 
+
 ## Sencha App Theming Contest
 
 ### Requirements
